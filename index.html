@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appetite | اباتاي — Healthy Menu</title>
+
+  <!-- ─── Fonts ─── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700&family=Noto+Sans+Arabic:wght@300;500;700&display=swap" rel="stylesheet" />
+
+  <!-- ─── Tailwind CDN ─── -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand:   '#7C5CFC',   /* main purple accent */
+            brandLt: '#EDE8FF',   /* light purple tint  */
+            brandDk: '#5A3ED9',   /* dark purple hover  */
+            sand:    '#FAF8F5',   /* warm off-white bg   */
+            ink:     '#1E1E2C',   /* near-black text     */
+            muted:   '#8C8CA1',   /* secondary text      */
+          },
+          fontFamily: {
+            sans: ['"DM Sans"', '"Noto Sans Arabic"', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- ─── Custom styles (minimal — mostly Tailwind) ─── -->
+  <style>
+    /* Hide scrollbar on category bar but keep scroll */
+    .hide-scroll::-webkit-scrollbar { display: none; }
+    .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Card hover lift */
+    .card-lift { transition: transform .25s ease, box-shadow .25s ease; }
+    .card-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(124,92,252,.12); }
+
+    /* Modal backdrop */
+    #modal-backdrop { transition: opacity .2s ease; }
+    #modal-backdrop.hidden { opacity: 0; pointer-events: none; }
+
+    /* Slide-up modal panel */
+    #modal-panel { transition: transform .3s cubic-bezier(.4,0,.2,1), opacity .25s ease; }
+    #modal-backdrop.hidden #modal-panel { transform: translateY(40px); opacity: 0; }
+
+    /* Nutrition bar fill animation */
+    .macro-bar-fill { transition: width .6s cubic-bezier(.4,0,.2,1); }
+
+    /* Fade-in on load */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation: fadeUp .45s ease both; }
+
+    /* Image shimmer placeholder */
+    .img-placeholder {
+      background: linear-gradient(110deg, #f0ecff 8%, #faf8f5 18%, #f0ecff 33%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s linear infinite;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+  </style>
+</head>
+
+<body class="bg-sand font-sans text-ink antialiased">
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  HEADER                                                  ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-brandLt">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
+    <!-- Logo / Name -->
+    <a href="#" class="shrink-0 flex items-center gap-2">
+      <span class="w-9 h-9 rounded-xl bg-brand flex items-center justify-center">
+        <!-- Simple leaf icon -->
+        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21C12 21 4 14 4 8C4 4 8 2 12 6C16 2 20 4 20 8C20 14 12 21 12 21Z"/></svg>
+      </span>
+      <span class="text-lg font-bold tracking-tight">Appetite <span class="text-muted font-medium text-sm">اباتاي</span></span>
+    </a>
+
+    <!-- Search bar -->
+    <div class="flex-1 max-w-md relative">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Search menu…"
+        class="w-full pl-9 pr-4 py-2 rounded-full bg-sand border border-transparent focus:border-brand focus:ring-2 focus:ring-brandLt text-sm outline-none transition"
+      />
+    </div>
+
+    <!-- Calorie toggle -->
+    <button id="cal-toggle" title="Show / hide calories" class="shrink-0 w-9 h-9 rounded-full bg-brandLt text-brand flex items-center justify-center hover:bg-brand hover:text-white transition">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 2C12 2 8 6 8 10a4 4 0 008 0c0-4-4-8-4-8z"/><path stroke-linecap="round" d="M12 18v4"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  CATEGORY TABS                                           ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<nav class="sticky top-[57px] z-30 bg-white/70 backdrop-blur-md border-b border-brandLt">
+  <div id="cat-bar" class="max-w-6xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto hide-scroll">
+    <!-- Tabs injected by JS -->
+  </div>
+</nav>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  MENU GRID                                               ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<main class="max-w-6xl mx-auto px-4 pt-6 pb-24">
+  <!-- Item count -->
+  <p id="item-count" class="text-xs text-muted mb-4"></p>
+
+  <!-- Grid -->
+  <div id="menu-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    <!-- Cards injected by JS -->
+  </div>
+
+  <!-- Empty state -->
+  <div id="empty-state" class="hidden text-center py-20 text-muted">
+    <svg class="mx-auto w-12 h-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <p class="text-sm">No items found.</p>
+  </div>
+</main>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  DETAIL MODAL                                            ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div id="modal-backdrop" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40" onclick="closeModal(event)">
+  <div id="modal-panel" class="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-3xl max-h-[92vh] overflow-y-auto shadow-2xl" onclick="event.stopPropagation()">
+    <!-- Close btn -->
+    <button onclick="closeModal()" class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center text-muted hover:text-ink transition">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+
+    <!-- Content filled by JS -->
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  DATA + LOGIC                                            ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<script>
+/* ─────────────────────────────────────────────
+   MENU DATA — edit items here
+   ───────────────────────────────────────────── */
+const menuItems = [
+  // ══════ SALADS ══════
+  {
+    id: 1,
+    nameEn: "Kale Salad",
+    nameAr: "سلطة كيل",
+    category: "Salads",
+    size: "48 oz",
+    price: 27,
+    calories: 500,
+    descEn: "Kale, Lettuce, Tomatoes, Cubed Avocado, Quinoa, Roasted Walnuts, Feta Cheese, Lemon Vinaigrette.",
+    descAr: "كيل، خس، طماطم، أفوكادو مكعبات، كينوا، جوز محمص، جبن فيتا، صلصة الخل والليمون الصحي.",
+    image: "assets/images/Kale Salad.jpg",
+    nutrition: { fat: 38, carbs: 29, protein: 16, sugars: 8.1 },
+    allergens: ["nuts", "dairy"],
+  },
+  {
+    id: 2,
+    nameEn: "Green Salad",
+    nameAr: "سلطة قرين",
+    category: "Salads",
+    size: "48 oz",
+    price: 27,
+    calories: 300,
+    descEn: "A fresh mix of leafy greens with a light, healthy dressing.",
+    descAr: "مزيج منعش من الأوراق الخضراء مع صلصة خفيفة وصحية.",
+    image: "assets/images/Lentil Salad.jpg",
+    nutrition: { fat: 10, carbs: 25, protein: 12, sugars: 5 },
+    allergens: [],
+  },
+  {
+    id: 3,
+    nameEn: "Lentil Salad",
+    nameAr: "سلطة العدس",
+    category: "Salads",
+    size: "48 oz",
+    price: 16,
+    calories: 347,
+    descEn: "Green Lentil, Lettuce, Chickpeas, Roasted Sweet Potato, Tomato, Spring Onion, Rocca, Dill, Crispy Potato, Pumpkin Seed, Lemon Vinaigrette Dressing.",
+    descAr: "عدس أخضر، خس، حمص، بطاطا حلوة مشوية، طماطم، بصل أخضر، جرجير، شبت، بطاطا مقرمشة، بذور اليقطين، صوص خل الليمون الصحي.",
+    image: "assets/images/Leentil Salad.jpg",
+    nutrition: { fat: 13, carbs: 44, protein: 19, sugars: 7.2 },
+    allergens: ["gluten"],
+  },
+  {
+    id: 4,
+    nameEn: "Chicken Crunchy Salad",
+    nameAr: "سلطة تشيكن كرانش",
+    category: "Salads",
+    size: "48 oz",
+    price: 25,
+    calories: 592,
+    descEn: "Lettuce, Grilled Chicken, Chickpea, Bread Croutons, Parmesan Cheese, Almond Slices, Healthy Caesar Dressing.",
+    descAr: "خس، دجاج مشوي، حمص، خبز محمص، جبن بارميزان، شرائح لوز، صوص سيزر الصحي.",
+    image: "assets/images/Spicy Grilled Chicken.jpg",
+    nutrition: { fat: 22.3, carbs: 53.9, protein: 46, sugars: 6.9 },
+    allergens: ["nuts", "dairy", "gluten"],
+  },
+  {
+    id: 5,
+    nameEn: "Mexican Salad",
+    nameAr: "سلطة مكسيكية",
+    category: "Salads",
+    size: "48 oz",
+    price: 24,
+    calories: 342,
+    descEn: "Grilled Chicken, Lettuce, Pickled Onion, Red Beans, Sweet Corn, Quinoa, Tomato, Red Pepper, Doritos Chips, Chipotle Sauce.",
+    descAr: "دجاج مشوي، خس، بصل مخلل، فاصوليا حمراء، ذرة حلوة، كينوا، طماطم، فلفل بارد، رقائق دوريتو، صوص شيبوتلي الصحي.",
+    image: "assets/images/Mexican Salad.jpg",
+    nutrition: { fat: 11.6, carbs: 33, protein: 25, sugars: 6.1 },
+    allergens: ["gluten"],
+  },
+  {
+    id: 6,
+    nameEn: "Rocca Salad",
+    nameAr: "سلطة جرجير",
+    category: "Salads",
+    size: "48 oz",
+    price: 24,
+    calories: 330,
+    descEn: "Rocca, Kale, Beetroot, Pomegranate, Green Beans, Roasted Walnuts, Feta Cheese, Crispy Beetroot, Pomegranate Molasses Dressing.",
+    descAr: "جرجير، كيل، شمندر، رمان، فاصوليا خضراء، جوز محمص، جبن فيتا، شمندر مقرمش، صلصة دبس الرمان.",
+    image: "assets/images/Shrimp Salad.jpg",
+    nutrition: { fat: 17.4, carbs: 27, protein: 13, sugars: 15.8 },
+    allergens: ["nuts", "dairy"],
+  },
+  {
+    id: 7,
+    nameEn: "Halloumi Salad",
+    nameAr: "سلطة حلومي",
+    category: "Salads",
+    size: "48 oz",
+    price: 25,
+    calories: 525,
+    descEn: "Grilled Halloumi, Lettuce, Rocca, Roasted Chickpea, Cucumber, Dried Tomato, Quinoa, Sliced Olives, Tahini Halloumi Dressing.",
+    descAr: "حلومي مشوي، خس، جرجير، حمص محمص، خيار، طماطم مجففة، كينوا، زيتون شرائح، صوص طحينة الحلومي.",
+    image: "assets/images/Hummus.jpg",
+    nutrition: { fat: 25.4, carbs: 47, protein: 28, sugars: 13.7 },
+    allergens: ["dairy", "sesame"],
+  },
+  {
+    id: 8,
+    nameEn: "Crab Salad",
+    nameAr: "سلطة كراب",
+    category: "Salads",
+    size: "48 oz",
+    price: 26,
+    calories: 192,
+    descEn: "Shredded Crab, Cucumber, Carrot, Mango, Red Cabbage, Green Beans, Crispy Crab, Crab Dressing.",
+    descAr: "كراب مبشور، خيار، جزر، مانجو، ملفوف أحمر، فاصوليا خضراء، كراب مقرمش، صوص الكراب.",
+    image: "assets/images/Shrimp Sauce.jpg",
+    nutrition: { fat: 2, carbs: 25, protein: 18, sugars: 13.7 },
+    allergens: ["shellfish"],
+  },
+  {
+    id: 9,
+    nameEn: "Avocado Salad",
+    nameAr: "سلطة الافوكادو",
+    category: "Salads",
+    size: "48 oz",
+    price: 26,
+    calories: 370,
+    descEn: "Cubed Avocado, Grilled Chicken, Lettuce, Pickled Onion, Quinoa, Cucumber, Cherry Tomato, Doritos Chips, Avocado Dressing.",
+    descAr: "أفوكادو مكعبات، دجاج مشوي، خس، بصل مخلل، كينوا، خيار، طماطم كرزية، رقائق دوريتو، صوص الأفوكادو.",
+    image: "assets/images/Lemon Avocado Sauce.jpg",
+    nutrition: { fat: 17.6, carbs: 33, protein: 25, sugars: 5 },
+    allergens: ["gluten"],
+  },
+  {
+    id: 10,
+    nameEn: "Crisp Salad",
+    nameAr: "سلطة كريسب",
+    category: "Salads",
+    size: "48 oz",
+    price: 25,
+    calories: 300,
+    descEn: "Grilled Chicken, Fried Okra, Roasted Sweet Potato, Sweet Corn, Croutons, Crispy Onion, Healthy Crisp Dressing.",
+    descAr: "دجاج مشوي، بامية مقلية، بطاطا حلوة محمصة، ذرة حلوة، خبز محمص، بصل مقرمش، صوص كريسب الصحي.",
+    image: "assets/images/Kale Salad.jpg",
+    nutrition: { fat: 4.9, carbs: 27, protein: 28, sugars: 6.4 },
+    allergens: ["gluten"],
+  },
+  {
+    id: 11,
+    nameEn: "Shrimp Salad",
+    nameAr: "سلطة الروبيان",
+    category: "Salads",
+    size: "48 oz",
+    price: 27,
+    calories: 276,
+    descEn: "Grilled Shrimp, Lettuce, Rocca, Shredded Carrot, Shredded Beetroot, Dried Tomato, Quinoa, Green Beans, Crispy Beetroot, Balsamic Dressing.",
+    descAr: "روبيان مشوي، خس، جرجير، جزر مبشور، شمندر مبشور، طماطم مجففة، كينوا، فاصوليا خضراء، شمندر مقرمش، صوص البلسمك.",
+    image: "assets/images/Shrimp Salad.jpg",
+    nutrition: { fat: 3.5, carbs: 36, protein: 25, sugars: 20.5 },
+    allergens: ["shellfish"],
+  },
+  {
+    id: 12,
+    nameEn: "Tuna Salad",
+    nameAr: "سلطة تونا",
+    category: "Salads",
+    size: "48 oz",
+    price: 27,
+    calories: 370,
+    descEn: "Fresh tuna mixed with crisp vegetables and a light vinaigrette.",
+    descAr: "تونا طازجة ممزوجة مع خضار مقرمشة وصلصة خل خفيفة.",
+    image: "assets/images/Tuna Salad.jpeg",
+    nutrition: { fat: 1.3, carbs: 33, protein: 33, sugars: 7 },
+    allergens: ["fish"],
+  },
+
+  // ══════ SANDWICHES ══════
+  {
+    id: 14,
+    nameEn: "Spicy Grilled Chicken",
+    nameAr: "سبايسي الدجاج المشوي",
+    category: "Sandwiches",
+    size: "Sandwich",
+    price: 18,
+    calories: 300,
+    descEn: "Grilled Chicken, Jalapeno, Tabasco, Tomato, Avocado, Shredded Cheese, Chipotle Sauce.",
+    descAr: "دجاج مشوي، هالبينو، تباسكو، طماطم، أفوكادو، جبن مبشور، صوص شيبوتلي.",
+    image: "assets/images/Spicy Grilled Chicken.jpg",
+    nutrition: { fat: 13.5, carbs: 44, protein: 19, sugars: 1.6 },
+    allergens: ["dairy", "gluten"],
+  },
+  {
+    id: 15,
+    nameEn: "Grilled Chicken",
+    nameAr: "ساندوتش الدجاج المشوي",
+    category: "Sandwiches",
+    size: "Sandwich",
+    price: 17,
+    calories: 295,
+    descEn: "Grilled Chicken, Tomato, Avocado, Shredded Cheese, Pesto.",
+    descAr: "دجاج مشوي، طماطم، أفوكادو، جبن مبشور، بيستو.",
+    image: "assets/images/Spicy Grilled Chicken.jpg",
+    nutrition: { fat: 13.5, carbs: 44, protein: 19, sugars: 1.6 },
+    allergens: ["dairy", "gluten"],
+  },
+  {
+    id: 16,
+    nameEn: "Spicy Tuna",
+    nameAr: "سبايسي تونا",
+    category: "Sandwiches",
+    size: "Sandwich",
+    price: 18,
+    calories: 200,
+    descEn: "Healthy Tuna Mixture, Avocado, Tomato, Shredded Cheese, Pesto, Jalapeno, Tabasco.",
+    descAr: "خلطة تونا صحية، أفوكادو، طماطم، جبن مبشور، بيستو، هالبينو، تباسكو.",
+    image: "assets/images/Spicy Tuna Sandwhich.jpg",
+    nutrition: { fat: 10.6, carbs: 34, protein: 29, sugars: 1.1 },
+    allergens: ["fish", "dairy", "gluten"],
+  },
+  {
+    id: 18,
+    nameEn: "Tuna Sandwich",
+    nameAr: "تونا ساندوتش",
+    category: "Sandwiches",
+    size: "Sandwich",
+    price: 17,
+    calories: 193,
+    descEn: "Healthy Tuna Mixture, Avocado, Tomato, Shredded Cheese, Pesto.",
+    descAr: "خلطة تونا صحية، أفوكادو، طماطم، جبن مبشور، بيستو.",
+    image: "assets/images/Tuna Sandwhich.jpg",
+    nutrition: { fat: 10.6, carbs: 34, protein: 29, sugars: 1.1 },
+    allergens: ["fish", "dairy", "gluten"],
+  },
+  {
+    id: 19,
+    nameEn: "PB & Strawberry Jam",
+    nameAr: "فول سوداني مربى فراولة",
+    category: "Sandwiches",
+    size: "Sandwich",
+    price: 14,
+    calories: 537,
+    descEn: "Peanut Butter with Strawberry Jam on artisan bread.",
+    descAr: "زبدة فول سوداني مع مربى فراولة على خبز طازج.",
+    image: "assets/images/Peanut Butter Starwberry Jam.jpeg",
+    nutrition: { fat: 28, carbs: 54, protein: 17, sugars: 12 },
+    allergens: ["peanuts", "gluten"],
+  },
+  {
+    id: 20,
+    nameEn: "PB & Blueberry Jam",
+    nameAr: "فول سوداني مربى بلو بيري",
+    category: "Sandwiches",
+    size: "Sandwich",
+    price: 14,
+    calories: 540,
+    descEn: "Peanut Butter with Blueberry Jam on artisan bread.",
+    descAr: "زبدة فول سوداني مع مربى بلوبيري على خبز طازج.",
+    image: "assets/images/Peanut Butter Blueberry Jam.jpeg",
+    nutrition: { fat: 28, carbs: 55, protein: 16, sugars: 13 },
+    allergens: ["peanuts", "gluten"],
+  },
+  {
+    id: 21,
+    nameEn: "Halloumi Sandwich",
+    nameAr: "ساندوتش حلومي",
+    category: "Sandwiches",
+    size: "Sandwich",
+    price: 17,
+    calories: 211,
+    descEn: "Grilled Halloumi, Dried Tomato, Olives, Pesto, Labneh Sauce.",
+    descAr: "حلومي مشوي، طماطم مجففة، زيتون، بيستو، صوص لبنة.",
+    image: "assets/images/Labneh Dip.jpg",
+    nutrition: { fat: 19.7, carbs: 45, protein: 23, sugars: 1 },
+    allergens: ["dairy", "gluten"],
+  },
+  {
+    id: 22,
+    nameEn: "Cheesy Turkey",
+    nameAr: "ساندوتش تركي",
+    category: "Sandwiches",
+    size: "Sandwich",
+    price: 17,
+    calories: 301,
+    descEn: "Smoked Turkey, Shredded Cheese, Avocado, Pesto, Rocca, Turkey Sauce.",
+    descAr: "ديك رومي مدخن، جبن مبشور، أفوكادو، بيستو، جرجير، صوص التركي.",
+    image: "assets/images/Turkey Sandwhich.jpg",
+    nutrition: { fat: 15.1, carbs: 34, protein: 39, sugars: 1 },
+    allergens: ["dairy", "gluten"],
+  },
+
+  // ══════ CHIPS ══════
+  {
+    id: 23,
+    nameEn: "Sweet Potato Chips",
+    nameAr: "رقائق البطاطس الحلوة",
+    category: "Chips",
+    size: "6 oz",
+    price: 8,
+    calories: 23,
+    descEn: "Thinly sliced and baked sweet potato chips — light and crispy.",
+    descAr: "رقائق بطاطا حلوة مخبوزة — خفيفة ومقرمشة.",
+    image: "assets/images/Sweet Potato Chips.jpg",
+    nutrition: { fat: 3, carbs: 4.9, protein: 1, sugars: 1 },
+    allergens: [],
+  },
+  {
+    id: 24,
+    nameEn: "Mix Chips",
+    nameAr: "مكس شبس",
+    category: "Chips",
+    size: "6 oz",
+    price: 9,
+    calories: 25,
+    descEn: "A colourful mix of sweet potato and beetroot chips.",
+    descAr: "مزيج ملون من رقائق البطاطا الحلوة والشمندر.",
+    image: "assets/images/Mix Chips.jpeg",
+    nutrition: { fat: 6, carbs: 3, protein: 1, sugars: 3 },
+    allergens: [],
+  },
+  {
+    id: 25,
+    nameEn: "Beetroot Chips",
+    nameAr: "رقائق الشمندر",
+    category: "Chips",
+    size: "6 oz",
+    price: 8,
+    calories: 17,
+    descEn: "Crispy baked beetroot chips — naturally sweet and crunchy.",
+    descAr: "رقائق شمندر مخبوزة — حلوة طبيعياً ومقرمشة.",
+    image: "assets/images/Mix Chips.jpeg",
+    nutrition: { fat: 1, carbs: 2.4, protein: 1, sugars: 2 },
+    allergens: [],
+  },
+
+  // ══════ GRANOLA & YOGURT ══════
+  {
+    id: 27,
+    nameEn: "Granola",
+    nameAr: "جرانولا",
+    category: "Granola & Yogurt",
+    size: "12 oz",
+    price: 14,
+    calories: 116,
+    descEn: "Classic crunchy granola with oats and natural ingredients.",
+    descAr: "جرانولا كلاسيكية مقرمشة مع شوفان ومكونات طبيعية.",
+    image: "assets/images/Strawberry Yogurt Granola.jpg",
+    nutrition: { fat: 55, carbs: 60, protein: 6, sugars: 24 },
+    allergens: ["nuts", "gluten"],
+  },
+  {
+    id: 28,
+    nameEn: "Chocolate Granola",
+    nameAr: "جرانولا الشوكولاتة",
+    category: "Granola & Yogurt",
+    size: "12 oz",
+    price: 16,
+    calories: 350,
+    descEn: "Rich chocolate granola with cocoa and oats.",
+    descAr: "جرانولا شوكولاتة غنية مع كاكاو وشوفان.",
+    image: "assets/images/Strawberry Yogurt Granola.jpg",
+    nutrition: { fat: 55, carbs: 55, protein: 7, sugars: 24 },
+    allergens: ["nuts", "gluten"],
+  },
+  {
+    id: 29,
+    nameEn: "Blueberry Yogurt Granola",
+    nameAr: "زبادي جرانولا مع بلوبيري",
+    category: "Granola & Yogurt",
+    size: "12 oz",
+    price: 12,
+    calories: 230,
+    descEn: "Greek yogurt topped with crunchy granola and fresh blueberries.",
+    descAr: "زبادي يوناني مع جرانولا مقرمشة وبلوبيري طازجة.",
+    image: "assets/images/Overnight.jpg",
+    nutrition: { fat: 55, carbs: 50, protein: 29, sugars: 24 },
+    allergens: ["dairy", "nuts", "gluten"],
+  },
+  {
+    id: 30,
+    nameEn: "Strawberry Yogurt Granola",
+    nameAr: "زبادي جرانولا مع الفراولة",
+    category: "Granola & Yogurt",
+    size: "12 oz",
+    price: 12,
+    calories: 230,
+    descEn: "Greek yogurt topped with crunchy granola and fresh strawberries.",
+    descAr: "زبادي يوناني مع جرانولا مقرمشة وفراولة طازجة.",
+    image: "assets/images/Strawberry Yogurt Granola.jpg",
+    nutrition: { fat: 55, carbs: 48, protein: 26, sugars: 24 },
+    allergens: ["dairy", "nuts", "gluten"],
+  },
+
+  // ══════ DIPS ══════
+  {
+    id: 33,
+    nameEn: "Labneh Dip",
+    nameAr: "تغميسة لبنة",
+    category: "Dips",
+    size: "12 oz",
+    price: 12,
+    calories: 608,
+    descEn: "Creamy traditional labneh dip with herbs.",
+    descAr: "تغميسة لبنة تقليدية كريمية مع أعشاب.",
+    image: "assets/images/Labneh Dip.jpg",
+    nutrition: { fat: 30, carbs: 15, protein: 10, sugars: 3 },
+    allergens: ["dairy"],
+  },
+  {
+    id: 34,
+    nameEn: "Jalapeno Dip",
+    nameAr: "تغميسة هالبينو",
+    category: "Dips",
+    size: "12 oz",
+    price: 12,
+    calories: 608,
+    descEn: "Spicy jalapeno dip with a creamy base.",
+    descAr: "تغميسة هالبينو حارة مع قاعدة كريمية.",
+    image: "assets/images/Jalapeno Dip.jpg",
+    nutrition: { fat: 30, carbs: 15, protein: 10, sugars: 3 },
+    allergens: ["dairy"],
+  },
+  {
+    id: 37,
+    nameEn: "Hummus",
+    nameAr: "الحمص",
+    category: "Dips",
+    size: "12 oz",
+    price: 10,
+    calories: 454,
+    descEn: "Classic chickpea hummus with tahini and lemon.",
+    descAr: "حمص كلاسيكي مع طحينة وليمون.",
+    image: "assets/images/Hummus.jpg",
+    nutrition: { fat: 22, carbs: 30, protein: 14, sugars: 2 },
+    allergens: ["sesame"],
+  },
+
+  // ══════ PICKLES ══════
+  {
+    id: 39,
+    nameEn: "Small Cucumber Pickle",
+    nameAr: "مخلل الخيار الصغير",
+    category: "Pickles",
+    size: "12 oz",
+    price: 8,
+    calories: 10,
+    descEn: "Crunchy baby cucumber pickles, tangy and refreshing.",
+    descAr: "مخلل خيار صغير مقرمش، لاذع ومنعش.",
+    image: "assets/images/Small Cucumber Pickle.jpg",
+    nutrition: { fat: 0, carbs: 2, protein: 0.5, sugars: 1 },
+    allergens: [],
+  },
+  {
+    id: 40,
+    nameEn: "Mix Pickles",
+    nameAr: "مخلل منوع",
+    category: "Pickles",
+    size: "12 oz",
+    price: 8,
+    calories: 12,
+    descEn: "Assorted pickled vegetables — turnip, cucumber, carrot.",
+    descAr: "مخللات خضار متنوعة — لفت، خيار، جزر.",
+    image: "assets/images/Mix Pickles.jpg",
+    nutrition: { fat: 0, carbs: 3, protein: 0.5, sugars: 1 },
+    allergens: [],
+  },
+  {
+    id: 41,
+    nameEn: "Pepper Pickles",
+    nameAr: "مخلل فلفل",
+    category: "Pickles",
+    size: "12 oz",
+    price: 8,
+    calories: 22,
+    descEn: "Spicy pickled peppers for the heat lovers.",
+    descAr: "مخلل فلفل حار لعشاق الحرارة.",
+    image: "assets/images/Pepper Pickles.jpg",
+    nutrition: { fat: 0.5, carbs: 4, protein: 1, sugars: 2 },
+    allergens: [],
+  },
+
+  // ══════ CRUNCHES ══════
+  {
+    id: 42,
+    nameEn: "Protein Crackers",
+    nameAr: "مقرمشات بروتين",
+    category: "Crunches",
+    size: "60 gm",
+    price: 7,
+    calories: 194,
+    descEn: "High-protein crispy crackers, perfect as a healthy snack.",
+    descAr: "مقرمشات عالية البروتين، مثالية كوجبة خفيفة صحية.",
+    image: "assets/images/Protien Crackers.jpg",
+    nutrition: { fat: 6, carbs: 22, protein: 10, sugars: 0 },
+    allergens: ["gluten"],
+  },
+  {
+    id: 43,
+    nameEn: "Za'atar Crackers",
+    nameAr: "مقرمشات زعتر",
+    category: "Crunches",
+    size: "60 gm",
+    price: 7,
+    calories: 250,
+    descEn: "Crispy crackers flavoured with traditional za'atar spice.",
+    descAr: "مقرمشات مقرمشة بنكهة الزعتر التقليدي.",
+    image: "assets/images/Zatar Crackers.jpg",
+    nutrition: { fat: 5, carbs: 28, protein: 5, sugars: 0 },
+    allergens: ["gluten", "sesame"],
+  },
+  {
+    id: 44,
+    nameEn: "Za'atar Chocolate Crackers",
+    nameAr: "مقرمشات زعتر شوكولاتة",
+    category: "Crunches",
+    size: "60 gm",
+    price: 9,
+    calories: 320,
+    descEn: "A sweet-savoury twist: za'atar crackers with chocolate drizzle.",
+    descAr: "لمسة حلوة ومالحة: مقرمشات زعتر مع شوكولاتة.",
+    image: "assets/images/Zatar Chocolate Crackers.jpg",
+    nutrition: { fat: 6, carbs: 32, protein: 6, sugars: 0 },
+    allergens: ["gluten", "sesame"],
+  },
+  {
+    id: 47,
+    nameEn: "Rusk Finger Chocolate",
+    nameAr: "أصابع شابورة شوكولاتة",
+    category: "Crunches",
+    size: "60 gm",
+    price: 9,
+    calories: 300,
+    descEn: "Chocolate-dipped rusk fingers, crunchy and indulgent.",
+    descAr: "أصابع شابورة مغطاة بالشوكولاتة، مقرمشة وشهية.",
+    image: "assets/images/Rusk Finger Chocolate.jpg",
+    nutrition: { fat: 10, carbs: 42, protein: 12, sugars: 0 },
+    allergens: ["gluten", "dairy"],
+  },
+
+  // ══════ HEALTHY SWEETS ══════
+  {
+    id: 49,
+    nameEn: "Jam Fig",
+    nameAr: "مربى تين",
+    category: "Healthy Sweets",
+    size: "150 ml",
+    price: 14,
+    calories: 186,
+    descEn: "Homemade fig jam with natural sweetness.",
+    descAr: "مربى تين محلي الصنع بحلاوة طبيعية.",
+    image: "assets/images/Jam Fig.jpg",
+    nutrition: { fat: 0.5, carbs: 45, protein: 1, sugars: 30 },
+    allergens: [],
+  },
+  {
+    id: 50,
+    nameEn: "Jam Blueberry",
+    nameAr: "مربى بلوبيري",
+    category: "Healthy Sweets",
+    size: "150 ml",
+    price: 14,
+    calories: 195,
+    descEn: "Rich blueberry jam made with real berries.",
+    descAr: "مربى بلوبيري غني مصنوع من توت حقيقي.",
+    image: "assets/images/Jam Blueberry.jpg",
+    nutrition: { fat: 0.5, carbs: 48, protein: 1, sugars: 32 },
+    allergens: [],
+  },
+  {
+    id: 51,
+    nameEn: "Jam Strawberry",
+    nameAr: "مربى فراولة",
+    category: "Healthy Sweets",
+    size: "150 ml",
+    price: 14,
+    calories: 195,
+    descEn: "Classic strawberry jam with fresh strawberries.",
+    descAr: "مربى فراولة كلاسيكي مع فراولة طازجة.",
+    image: "assets/images/Jam Strawberry.jpg",
+    nutrition: { fat: 0.5, carbs: 48, protein: 1, sugars: 32 },
+    allergens: [],
+  },
+  {
+    id: 52,
+    nameEn: "Healthy Snickers Cake",
+    nameAr: "كيكة سنيكرز الصحية",
+    category: "Healthy Sweets",
+    size: "12 oz",
+    price: 11,
+    calories: 693,
+    descEn: "A healthier take on the classic snickers — peanuts, caramel and chocolate.",
+    descAr: "نسخة صحية من سنيكرز الكلاسيكي — فول سوداني، كراميل وشوكولاتة.",
+    image: "assets/images/Snickers Cake.jpg",
+    nutrition: { fat: 12, carbs: 40, protein: 15, sugars: 0 },
+    allergens: ["peanuts", "dairy", "gluten"],
+  },
+  {
+    id: 53,
+    nameEn: "Protein Crunchy Rice",
+    nameAr: "كرنشي رايز بروتين بار",
+    category: "Healthy Sweets",
+    size: "2 pcs",
+    price: 8,
+    calories: 194,
+    descEn: "Crispy rice protein bar — a guilt-free treat.",
+    descAr: "بار بروتين أرز مقرمش — حلوى بدون ذنب.",
+    image: "assets/images/Protien Crunchy Rice.jpg",
+    nutrition: { fat: 6, carbs: 22, protein: 10, sugars: 0 },
+    allergens: ["gluten"],
+  },
+  {
+    id: 55,
+    nameEn: "Protein Butter Bar",
+    nameAr: "بروتين بار بتر",
+    category: "Healthy Sweets",
+    size: "2 pcs",
+    price: 7,
+    calories: 280,
+    descEn: "Protein bar with peanut butter flavour.",
+    descAr: "بار بروتين بنكهة زبدة الفول السوداني.",
+    image: "assets/images/Protien Butter Bar.jpg",
+    nutrition: { fat: 6, carbs: 22, protein: 10, sugars: 0 },
+    allergens: ["peanuts", "gluten"],
+  },
+  {
+    id: 99,
+    nameEn: "Overnight Tiramisu",
+    nameAr: "تيراميسو أوفرنايت",
+    category: "Healthy Sweets",
+    size: "12 oz",
+    price: 14,
+    calories: 225,
+    descEn: "Overnight oats infused with tiramisu flavours — coffee, cocoa and mascarpone.",
+    descAr: "أوفرنايت أوتس بنكهة التيراميسو — قهوة، كاكاو وماسكربون.",
+    image: "assets/images/Overnight Tiramisu.jpeg",
+    nutrition: { fat: 6, carbs: 28, protein: 15.4, sugars: 9 },
+    allergens: ["dairy", "gluten"],
+  },
+
+  // ══════ BEVERAGES ══════
+  {
+    id: 66,
+    nameEn: "Protein Avocado Smoothie",
+    nameAr: "سموذي بروتين افوكادو",
+    category: "Beverages",
+    size: "330 ml",
+    price: 13,
+    calories: 399,
+    descEn: "Creamy avocado smoothie packed with protein.",
+    descAr: "سموذي أفوكادو كريمي غني بالبروتين.",
+    image: "assets/images/Protien Avocado Smoothie.jpg",
+    nutrition: { fat: 18, carbs: 35, protein: 25, sugars: 10 },
+    allergens: ["dairy"],
+  },
+  {
+    id: 67,
+    nameEn: "Protein Dates Smoothie",
+    nameAr: "سموذي بروتين التمر",
+    category: "Beverages",
+    size: "330 ml",
+    price: 13,
+    calories: 416,
+    descEn: "Dates smoothie loaded with protein — energy in a cup.",
+    descAr: "سموذي تمر غني بالبروتين — طاقة في كوب.",
+    image: "assets/images/Protien Dates Smoothie.jpg",
+    nutrition: { fat: 10, carbs: 50, protein: 28, sugars: 30 },
+    allergens: ["dairy"],
+  },
+  {
+    id: 70,
+    nameEn: "Perrier Sparkling Water",
+    nameAr: "بيريه ماء غازية",
+    category: "Beverages",
+    size: "330 ml",
+    price: 6,
+    calories: 1,
+    descEn: "Natural sparkling mineral water.",
+    descAr: "ماء معدنية غازية طبيعية.",
+    image: "assets/images/Perrier Sparkling Water.jpg",
+    nutrition: { fat: 0, carbs: 0, protein: 0, sugars: 0 },
+    allergens: [],
+  },
+  {
+    id: 71,
+    nameEn: "Still Water",
+    nameAr: "ماء معدنية",
+    category: "Beverages",
+    size: "330 ml",
+    price: 1,
+    calories: 1,
+    descEn: "Pure still mineral water.",
+    descAr: "ماء معدنية نقية.",
+    image: "assets/images/Still Water.jpg",
+    nutrition: { fat: 0, carbs: 0, protein: 0, sugars: 0 },
+    allergens: [],
+  },
+
+  // ══════ RICE PLATES ══════
+  {
+    id: 72,
+    nameEn: "Chicken Rice",
+    nameAr: "دجاج مع رز",
+    category: "Rice Plates",
+    size: "Plate",
+    price: 22,
+    calories: 394,
+    descEn: "Grilled chicken served with seasoned rice.",
+    descAr: "دجاج مشوي مقدم مع أرز متبل.",
+    image: "assets/images/Salmon (2).jpg",
+    nutrition: { fat: 7.5, carbs: 1.7, protein: 36.5, sugars: 1.4 },
+    allergens: [],
+  },
+  {
+    id: 74,
+    nameEn: "Salmon Rice",
+    nameAr: "سالمون مع رز",
+    category: "Rice Plates",
+    size: "Plate",
+    price: 28,
+    calories: 437,
+    descEn: "Pan-seared salmon fillet served with seasoned rice.",
+    descAr: "فيليه سالمون مقلي مقدم مع أرز متبل.",
+    image: "assets/images/Salmon (2).jpg",
+    nutrition: { fat: 17, carbs: 36.5, protein: 31.8, sugars: 1.4 },
+    allergens: ["fish"],
+  },
+];
+
+
+/* ─────────────────────────────────────────────
+   ALLERGEN CONFIG — icons + labels
+   ───────────────────────────────────────────── */
+const allergenMeta = {
+  dairy:     { icon: "🧀", label: "Dairy" },
+  gluten:    { icon: "🌾", label: "Gluten" },
+  nuts:      { icon: "🥜", label: "Tree Nuts" },
+  peanuts:   { icon: "🥜", label: "Peanuts" },
+  fish:      { icon: "🐟", label: "Fish" },
+  shellfish: { icon: "🦐", label: "Shellfish" },
+  sesame:    { icon: "⚪", label: "Sesame" },
+  soy:       { icon: "🫘", label: "Soy" },
+  eggs:      { icon: "🥚", label: "Eggs" },
+};
+
+
+/* ─────────────────────────────────────────────
+   STATE
+   ───────────────────────────────────────────── */
+let activeCategory = "All";
+let searchQuery = "";
+let showCalories = true;
+
+
+/* ─────────────────────────────────────────────
+   HELPERS
+   ───────────────────────────────────────────── */
+const $ = (s) => document.querySelector(s);
+const categories = ["All", ...new Set(menuItems.map((i) => i.category))];
+
+function filteredItems() {
+  return menuItems.filter((item) => {
+    const catMatch = activeCategory === "All" || item.category === activeCategory;
+    const q = searchQuery.toLowerCase();
+    const textMatch =
+      !q ||
+      item.nameEn.toLowerCase().includes(q) ||
+      item.nameAr.includes(q) ||
+      item.descEn.toLowerCase().includes(q) ||
+      item.category.toLowerCase().includes(q);
+    return catMatch && textMatch;
+  });
+}
+
+
+/* ─────────────────────────────────────────────
+   RENDER — Category tabs
+   ───────────────────────────────────────────── */
+function renderTabs() {
+  const bar = $("#cat-bar");
+  bar.innerHTML = categories
+    .map((c) => {
+      const active = c === activeCategory;
+      return `<button data-cat="${c}" class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition whitespace-nowrap
+        ${active ? "bg-brand text-white shadow-md shadow-brand/25" : "bg-brandLt text-brand hover:bg-brand/10"}">${c}</button>`;
+    })
+    .join("");
+
+  bar.querySelectorAll("button").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      activeCategory = btn.dataset.cat;
+      renderTabs();
+      renderGrid();
+    })
+  );
+}
+
+
+/* ─────────────────────────────────────────────
+   RENDER — Menu grid cards
+   ───────────────────────────────────────────── */
+function renderGrid() {
+  const items = filteredItems();
+  const grid = $("#menu-grid");
+  const empty = $("#empty-state");
+  const counter = $("#item-count");
+
+  counter.textContent = `${items.length} item${items.length !== 1 ? "s" : ""}`;
+
+  if (!items.length) {
+    grid.innerHTML = "";
+    empty.classList.remove("hidden");
+    return;
+  }
+  empty.classList.add("hidden");
+
+  grid.innerHTML = items
+    .map(
+      (item, idx) => `
+    <article class="card-lift fade-up bg-white rounded-2xl overflow-hidden cursor-pointer border border-gray-100"
+             style="animation-delay:${Math.min(idx * 40, 400)}ms"
+             onclick="openModal(${item.id})">
+      <!-- Image -->
+      <div class="relative aspect-[4/3] bg-brandLt img-placeholder overflow-hidden">
+        <img src="${item.image}" alt="${item.nameEn}"
+             class="w-full h-full object-cover transition-opacity duration-300 opacity-0"
+             loading="lazy"
+             onload="this.classList.remove('opacity-0')"
+             onerror="this.style.display='none'" />
+        ${showCalories ? `<span class="absolute top-2 right-2 bg-white/90 backdrop-blur text-xs font-bold text-brand px-2 py-0.5 rounded-full shadow">${item.calories} cal</span>` : ""}
+      </div>
+      <!-- Info -->
+      <div class="p-3">
+        <h3 class="text-sm font-bold leading-tight truncate">${item.nameEn}</h3>
+        <p class="text-xs text-muted mt-0.5 truncate" dir="rtl">${item.nameAr}</p>
+        <p class="text-[11px] text-muted mt-1 line-clamp-2 leading-relaxed">${item.descEn}</p>
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-brand font-bold text-sm">${item.price} SAR</span>
+          <span class="text-[10px] text-muted">${item.size}</span>
+        </div>
+      </div>
+    </article>`
+    )
+    .join("");
+}
+
+
+/* ─────────────────────────────────────────────
+   MODAL — detail view
+   ───────────────────────────────────────────── */
+function openModal(id) {
+  const item = menuItems.find((i) => i.id === id);
+  if (!item) return;
+
+  const n = item.nutrition;
+  const totalMacro = (n.fat || 0) + (n.carbs || 0) + (n.protein || 0) || 1;
+
+  const allergenHTML = item.allergens.length
+    ? item.allergens
+        .map((a) => {
+          const m = allergenMeta[a] || { icon: "⚠️", label: a };
+          return `<span class="inline-flex items-center gap-1 bg-red-50 text-red-700 text-xs font-medium px-2.5 py-1 rounded-full">${m.icon} ${m.label}</span>`;
+        })
+        .join("")
+    : `<span class="text-xs text-green-600 font-medium">✓ No common allergens</span>`;
+
+  $("#modal-body").innerHTML = `
+    <!-- Image -->
+    <div class="aspect-[4/3] bg-brandLt img-placeholder overflow-hidden sm:rounded-t-2xl">
+      <img src="${item.image}" alt="${item.nameEn}"
+           class="w-full h-full object-cover"
+           onerror="this.style.display='none'" />
+    </div>
+
+    <div class="p-5 space-y-5">
+      <!-- Title + price -->
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-bold">${item.nameEn}</h2>
+          <p class="text-sm text-muted mt-0.5" dir="rtl">${item.nameAr}</p>
+        </div>
+        <span class="shrink-0 bg-brand text-white text-sm font-bold px-3 py-1 rounded-full">${item.price} SAR</span>
+      </div>
+
+      <!-- Description -->
+      <p class="text-sm text-muted leading-relaxed">${item.descEn}</p>
+      <p class="text-sm text-muted leading-relaxed" dir="rtl">${item.descAr}</p>
+
+      <!-- Nutrition facts -->
+      <div class="bg-sand rounded-xl p-4 space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted">Nutrition Facts</h3>
+        <div class="flex items-center justify-between">
+          <span class="text-2xl font-bold text-brand">${item.calories}</span>
+          <span class="text-xs text-muted">kcal per serving (${item.size})</span>
+        </div>
+
+        <!-- Macro bars -->
+        <div class="space-y-2">
+          ${macroBar("Fat", n.fat, totalMacro, "#F59E0B")}
+          ${macroBar("Carbs", n.carbs, totalMacro, "#7C5CFC")}
+          ${macroBar("Protein", n.protein, totalMacro, "#10B981")}
+          ${n.sugars ? macroBar("Sugars", n.sugars, totalMacro, "#F472B6") : ""}
+        </div>
+      </div>
+
+      <!-- Allergens -->
+      <div class="space-y-2">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted">Allergen Information</h3>
+        <div class="flex flex-wrap gap-2">${allergenHTML}</div>
+      </div>
+    </div>
+  `;
+
+  const backdrop = $("#modal-backdrop");
+  backdrop.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+
+  // Animate macro bars after paint
+  requestAnimationFrame(() => {
+    backdrop.querySelectorAll(".macro-bar-fill").forEach((bar) => {
+      bar.style.width = bar.dataset.width;
+    });
+  });
+}
+
+function macroBar(label, grams, total, color) {
+  const pct = Math.round((grams / total) * 100);
+  return `
+    <div class="flex items-center gap-2 text-xs">
+      <span class="w-14 text-muted font-medium">${label}</span>
+      <div class="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden">
+        <div class="macro-bar-fill h-full rounded-full" style="width:0;background:${color}" data-width="${pct}%"></div>
+      </div>
+      <span class="w-10 text-right font-bold">${grams}g</span>
+    </div>`;
+}
+
+function closeModal(e) {
+  if (e && e.target !== e.currentTarget && !e.currentTarget.id) return;
+  $("#modal-backdrop").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+// ESC key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeModal();
+});
+
+
+/* ─────────────────────────────────────────────
+   EVENT LISTENERS
+   ───────────────────────────────────────────── */
+// Search
+$("#search-input").addEventListener("input", (e) => {
+  searchQuery = e.target.value;
+  renderGrid();
+});
+
+// Calorie toggle
+$("#cal-toggle").addEventListener("click", () => {
+  showCalories = !showCalories;
+  $("#cal-toggle").classList.toggle("bg-brand", showCalories);
+  $("#cal-toggle").classList.toggle("text-white", showCalories);
+  $("#cal-toggle").classList.toggle("bg-brandLt", !showCalories);
+  $("#cal-toggle").classList.toggle("text-brand", !showCalories);
+  renderGrid();
+});
+
+
+/* ─────────────────────────────────────────────
+   INIT
+   ───────────────────────────────────────────── */
+renderTabs();
+renderGrid();
+</script>
+</body>
+</html>

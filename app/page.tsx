@@ -57,6 +57,8 @@ const T = {
     carbs: 'كربوهيدرات',
     protein: 'بروتين',
     sugars: 'سكر طبيعي',
+    saturatedFat: 'دهون مشبعة',
+    saturatedFatFree: '✓ خالي من الدهون المشبعة',
     allergenTitle: 'معلومات الحساسية',
     noAllergens: '✓ لا يحتوي على مسببات حساسية',
     sar: 'ر.س',
@@ -73,6 +75,8 @@ const T = {
     carbs: 'Carbs',
     protein: 'Protein',
     sugars: 'Natural Sugar',
+    saturatedFat: 'Saturated Fat',
+    saturatedFatFree: '✓ Saturated Fat Free',
     allergenTitle: 'Allergen Information',
     noAllergens: '✓ No common allergens',
     sar: 'SAR',
@@ -472,19 +476,26 @@ function ItemModal({ item, lang, showCalories, t, onClose }: {
                   {details.size ? t.perServing(details.size) : ''}
                 </span>
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${n.sugars ? 5 : 4}, 1fr)`, gap: 8, textAlign: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, textAlign: 'center', marginBottom: 12 }}>
                 {[
                   { val: item.calories, label: t.calories, highlight: true },
                   { val: `${n.fat}g`, label: t.fat },
                   { val: `${n.carbs}g`, label: t.carbs },
                   { val: `${n.protein}g`, label: t.protein },
-                  ...(n.sugars ? [{ val: `${n.sugars}g`, label: t.sugars }] : []),
+                  { val: `${n.sugars ?? 0}g`, label: t.sugars },
                 ].map(({ val, label, highlight }) => (
                   <div key={label}>
                     <p style={{ fontSize: 18, fontWeight: 700, color: highlight ? C.brand : C.ink }}>{val}</p>
                     <p style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{label}</p>
                   </div>
                 ))}
+              </div>
+              {/* Saturated Fat Free badge */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 10, borderTop: '1px solid #e8f5e9' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#e8f5e9', color: '#2e7d32', fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 50 }}>
+                  {t.saturatedFatFree}
+                </span>
+                <span style={{ fontSize: 11, color: C.muted }}>{t.saturatedFat}: 0g</span>
               </div>
             </div>
           )}

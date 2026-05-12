@@ -65,3 +65,37 @@ body {
 /* Admin scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
+/* Admin shared inputs */
+.admin-input, .admin-select {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  width: 100%;
+  outline: none;
+  background: white;
+  color: #1e293b;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+}
+.admin-input:focus, .admin-select:focus {
+  border-color: #25D366;
+  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.12);
+}
+.admin-input::placeholder { color: #94a3b8; }
+
+/* Admin icon buttons */
+.ibtn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: none; cursor: pointer; display: inline-flex;
+  align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.ibtn-edit { background: #f1f5f9; color: #64748b; }
+.ibtn-edit:hover { background: #dbeafe; color: #3b82f6; }
+.ibtn-del { background: #fef2f2; color: #ef4444; }
+.ibtn-del:hover { background: #fee2e2; color: #dc2626; }
+.ibtn-green { background: #dcfce7; color: #16a34a; }
+.ibtn-green:hover { background: #bbf7d0; color: #15803d; }

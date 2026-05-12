@@ -6,11 +6,28 @@ import { SEED_BRANCHES } from '@/lib/seed-data'
 
 interface Branch { id: number; name: string; location: string; is_active: boolean }
 
-const BRANCH_COLORS: Record<string, { text: string; bg: string }> = {
-  'Ar Rayyan': { text: '#5b8a3c', bg: '#eaf3e0' },
-  'Hittin': { text: '#7c3aed', bg: '#ede9fe' },
-  'Malqa': { text: '#2563eb', bg: '#dbeafe' },
+const BRANCH_CONFIG: Record<string, { color: string; bg: string; lightBg: string }> = {
+  'Ar Rayyan': { color: '#16a34a', bg: '#dcfce7', lightBg: '#f0fdf4' },
+  'Hittin':    { color: '#7c3aed', bg: '#ede9fe', lightBg: '#faf5ff' },
+  'Malqa':     { color: '#2563eb', bg: '#dbeafe', lightBg: '#eff6ff' },
 }
+
+const PencilIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+)
+const CloseIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+)
+const LocationIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+  </svg>
+)
 
 export default function BranchesPage() {
   const [branches, setBranches] = useState<Branch[]>([])
@@ -30,19 +47,14 @@ export default function BranchesPage() {
     try {
       if (modal.branch.id) {
         await supabase.from('branches').update({
-          name: modal.branch.name,
-          location: modal.branch.location,
-          is_active: modal.branch.is_active,
+          name: modal.branch.name, location: modal.branch.location, is_active: modal.branch.is_active,
         }).eq('id', modal.branch.id)
       } else {
         await supabase.from('branches').insert({
-          name: modal.branch.name,
-          location: modal.branch.location,
-          is_active: modal.branch.is_active ?? true,
+          name: modal.branch.name, location: modal.branch.location, is_active: modal.branch.is_active ?? true,
         })
       }
-      setModal({ open: false, branch: null })
-      loadData()
+      setModal({ open: false, branch: null }); loadData()
     } catch (e) { console.error(e) }
     setSaving(false)
   }
@@ -53,82 +65,85 @@ export default function BranchesPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Branches</h1>
-          <p className="text-sm text-gray-500 mt-1">{branches.length} branches · {branches.filter(b => b.is_active).length} active</p>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>Branches</h1>
+          <p style={{ fontSize: 13, color: '#64748b' }}>{branches.length} branches · {branches.filter(b => b.is_active).length} active</p>
         </div>
         <button onClick={() => setModal({ open: true, branch: { name: '', location: '', is_active: true } })}
-          className="px-4 py-2 rounded-xl text-white text-sm font-semibold hover:opacity-90"
-          style={{ background: '#5b8a3c' }}>
-          + Add Branch
+          style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#25D366', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,211,102,0.35)' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Branch
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
         {branches.map(branch => {
-          const colors = BRANCH_COLORS[branch.name] || { text: '#374151', bg: '#f3f4f6' }
+          const cfg = BRANCH_CONFIG[branch.name] ?? { color: '#374151', bg: '#f3f4f6', lightBg: '#f9fafb' }
           return (
-            <div key={branch.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
-                  style={{ background: colors.bg, color: colors.text }}>
-                  {branch.name.charAt(0)}
+            <div key={branch.id} style={{ background: 'white', borderRadius: 18, border: '1px solid #f1f5f9', boxShadow: '0 1px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+              {/* Colored top band */}
+              <div style={{ height: 5, background: cfg.color }} />
+              <div style={{ padding: '20px 20px 18px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 20, color: cfg.color }}>
+                    {branch.name.charAt(0)}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <button onClick={() => toggleActive(branch)} style={{
+                      fontSize: 11, padding: '4px 12px', borderRadius: 20, fontWeight: 700, border: 'none', cursor: 'pointer',
+                      background: branch.is_active ? '#dcfce7' : '#fef2f2',
+                      color: branch.is_active ? '#16a34a' : '#ef4444',
+                    }}>
+                      {branch.is_active ? 'Active' : 'Inactive'}
+                    </button>
+                    <button className="ibtn ibtn-edit" onClick={() => setModal({ open: true, branch: { ...branch } })} title="Edit">
+                      <PencilIcon />
+                    </button>
+                  </div>
                 </div>
-                <button onClick={() => toggleActive(branch)}
-                  className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
-                    branch.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-500'
-                  }`}>
-                  {branch.is_active ? 'Active' : 'Inactive'}
-                </button>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>{branch.name}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#94a3b8', fontSize: 13 }}>
+                  <LocationIcon />
+                  <span>{branch.location || 'No location set'}</span>
+                </div>
               </div>
-              <h3 className="font-bold text-gray-900">{branch.name}</h3>
-              <p className="text-xs text-gray-500 mt-1">{branch.location}</p>
-              <button onClick={() => setModal({ open: true, branch: { ...branch } })}
-                className="mt-4 w-full text-xs border border-gray-200 py-2 rounded-xl hover:bg-gray-50 font-medium text-gray-600">
-                Edit Branch
-              </button>
             </div>
           )
         })}
       </div>
 
+      {/* Modal */}
       {modal.open && modal.branch && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="font-bold text-gray-900">{modal.branch.id ? 'Edit Branch' : 'Add Branch'}</h2>
-              <button onClick={() => setModal({ open: false, branch: null })} className="text-gray-400 hover:text-gray-600">✕</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
+          <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 420, boxShadow: '0 25px 60px rgba(0,0,0,0.18)' }}>
+            <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{modal.branch.id ? 'Edit Branch' : 'Add Branch'}</h2>
+              <button className="ibtn ibtn-edit" onClick={() => setModal({ open: false, branch: null })}><CloseIcon /></button>
             </div>
-            <div className="p-5 space-y-4">
+            <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Branch Name</label>
-                <input type="text" value={modal.branch.name || ''}
-                  onChange={e => setModal(m => ({ ...m, branch: { ...m.branch!, name: e.target.value } }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none" />
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Branch Name</label>
+                <input type="text" value={modal.branch.name || ''} className="admin-input"
+                  onChange={e => setModal(m => ({ ...m, branch: { ...m.branch!, name: e.target.value } }))} />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Location</label>
-                <input type="text" value={modal.branch.location || ''}
-                  onChange={e => setModal(m => ({ ...m, branch: { ...m.branch!, location: e.target.value } }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none" />
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Location</label>
+                <input type="text" value={modal.branch.location || ''} className="admin-input"
+                  onChange={e => setModal(m => ({ ...m, branch: { ...m.branch!, location: e.target.value } }))} />
               </div>
-              <div className="flex items-center gap-2">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: '#f8fafc', borderRadius: 10 }}>
                 <input type="checkbox" id="active" checked={modal.branch.is_active ?? true}
                   onChange={e => setModal(m => ({ ...m, branch: { ...m.branch!, is_active: e.target.checked } }))} />
-                <label htmlFor="active" className="text-sm text-gray-700">Active</label>
+                <label htmlFor="active" style={{ fontSize: 13, fontWeight: 500, color: '#374151', cursor: 'pointer' }}>Branch is active</label>
               </div>
             </div>
-            <div className="p-5 border-t border-gray-100 flex gap-3">
-              <button onClick={() => setModal({ open: false, branch: null })}
-                className="flex-1 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50">
-                Cancel
-              </button>
-              <button onClick={saveBranch} disabled={saving}
-                className="flex-1 text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90"
-                style={{ background: '#5b8a3c' }}>
-                {saving ? 'Saving...' : 'Save'}
+            <div style={{ padding: '16px 20px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10 }}>
+              <button onClick={() => setModal({ open: false, branch: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={saveBranch} disabled={saving} style={{ flex: 2, padding: '11px', borderRadius: 12, border: 'none', background: '#25D366', fontSize: 13, fontWeight: 700, color: 'white', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+                {saving ? 'Saving...' : 'Save Branch'}
               </button>
             </div>
           </div>

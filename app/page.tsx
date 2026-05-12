@@ -161,7 +161,6 @@ export default function MenuPage() {
           {/* Logo */}
           <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
             <Image src="/logo.png" alt="Appetie" width={110} height={58} style={{ objectFit: 'contain', height: 38, width: 'auto' }} priority />
-            <div style={{ fontWeight: 700, fontSize: 12, color: C.brand }}>اباتاي</div>
           </a>
 
           {/* Search */}

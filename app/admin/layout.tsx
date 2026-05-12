@@ -22,8 +22,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <html lang="en" dir="ltr">
-      <body className="h-screen overflow-hidden bg-gray-50 font-sans text-gray-800 flex">
+    <div dir="ltr" className="h-screen overflow-hidden bg-gray-50 font-sans text-gray-800 flex">
         {/* Sidebar */}
         <div className={`${collapsed ? 'w-14' : 'w-52'} bg-white border-r border-gray-200 flex flex-col shrink-0 h-screen transition-all duration-200`}>
           {/* Logo */}
@@ -83,7 +82,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex-1 h-screen overflow-y-auto">
           {children}
         </div>
-      </body>
-    </html>
+    </div>
   )
 }

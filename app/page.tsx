@@ -410,7 +410,7 @@ function ItemModal({ item, lang, showCalories, t, onClose }: {
         }}
       >
         {/* Image */}
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', background: C.brandLt, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'relative', width: '100%', height: 200, background: C.brandLt, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {imgSrc ? (
             <>
               {!imgLoaded && <div className="shimmer" style={{ position: 'absolute', inset: 0 }} />}
@@ -460,13 +460,6 @@ function ItemModal({ item, lang, showCalories, t, onClose }: {
             )}
           </div>
 
-          {/* Description */}
-          {details?.descEn && (
-            <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
-              {lang === 'ar' ? details.descAr : details.descEn}
-            </p>
-          )}
-
           {/* Nutrition facts */}
           {n && (
             <div style={{ background: C.sand, borderRadius: 14, padding: 16, marginBottom: 16 }}>
@@ -498,6 +491,13 @@ function ItemModal({ item, lang, showCalories, t, onClose }: {
                 <span style={{ fontSize: 11, color: C.muted }}>{t.saturatedFat}: 0g</span>
               </div>
             </div>
+          )}
+
+          {/* Description */}
+          {details?.descEn && (
+            <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
+              {lang === 'ar' ? details.descAr : details.descEn}
+            </p>
           )}
 
           {/* Allergens */}

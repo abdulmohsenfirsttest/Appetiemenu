@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 
 const NAV = [
   { href: '/admin',            label: 'Dashboard',   icon: '⊞',  exact: true },
@@ -15,24 +16,35 @@ const NAV = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
+
+  // Login page: no sidebar, just render children
+  if (pathname === '/admin/login') {
+    return <>{children}</>
+  }
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href)
+
+  async function handleSignOut() {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    await supabase.auth.signOut()
+    router.push('/admin/login')
+    router.refresh()
+  }
 
   return (
     <div dir="ltr" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f8fafc', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
 
       {/* ── Sidebar ─────────────────────────────────── */}
       <aside style={{
-        width: collapsed ? 60 : 220,
-        flexShrink: 0,
-        background: '#0f172a',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        transition: 'width 0.2s ease',
-        overflow: 'hidden',
+        width: collapsed ? 60 : 220, flexShrink: 0,
+        background: '#0f172a', display: 'flex', flexDirection: 'column',
+        height: '100vh', transition: 'width 0.2s ease', overflow: 'hidden',
       }}>
         {/* Logo */}
         <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: 10, minHeight: 64 }}>
@@ -45,10 +57,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div style={{ fontSize: 10, color: '#64748b', whiteSpace: 'nowrap' }}>Admin Panel</div>
             </div>
           )}
-          <button
-            onClick={() => setCollapsed(c => !c)}
-            style={{ marginInlineStart: 'auto', background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: 16, flexShrink: 0, padding: 2 }}
-          >
+          <button onClick={() => setCollapsed(c => !c)}
+            style={{ marginInlineStart: 'auto', background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: 16, flexShrink: 0, padding: 2 }}>
             {collapsed ? '›' : '‹'}
           </button>
         </div>
@@ -65,13 +75,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 borderRadius: 8, marginBottom: 2, textDecoration: 'none',
                 background: active ? '#1e293b' : 'transparent',
                 color: active ? '#25D366' : '#94a3b8',
-                fontWeight: active ? 600 : 400,
-                fontSize: 13,
+                fontWeight: active ? 600 : 400, fontSize: 13,
                 transition: 'all 0.15s',
               }}
                 onMouseOver={e => { if (!active) e.currentTarget.style.background = '#1e293b' }}
-                onMouseOut={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
-              >
+                onMouseOut={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
                 <span style={{ fontSize: 15, flexShrink: 0 }}>{item.icon}</span>
                 {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
                 {!collapsed && active && <span style={{ marginInlineStart: 'auto', width: 6, height: 6, borderRadius: '50%', background: '#25D366', flexShrink: 0 }} />}
@@ -80,16 +88,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        {/* View menu link */}
-        <div style={{ padding: '12px 8px', borderTop: '1px solid #1e293b' }}>
+        {/* Bottom links */}
+        <div style={{ padding: '12px 8px', borderTop: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <Link href="/" target="_blank" style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: collapsed ? '8px 0' : '8px 12px',
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: collapsed ? '8px 0' : '8px 12px',
             justifyContent: collapsed ? 'center' : 'flex-start',
             borderRadius: 8, textDecoration: 'none', color: '#475569', fontSize: 12,
           }}>
             <span>↗</span>
             {!collapsed && <span>Customer Menu</span>}
           </Link>
+
+          {/* Sign Out */}
+          <button onClick={handleSignOut} style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: collapsed ? '8px 0' : '8px 12px',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            borderRadius: 8, background: 'none', border: 'none',
+            color: '#ef4444', fontSize: 12, cursor: 'pointer', width: '100%',
+            transition: 'background 0.15s',
+          }}
+            onMouseOver={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
+            onMouseOut={e => (e.currentTarget.style.background = 'none')}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            {!collapsed && <span>Sign Out</span>}
+          </button>
         </div>
       </aside>
 
@@ -98,8 +126,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Top bar */}
         <header style={{
           height: 56, background: 'white', borderBottom: '1px solid #e2e8f0',
-          display: 'flex', alignItems: 'center', padding: '0 24px',
-          flexShrink: 0,
+          display: 'flex', alignItems: 'center', padding: '0 24px', flexShrink: 0,
         }}>
           <div style={{ flex: 1 }}>
             <span style={{ fontSize: 13, color: '#64748b' }}>

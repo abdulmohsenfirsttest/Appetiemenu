@@ -86,7 +86,7 @@ export default function MenuPage() {
   const [lang, setLang] = useState<'ar' | 'en'>('ar')
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [showCalories, setShowCalories] = useState(true)
+  const showCalories = true
   const [modal, setModal] = useState<MenuItem | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -197,23 +197,6 @@ export default function MenuPage() {
               onBlur={e => e.currentTarget.style.borderColor = 'transparent'}
             />
           </div>
-
-          {/* Calories toggle */}
-          <button
-            onClick={() => setShowCalories(v => !v)}
-            title="Show / hide calories"
-            style={{
-              flexShrink: 0, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: showCalories ? C.brand : C.brandLt,
-              color: showCalories ? 'white' : C.brand,
-              transition: 'all 0.15s',
-            }}
-          >
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 18a8 8 0 110-16 8 8 0 010 16zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
-            </svg>
-          </button>
 
           {/* Language toggle */}
           <button

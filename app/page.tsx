@@ -488,7 +488,7 @@ function ItemModal({ item, lang, showCalories, t, onClose }: {
                   {t.saturatedFatFree}
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', background: C.brandLt, color: C.brand, fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 50 }}>
-                  {t.sugars}: {n.sugars ?? 0}g
+                  {t.sugars}
                 </span>
               </div>
             </div>

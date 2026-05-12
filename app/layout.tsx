@@ -6,7 +6,7 @@ const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "700", "800"
 const notoArabic = Noto_Sans_Arabic({ subsets: ["arabic"], weight: ["400", "700", "800"], variable: "--font-noto-arabic" });
 
 export const metadata: Metadata = {
-  title: "Appetie | أبيتي",
+  title: "Appetie | اباتاي",
   description: "Healthy food restaurant - Ar Rayyan, Hittin, Malqa",
 };
 

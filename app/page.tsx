@@ -160,15 +160,8 @@ export default function MenuPage() {
         <div style={{ maxWidth: 1024, margin: '0 auto', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Logo */}
           <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: C.brandLt, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2C7.03 2 3 6.03 3 11c0 3.9 2.34 7.24 5.71 8.78L8 22h8l-.71-2.22C18.66 18.24 21 14.9 21 11c0-4.97-4.03-9-9-9z" fill={C.brand}/>
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: 17, color: C.ink, lineHeight: 1.1 }}>Appetie</div>
-              <div style={{ fontWeight: 700, fontSize: 11, color: C.brand }}>أبيتي</div>
-            </div>
+            <Image src="/logo.png" alt="Appetie" width={110} height={58} style={{ objectFit: 'contain', height: 38, width: 'auto' }} priority />
+            <div style={{ fontWeight: 700, fontSize: 12, color: C.brand }}>اباتاي</div>
           </a>
 
           {/* Search */}
@@ -292,7 +285,7 @@ export default function MenuPage() {
       </main>
 
       <footer style={{ textAlign: 'center', padding: '24px 16px', borderTop: `1px solid ${C.brandLt}`, color: C.muted, fontSize: 12 }}>
-        Appetie · أبيتي · {lang === 'ar' ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}
+        Appetie · اباتاي · {lang === 'ar' ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}
       </footer>
 
       {/* ── Item detail modal ──────────────────────────────────────────── */}

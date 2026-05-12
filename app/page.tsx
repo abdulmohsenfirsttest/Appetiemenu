@@ -87,14 +87,42 @@ export default function MenuPage() {
   const [items, setItems] = useState<MenuItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [activeCategory, setActiveCategory] = useState('All')
+  const [scrollCategory, setScrollCategory] = useState('All')
   const [lang, setLang] = useState<'ar' | 'en'>('ar')
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const showCalories = true
   const [modal, setModal] = useState<MenuItem | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
+  const navRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { loadData() }, [])
+
+  // Auto-highlight tab based on scroll position
+  useEffect(() => {
+    if (activeCategory !== 'All' || loading) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const cat = entry.target.getAttribute('data-cat')
+            if (cat) setScrollCategory(cat)
+          }
+        })
+      },
+      { rootMargin: '-120px 0px -70% 0px', threshold: 0 }
+    )
+    const sections = document.querySelectorAll('[data-cat]')
+    sections.forEach(s => observer.observe(s))
+    return () => observer.disconnect()
+  }, [activeCategory, loading, items])
+
+  // Scroll active tab into view when scrollCategory changes
+  useEffect(() => {
+    if (!navRef.current) return
+    const btn = navRef.current.querySelector(`[data-tab="${scrollCategory}"]`) as HTMLElement
+    btn?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [scrollCategory])
 
   async function loadData() {
     try {
@@ -218,23 +246,29 @@ export default function MenuPage() {
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
         borderBottom: `1px solid ${C.brandLt}`,
       }}>
-        <div className="scrollbar-hide" style={{ overflowX: 'auto' }}>
+        <div ref={navRef} className="scrollbar-hide" style={{ overflowX: 'auto' }}>
           <div style={{ display: 'flex', gap: 8, padding: '10px 16px', minWidth: 'max-content', maxWidth: 1024, margin: '0 auto' }}>
-            {['All', ...usedCategoryNames].map(name => (
-              <button
-                key={name}
-                onClick={() => setActiveCategory(name)}
-                style={{
-                  padding: '7px 18px', borderRadius: 50, fontSize: 13, fontWeight: 600,
-                  whiteSpace: 'nowrap', cursor: 'pointer', border: 'none', transition: 'all 0.15s',
-                  background: activeCategory === name ? C.brand : C.brandLt,
-                  color: activeCategory === name ? 'white' : C.brand,
-                  boxShadow: activeCategory === name ? `0 4px 12px ${C.brand}40` : 'none',
-                }}
-              >
-                {catLabel(name)}
-              </button>
-            ))}
+            {['All', ...usedCategoryNames].map(name => {
+              const isActive = activeCategory === 'All'
+                ? scrollCategory === name
+                : activeCategory === name
+              return (
+                <button
+                  key={name}
+                  data-tab={name}
+                  onClick={() => { setActiveCategory(name); setScrollCategory(name) }}
+                  style={{
+                    padding: '7px 18px', borderRadius: 50, fontSize: 13, fontWeight: 600,
+                    whiteSpace: 'nowrap', cursor: 'pointer', border: 'none', transition: 'all 0.2s',
+                    background: isActive ? C.brand : C.brandLt,
+                    color: isActive ? 'white' : C.brand,
+                    boxShadow: isActive ? `0 4px 12px ${C.brand}40` : 'none',
+                  }}
+                >
+                  {catLabel(name)}
+                </button>
+              )
+            })}
           </div>
         </div>
       </nav>
@@ -267,7 +301,7 @@ export default function MenuPage() {
         ) : activeCategory === 'All' ? (
           // Grouped view
           Object.entries(grouped).map(([catName, catItems]) => (
-            <div key={catName} style={{ marginBottom: 32 }}>
+            <div key={catName} data-cat={catName} style={{ marginBottom: 32 }}>
               <h2 dir={dir} style={{ fontWeight: 700, fontSize: 15, color: C.ink, borderBottom: '1px solid #f0f0f0', paddingBottom: 8, marginBottom: 16 }}>
                 {catLabel(catName)}
               </h2>

@@ -15,8 +15,23 @@ function StatCard({ label, value, color = '#0f172a', bg = '#f8fafc' }: { label: 
 
 export default function BakeryDashboard() {
   const [summary, setSummary] = useState<Summary | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => { bakeryApi.reports.summary().then(setSummary).catch(() => {}) }, [])
+  useEffect(() => {
+    bakeryApi.reports.summary()
+      .then(setSummary)
+      .catch(e => setError(e?.message || 'Failed to load dashboard'))
+  }, [])
+
+  if (error) return (
+    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: 24, color: '#dc2626' }}>
+      <div style={{ fontWeight: 700, marginBottom: 8 }}>Could not load dashboard</div>
+      <div style={{ fontSize: 13, fontFamily: 'monospace' }}>{error}</div>
+      <div style={{ marginTop: 12, fontSize: 12, color: '#7f1d1d' }}>
+        Make sure you have run <code>bakery-schema.sql</code> in Supabase and that your <code>.env.local</code> keys are correct.
+      </div>
+    </div>
+  )
 
   if (!summary) return <div style={{ color: '#94a3b8' }}>Loading…</div>
 

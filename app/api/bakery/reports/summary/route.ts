@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/bakery-db'
 
 export async function GET() {
+  try {
   const supabase = getServiceClient()
   const today = new Date().toISOString().slice(0, 10)
 
@@ -29,4 +30,7 @@ export async function GET() {
     pendingOrders: pending,
     lowStock,
   })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Server error' }, { status: 500 })
+  }
 }

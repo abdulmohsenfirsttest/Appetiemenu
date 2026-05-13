@@ -12,6 +12,7 @@ const NAV = [
   { href: '/admin/categories', label: 'Categories',   icon: '◫' },
   { href: '/admin/hr',         label: 'HR & Payroll', icon: '👤' },
   { href: '/admin/branches',   label: 'Branches',     icon: '◉' },
+  { href: '/admin/bakery',     label: 'Bakery Manager', icon: '🥐' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

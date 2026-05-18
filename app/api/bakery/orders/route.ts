@@ -23,8 +23,15 @@ export async function GET(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const { data: items } = await supabase.from('bakery_order_items').select('*')
+  const orderIds = (orders || []).map(o => o.id)
+  const { data: activities } = orderIds.length
+    ? await supabase.from('bakery_activity').select('order_id,photo_url').in('order_id', orderIds).not('photo_url', 'is', null)
+    : { data: [] }
+  const photoMap: Record<number, string> = {}
+  for (const a of (activities || [])) if (a.photo_url) photoMap[a.order_id] = a.photo_url
   const result = (orders || []).map(o => ({
     ...o,
+    photo_url: photoMap[o.id] || null,
     items: (items || []).filter(i => i.order_id === o.id),
   }))
   return NextResponse.json(result)

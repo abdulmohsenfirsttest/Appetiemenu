@@ -523,7 +523,7 @@ export default function HRPage() {
                   <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Restaurant</label>
                   <input list="restaurants" type="text" value={modal.emp.restaurant || ''} className="admin-input"
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, restaurant: e.target.value } }))} />
-                  <datalist id="restaurants"><option value="Appetie" /><option value="Ghabashi" /><option value="Manager Supervised" /></datalist>
+                  <datalist id="restaurants"><option value="Appetie" /><option value="Ghabashi" /><option value="Piece Bakery" /></datalist>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Vacation Status</label>

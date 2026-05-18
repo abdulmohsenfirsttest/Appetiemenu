@@ -1,70 +1,55 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { bakeryApi } from '@/lib/bakery-api'
+import Link from 'next/link'
+import { SEED_EMPLOYEES } from '@/lib/seed-data'
 
-type Summary = { todayRevenue: number; todayOrders: number; totalProducts: number; totalCustomers: number; pendingOrders: number; lowStock: { id: number; name: string; stock: number }[] }
+const RESTAURANTS = [
+  { name: 'Ghabashi', slug: 'ghabashi', key: 'Ghabashi', color: '#7c3aed', bg: '#ede9fe', emoji: '🏪' },
+  { name: 'Appetie', slug: 'appetie', key: 'Appetie', color: '#16a34a', bg: '#dcfce7', emoji: '🥗' },
+  { name: 'Piece Bakery', slug: 'piece-bakery', key: 'Piece Bakery', color: '#c8733a', bg: '#fff7ed', emoji: '🥐' },
+]
 
-function StatCard({ label, value, color = '#0f172a', bg = '#f8fafc' }: { label: string; value: string | number; color?: string; bg?: string }) {
-  return (
-    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px 24px', boxShadow: '0 1px 3px rgba(0,0,0,.06)' }}>
-      <div style={{ fontSize: 26, fontWeight: 800, color }}>{value}</div>
-      <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginTop: 4 }}>{label}</div>
-    </div>
-  )
-}
-
-export default function BakeryDashboard() {
-  const [summary, setSummary] = useState<Summary | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    bakeryApi.reports.summary()
-      .then(setSummary)
-      .catch(e => setError(e?.message || 'Failed to load dashboard'))
-  }, [])
-
-  if (error) return (
-    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: 24, color: '#dc2626' }}>
-      <div style={{ fontWeight: 700, marginBottom: 8 }}>Could not load dashboard</div>
-      <div style={{ fontSize: 13, fontFamily: 'monospace' }}>{error}</div>
-      <div style={{ marginTop: 12, fontSize: 12, color: '#7f1d1d' }}>
-        Make sure you have run <code>bakery-schema.sql</code> in Supabase and that your <code>.env.local</code> keys are correct.
-      </div>
-    </div>
-  )
-
-  if (!summary) return <div style={{ color: '#94a3b8' }}>Loading…</div>
-
+export default function ManagerSupervisedDashboard() {
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard label="Today's Revenue" value={`$${summary.todayRevenue.toFixed(2)}`} color="#16a34a" />
-        <StatCard label="Today's Orders" value={summary.todayOrders} color="#1d4ed8" />
-        <StatCard label="Pending Orders" value={summary.pendingOrders} color="#d97706" />
-        <StatCard label="Products" value={summary.totalProducts} />
-        <StatCard label="Customers" value={summary.totalCustomers} />
-      </div>
-
-      {summary.lowStock.length > 0 && (
-        <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, color: '#c2410c', fontSize: 14, marginBottom: 10 }}>⚠ Low Stock Alert</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {summary.lowStock.map(p => (
-              <span key={p.id} style={{ background: '#fed7aa', color: '#9a3412', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600 }}>
-                {p.name}: {p.stock} left
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20 }}>
-        <div style={{ fontWeight: 700, marginBottom: 10 }}>Quick links</div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {[['Orders', '/admin/bakery/orders'], ['Products', '/admin/bakery/products'], ['Activity Log', '/admin/bakery/activity'], ['Staff', '/admin/bakery/staff']].map(([label, href]) => (
-            <a key={href} href={href} style={{ padding: '8px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#374151', textDecoration: 'none' }}>{label}</a>
-          ))}
-        </div>
+      <p style={{ fontSize: 13, color: '#64748b', marginBottom: 24 }}>Select a restaurant to view its staff dashboard</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
+        {RESTAURANTS.map(r => {
+          const emps = SEED_EMPLOYEES.filter(e => e.restaurant === r.key)
+          const supervisors = emps.filter(e => e.position === 'Supervisor' || e.position === 'Manager' || e.position === 'Operation Manager')
+          const branches = [...new Set(emps.map(e => e.branch).filter(Boolean))]
+          const totalSalary = emps.reduce((s, e) => s + e.basic_salary, 0)
+          return (
+            <Link key={r.slug} href={`/admin/bakery/${r.slug}`} style={{ textDecoration: 'none' }}>
+              <div style={{ background: 'white', border: `2px solid ${r.color}25`, borderRadius: 16, padding: 28, cursor: 'pointer', transition: 'box-shadow .15s', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}
+                onMouseOver={e => (e.currentTarget.style.boxShadow = `0 6px 20px ${r.color}30`)}
+                onMouseOut={e => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,.06)')}>
+                <div style={{ fontSize: 40, marginBottom: 14 }}>{r.emoji}</div>
+                <div style={{ fontWeight: 800, fontSize: 20, color: '#0f172a', marginBottom: 12 }}>{r.name}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: '#64748b' }}>Total Staff</span>
+                    <span style={{ fontWeight: 700, color: r.color }}>{emps.length}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: '#64748b' }}>Supervisors</span>
+                    <span style={{ fontWeight: 700, color: '#0f172a' }}>{supervisors.length}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: '#64748b' }}>Total Salary</span>
+                    <span style={{ fontWeight: 700, color: '#0f172a' }}>{totalSalary.toLocaleString()} SAR</span>
+                  </div>
+                  {branches.length > 0 && (
+                    <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {branches.map(b => (
+                        <span key={b} style={{ background: r.bg, color: r.color, padding: '2px 8px', borderRadius: 99, fontSize: 11, fontWeight: 600 }}>{b}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Link>
+          )
+        })}
       </div>
     </div>
   )

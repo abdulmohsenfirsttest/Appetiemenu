@@ -26,7 +26,7 @@ export default function BakeryLogin() {
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>🥐</div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#2d1f14' }}>BakeryPro</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#2d1f14' }}>Manager Supervised</h1>
           <p style={{ color: '#7a6355', fontSize: 13, marginTop: 4 }}>Staff Portal — Sign in to your account</p>
         </div>
         <div style={{ background: 'white', border: '1px solid #e8ddd0', borderRadius: 16, padding: 28, boxShadow: '0 4px 20px rgba(0,0,0,.06)' }}>

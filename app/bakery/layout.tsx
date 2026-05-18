@@ -35,7 +35,7 @@ export default function BakeryLayout({ children }: { children: React.ReactNode }
       <aside style={{ width: 200, background: '#2d1f14', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed' }}>
         <div style={{ padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,.1)' }}>
           <div style={{ fontSize: 22, marginBottom: 4 }}>🥐</div>
-          <div style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>BakeryPro</div>
+          <div style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>Manager Supervised</div>
           <div style={{ color: 'rgba(255,255,255,.4)', fontSize: 11 }}>Staff Portal</div>
         </div>
         <nav style={{ flex: 1, padding: '12px 8px' }}>

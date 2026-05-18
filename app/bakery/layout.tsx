@@ -23,6 +23,7 @@ export default function BakeryLayout({ children }: { children: React.ReactNode }
   const NAV = [
     { href: '/bakery/dashboard', label: '📊 Dashboard' },
     { href: '/bakery/orders', label: '🛒 Orders' },
+    { href: '/bakery/ghabashi', label: '🏪 Ghabashi Checklist' },
   ]
 
   async function logout() {

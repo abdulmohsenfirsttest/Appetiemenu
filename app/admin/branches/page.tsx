@@ -69,7 +69,7 @@ export default function BranchesPage() {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>Branches</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>Branches</h1>
           <p style={{ fontSize: 13, color: '#64748b' }}>{branches.length} branches · {branches.filter(b => b.is_active).length} active</p>
         </div>
         <button onClick={() => setModal({ open: true, branch: { name: '', location: '', is_active: true } })}
@@ -83,7 +83,7 @@ export default function BranchesPage() {
         {branches.map(branch => {
           const cfg = BRANCH_CONFIG[branch.name] ?? { color: '#374151', bg: '#f3f4f6', lightBg: '#f9fafb' }
           return (
-            <div key={branch.id} style={{ background: 'white', borderRadius: 18, border: '1px solid #f1f5f9', boxShadow: '0 1px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+            <div key={branch.id} style={{ background: 'var(--admin-card)', borderRadius: 18, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
               {/* Colored top band */}
               <div style={{ height: 5, background: cfg.color }} />
               <div style={{ padding: '20px 20px 18px' }}>
@@ -104,7 +104,7 @@ export default function BranchesPage() {
                     </button>
                   </div>
                 </div>
-                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>{branch.name}</h3>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 6 }}>{branch.name}</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#94a3b8', fontSize: 13 }}>
                   <LocationIcon />
                   <span>{branch.location || 'No location set'}</span>
@@ -118,9 +118,9 @@ export default function BranchesPage() {
       {/* Modal */}
       {modal.open && modal.branch && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
-          <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 420, boxShadow: '0 25px 60px rgba(0,0,0,0.18)' }}>
-            <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{modal.branch.id ? 'Edit Branch' : 'Add Branch'}</h2>
+          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 420, boxShadow: '0 25px 60px rgba(0,0,0,0.18)' }}>
+            <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--admin-text)' }}>{modal.branch.id ? 'Edit Branch' : 'Add Branch'}</h2>
               <button className="ibtn ibtn-edit" onClick={() => setModal({ open: false, branch: null })}><CloseIcon /></button>
             </div>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -134,14 +134,14 @@ export default function BranchesPage() {
                 <input type="text" value={modal.branch.location || ''} className="admin-input"
                   onChange={e => setModal(m => ({ ...m, branch: { ...m.branch!, location: e.target.value } }))} />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: '#f8fafc', borderRadius: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'var(--admin-subcard)', borderRadius: 10 }}>
                 <input type="checkbox" id="active" checked={modal.branch.is_active ?? true}
                   onChange={e => setModal(m => ({ ...m, branch: { ...m.branch!, is_active: e.target.checked } }))} />
                 <label htmlFor="active" style={{ fontSize: 13, fontWeight: 500, color: '#374151', cursor: 'pointer' }}>Branch is active</label>
               </div>
             </div>
-            <div style={{ padding: '16px 20px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10 }}>
-              <button onClick={() => setModal({ open: false, branch: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
+            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--admin-border2)', display: 'flex', gap: 10 }}>
+              <button onClick={() => setModal({ open: false, branch: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: 'var(--admin-text)', cursor: 'pointer' }}>Cancel</button>
               <button onClick={saveBranch} disabled={saving} style={{ flex: 2, padding: '11px', borderRadius: 12, border: 'none', background: '#25D366', fontSize: 13, fontWeight: 700, color: 'white', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving...' : 'Save Branch'}
               </button>

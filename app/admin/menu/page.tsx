@@ -46,7 +46,7 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
     }}>
       <span style={{
         position: 'absolute', top: 2, left: on ? 20 : 2,
-        width: 18, height: 18, borderRadius: '50%', background: 'white',
+        width: 18, height: 18, borderRadius: '50%', background: 'var(--admin-card)',
         transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
       }} />
     </button>
@@ -57,16 +57,16 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 function ConfirmDialog({ name, onConfirm, onCancel }: { name: string; onConfirm: () => void; onCancel: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-      <div style={{ background: 'white', borderRadius: 20, padding: '32px 28px', maxWidth: 360, width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
+      <div style={{ background: 'var(--admin-card)', borderRadius: 20, padding: '32px 28px', maxWidth: 360, width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
         <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#ef4444' }}>
           <TrashIcon size={22} />
         </div>
-        <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Delete Item?</h3>
+        <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 8 }}>Delete Item?</h3>
         <p style={{ fontSize: 13, color: '#64748b', marginBottom: 28 }}>
           <strong>"{name}"</strong> will be permanently removed.
         </p>
         <div style={{ display: 'flex', gap: 12 }}>
-          <button onClick={onCancel} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
+          <button onClick={onCancel} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
           <button onClick={onConfirm} style={{ flex: 1, padding: '11px', borderRadius: 12, border: 'none', background: '#ef4444', fontSize: 13, fontWeight: 600, color: 'white', cursor: 'pointer' }}>Delete</button>
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function MenuManagement() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>Menu Management</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>Menu Management</h1>
           <p style={{ fontSize: 13, color: '#64748b' }}>{items.length} items · {items.filter(i => i.is_available).length} available</p>
         </div>
         <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#25D366', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,211,102,0.35)' }}>
@@ -225,7 +225,7 @@ export default function MenuManagement() {
       </div>
 
       {/* Table */}
-      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
@@ -250,7 +250,7 @@ export default function MenuManagement() {
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <p style={{ fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>{item.name_en}</p>
+                    <p style={{ fontWeight: 600, color: 'var(--admin-text)', marginBottom: 2 }}>{item.name_en}</p>
                     <p style={{ fontSize: 12, color: '#94a3b8' }}>{item.name_ar}</p>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
@@ -288,10 +288,10 @@ export default function MenuManagement() {
       {/* Edit / Add Modal */}
       {modal.open && modal.item && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
-          <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 520, boxShadow: '0 25px 60px rgba(0,0,0,0.18)', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 520, boxShadow: '0 25px 60px rgba(0,0,0,0.18)', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Modal header */}
-            <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{modal.item.id ? 'Edit Item' : 'Add New Item'}</h2>
+            <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--admin-text)' }}>{modal.item.id ? 'Edit Item' : 'Add New Item'}</h2>
               <button onClick={() => setModal({ open: false, item: null })} className="ibtn ibtn-edit"><CloseIcon /></button>
             </div>
 
@@ -301,12 +301,12 @@ export default function MenuManagement() {
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Image</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 72, height: 72, borderRadius: 12, overflow: 'hidden', background: '#f8fafc', position: 'relative', border: '1.5px solid #e2e8f0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
+                  <div style={{ width: 72, height: 72, borderRadius: 12, overflow: 'hidden', background: '#f8fafc', position: 'relative', border: '1.5px solid var(--admin-border)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
                     {imagePreview ? <Image src={imagePreview} alt="preview" fill style={{ objectFit: 'cover' }} sizes="72px" /> : '🥗'}
                   </div>
                   <div>
                     <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
-                    <button onClick={() => fileRef.current?.click()} style={{ padding: '8px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+                    <button onClick={() => fileRef.current?.click()} style={{ padding: '8px 14px', border: '1.5px solid var(--admin-border)', borderRadius: 10, background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
                       Change Image
                     </button>
                     <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>JPG, PNG, WebP · Max 5MB</p>
@@ -354,7 +354,7 @@ export default function MenuManagement() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: '#f8fafc', borderRadius: 10 }}>
                 <Toggle on={modal.item.is_available ?? true} onToggle={() => setModal(m => ({ ...m, item: { ...m.item!, is_available: !m.item!.is_available } }))} />
                 <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>Available on menu</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--admin-text)' }}>Available on menu</p>
                   <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>Customers can see and order this item</p>
                 </div>
               </div>
@@ -362,7 +362,7 @@ export default function MenuManagement() {
 
             {/* Modal footer */}
             <div style={{ padding: '16px 20px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10 }}>
-              <button onClick={() => setModal({ open: false, item: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+              <button onClick={() => setModal({ open: false, item: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
                 Cancel
               </button>
               <button onClick={saveItem} disabled={saving} style={{ flex: 2, padding: '11px', borderRadius: 12, border: 'none', background: '#25D366', fontSize: 13, fontWeight: 700, color: 'white', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>

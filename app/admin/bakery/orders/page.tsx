@@ -49,11 +49,11 @@ export default function BakeryOrders() {
       <div style={{ fontSize: 12, color: '#64748b', marginBottom: 20 }}>{visible.length} orders · {revenue.toFixed(2)} SAR revenue</div>
 
       {/* Date filter */}
-      <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ background: 'var(--admin-card)', border: '1px solid var(--admin-border)', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>📅 Date range:</span>
-        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} style={{ padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13 }} />
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} style={{ padding: '6px 10px', border: '1px solid var(--admin-border)', borderRadius: 8, fontSize: 13, background: 'var(--admin-input)', color: 'var(--admin-text)' }} />
         <span style={{ color: '#94a3b8' }}>to</span>
-        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} style={{ padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13 }} />
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} style={{ padding: '6px 10px', border: '1px solid var(--admin-border)', borderRadius: 8, fontSize: 13, background: 'var(--admin-input)', color: 'var(--admin-text)' }} />
         {(dateFrom || dateTo) && <button onClick={() => { setDateFrom(''); setDateTo('') }} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: 12 }}>Clear</button>}
       </div>
 
@@ -68,12 +68,12 @@ export default function BakeryOrders() {
         ))}
       </div>
 
-      <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--admin-card)', border: '1px solid var(--admin-border)', borderRadius: 12, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ background: '#f8fafc' }}>
+            <tr style={{ background: 'var(--admin-thead)' }}>
               {['#', 'Customer', 'Created By', 'Total', 'Status', 'Date', ''].map(h => (
-                <th key={h} style={{ padding: '10px 16px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#64748b', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                <th key={h} style={{ padding: '10px 16px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#64748b', textAlign: 'left', borderBottom: '1px solid var(--admin-border)' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -81,7 +81,7 @@ export default function BakeryOrders() {
             {visible.map(o => {
               const sc = STATUS_COLORS[o.status] || { bg: '#f8fafc', color: '#64748b' }
               return (
-                <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <tr key={o.id} style={{ borderBottom: '1px solid var(--admin-border2)' }}>
                   <td style={{ padding: '12px 16px', fontWeight: 700, color: '#94a3b8', fontSize: 12 }}>#{String(o.id).padStart(4, '0')}</td>
                   <td style={{ padding: '12px 16px' }}>
                     <button onClick={() => setModal(o)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 700, fontSize: 14, color: '#c8733a', textDecoration: 'underline', textDecorationColor: '#c8733a50' }}>
@@ -116,11 +116,11 @@ export default function BakeryOrders() {
       {/* Order Detail Modal */}
       {modal && (
         <div onClick={() => setModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--admin-card)', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
             {/* Header */}
-            <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--admin-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontWeight: 800, fontSize: 18, color: '#0f172a' }}>{modal.customer_name}</div>
+                <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--admin-text)' }}>{modal.customer_name}</div>
                 <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Order #{String(modal.id).padStart(4, '0')} · {new Date(modal.created_at).toLocaleString()}</div>
               </div>
               <button onClick={() => setModal(null)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 16, color: '#475569' }}>✕</button>
@@ -153,7 +153,7 @@ export default function BakeryOrders() {
                 {(modal.items || []).length === 0
                   ? <div style={{ fontSize: 13, color: '#94a3b8' }}>No items</div>
                   : (modal.items || []).map(item => (
-                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--admin-border2)' }}>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 13 }}>{item.product_name}</div>
                         <div style={{ fontSize: 11, color: '#94a3b8' }}>× {item.quantity} · {Number(item.price).toFixed(2)} SAR each</div>
@@ -173,8 +173,8 @@ export default function BakeryOrders() {
               )}
 
               {/* Total */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px solid #e2e8f0', paddingTop: 14 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>Total</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px solid var(--admin-border)', paddingTop: 14 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--admin-text)' }}>Total</div>
                 <div style={{ fontWeight: 800, fontSize: 20, color: '#c8733a' }}>{Number(modal.total).toFixed(2)} SAR</div>
               </div>
             </div>

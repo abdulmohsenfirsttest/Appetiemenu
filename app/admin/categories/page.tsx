@@ -91,7 +91,7 @@ export default function CategoriesPage() {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>Categories</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>Categories</h1>
           <p style={{ fontSize: 13, color: '#64748b' }}>{categories.length} categories total</p>
         </div>
         <button onClick={() => setModal({ open: true, cat: { name_en: '', name_ar: '', sort_order: categories.length + 1 } })}
@@ -103,10 +103,10 @@ export default function CategoriesPage() {
 
       {status && <div style={{ padding: '10px 16px', background: '#fef2f2', borderRadius: 10, fontSize: 13, color: '#dc2626', border: '1px solid #fecaca' }}>{status}</div>}
 
-      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
-            <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #f1f5f9' }}>
+            <tr style={{ background: 'var(--admin-thead)', borderBottom: '1.5px solid var(--admin-border2)' }}>
               {['#', 'English Name', 'Arabic Name', 'Order', 'Actions'].map((h, i) => (
                 <th key={h} style={{ padding: '11px 20px', textAlign: i === 4 ? 'center' : 'left', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
               ))}
@@ -123,7 +123,7 @@ export default function CategoriesPage() {
                     <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>{cat.id}</span>
                   </div>
                 </td>
-                <td style={{ padding: '13px 20px', fontWeight: 600, color: '#0f172a' }}>{cat.name_en}</td>
+                <td style={{ padding: '13px 20px', fontWeight: 600, color: 'var(--admin-text)' }}>{cat.name_en}</td>
                 <td style={{ padding: '13px 20px', color: '#475569' }} dir="rtl">{cat.name_ar}</td>
                 <td style={{ padding: '13px 20px' }}>
                   <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: '#f1f5f9', color: '#64748b', fontWeight: 600 }}>{cat.sort_order}</span>
@@ -143,9 +143,9 @@ export default function CategoriesPage() {
       {/* Modal */}
       {modal.open && modal.cat && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
-          <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 440, boxShadow: '0 25px 60px rgba(0,0,0,0.18)' }}>
-            <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{modal.cat.id ? 'Edit Category' : 'Add Category'}</h2>
+          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 440, boxShadow: '0 25px 60px rgba(0,0,0,0.18)' }}>
+            <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--admin-text)' }}>{modal.cat.id ? 'Edit Category' : 'Add Category'}</h2>
               <button className="ibtn ibtn-edit" onClick={() => setModal({ open: false, cat: null })}><CloseIcon /></button>
             </div>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -165,8 +165,8 @@ export default function CategoriesPage() {
                   onChange={e => setModal(m => ({ ...m, cat: { ...m.cat!, sort_order: Number(e.target.value) } }))} />
               </div>
             </div>
-            <div style={{ padding: '16px 20px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10 }}>
-              <button onClick={() => setModal({ open: false, cat: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
+            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--admin-border2)', display: 'flex', gap: 10 }}>
+              <button onClick={() => setModal({ open: false, cat: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: 'var(--admin-text)', cursor: 'pointer' }}>Cancel</button>
               <button onClick={saveCat} disabled={saving} style={{ flex: 2, padding: '11px', borderRadius: 12, border: 'none', background: '#25D366', fontSize: 13, fontWeight: 700, color: 'white', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving...' : 'Save Category'}
               </button>

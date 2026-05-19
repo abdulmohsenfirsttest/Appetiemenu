@@ -64,14 +64,14 @@ const CloseIcon = () => (
 function ConfirmDialog({ name, onConfirm, onCancel }: { name: string; onConfirm: () => void; onCancel: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-      <div style={{ background: 'white', borderRadius: 20, padding: '32px 28px', maxWidth: 360, width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
+      <div style={{ background: 'var(--admin-card)', borderRadius: 20, padding: '32px 28px', maxWidth: 360, width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
         <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#ef4444' }}>
           <TrashIcon size={22} />
         </div>
-        <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Remove Employee?</h3>
+        <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 8 }}>Remove Employee?</h3>
         <p style={{ fontSize: 13, color: '#64748b', marginBottom: 28 }}><strong>"{name}"</strong> will be permanently removed.</p>
         <div style={{ display: 'flex', gap: 12 }}>
-          <button onClick={onCancel} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
+          <button onClick={onCancel} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
           <button onClick={onConfirm} style={{ flex: 1, padding: '11px', borderRadius: 12, border: 'none', background: '#ef4444', fontSize: 13, fontWeight: 600, color: 'white', cursor: 'pointer' }}>Remove</button>
         </div>
       </div>
@@ -255,12 +255,12 @@ export default function HRPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>HR & Payroll</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>HR & Payroll</h1>
           <p style={{ fontSize: 13, color: '#64748b' }}>{employees.length} employees · Current month payroll</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* OT Multiplier */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 10, padding: '6px 10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--admin-card)', border: '1.5px solid var(--admin-border)', borderRadius: 10, padding: '6px 10px' }}>
             <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginRight: 4 }}>OT:</span>
             {[1.0, 1.25, 1.5].map(v => (
               <button key={v} onClick={() => handleMultiplierChange(v)} style={{
@@ -282,13 +282,13 @@ export default function HRPage() {
       {/* Summary Cards */}
       {loading ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
-          {Array.from({ length: 7 }).map((_, i) => <div key={i} style={{ height: 80, background: 'white', borderRadius: 14, border: '1px solid #f1f5f9' }} className="shimmer" />)}
+          {Array.from({ length: 7 }).map((_, i) => <div key={i} style={{ height: 80, background: 'var(--admin-card)', borderRadius: 14, border: '1px solid var(--admin-border2)' }} className="shimmer" />)}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
           {summaryCards.map((card, i) => (
-            <div key={i} style={{ background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', borderTop: `3px solid ${card.color}` }}>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', lineHeight: 1.1, marginTop: 4 }}>{card.value}</div>
+            <div key={i} style={{ background: 'var(--admin-card)', borderRadius: 14, padding: '14px 16px', border: '1px solid var(--admin-border2)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', borderTop: `3px solid ${card.color}` }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--admin-text)', lineHeight: 1.1, marginTop: 4 }}>{card.value}</div>
               <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{card.label}</div>
             </div>
           ))}
@@ -299,8 +299,8 @@ export default function HRPage() {
       {!loading && (topOT.length > 0 || branchSalary.length > 0) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {topOT.length > 0 && (
-            <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 14 }}>Top OT Hours</h3>
+            <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>Top OT Hours</h3>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={topOT} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
@@ -312,8 +312,8 @@ export default function HRPage() {
             </div>
           )}
           {branchSalary.length > 0 && (
-            <div style={{ background: 'white', borderRadius: 16, padding: 20, border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 14 }}>Net Pay by Branch</h3>
+            <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>Net Pay by Branch</h3>
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
                   <Pie data={branchSalary} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
@@ -344,18 +344,18 @@ export default function HRPage() {
           <option value="all">All Shifts</option>
           {SHIFTS.filter(s => s).map(s => <option key={s} value={s}>{s}</option>)}
         </select>
-        <button onClick={exportExcel} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+        <button onClick={exportExcel} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid var(--admin-border)', borderRadius: 10, background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export
         </button>
       </div>
 
       {/* Table */}
-      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, whiteSpace: 'nowrap' }}>
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #f1f5f9' }}>
+              <tr style={{ background: 'var(--admin-thead)', borderBottom: '1.5px solid #f1f5f9' }}>
                 <TH label="#" sortKey="id" />
                 <TH label="Name" sortKey="name" />
                 <TH label="Position" sortKey="position" />
@@ -388,7 +388,7 @@ export default function HRPage() {
                     onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
                     <td style={{ padding: '11px 12px', color: '#94a3b8', fontSize: 12 }}>{idx + 1}</td>
                     <td style={{ padding: '11px 12px' }}>
-                      <p style={{ fontWeight: 600, color: '#0f172a', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.name}</p>
+                      <p style={{ fontWeight: 600, color: 'var(--admin-text)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.name}</p>
                       <p style={{ fontSize: 11, color: '#94a3b8' }}>{emp.iqama || '–'}</p>
                     </td>
                     <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 12, maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.position || '–'}</td>
@@ -408,14 +408,14 @@ export default function HRPage() {
                         </span>
                       ) : <span style={{ color: '#cbd5e1' }}>–</span>}
                     </td>
-                    <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>{emp.basic_salary.toLocaleString()}</td>
+                    <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--admin-text)' }}>{emp.basic_salary.toLocaleString()}</td>
                     <td style={{ padding: '11px 12px', textAlign: 'right' }}>
                       {isEditingThis ? (
                         <input type="number" value={otDraft} autoFocus
                           onChange={e => setOtDraft(e.target.value)}
                           onBlur={() => saveOTInline(emp)}
                           onKeyDown={e => e.key === 'Enter' && saveOTInline(emp)}
-                          style={{ width: 64, border: '1.5px solid #25D366', borderRadius: 7, padding: '3px 8px', fontSize: 12, textAlign: 'right', outline: 'none', background: 'white' }} />
+                          style={{ width: 64, border: '1.5px solid #25D366', borderRadius: 7, padding: '3px 8px', fontSize: 12, textAlign: 'right', outline: 'none', background: 'var(--admin-card)' }} />
                       ) : (
                         <span onClick={() => { setEditingOT(emp.id); setOtDraft(String(emp.ot_hours)) }}
                           title="Click to edit"
@@ -465,9 +465,9 @@ export default function HRPage() {
       {/* Employee Modal */}
       {modal.open && modal.emp && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
-          <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 520, boxShadow: '0 25px 60px rgba(0,0,0,0.18)', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{modal.emp.id ? 'Edit Employee' : 'Add Employee'}</h2>
+          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 520, boxShadow: '0 25px 60px rgba(0,0,0,0.18)', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--admin-text)' }}>{modal.emp.id ? 'Edit Employee' : 'Add Employee'}</h2>
               <button className="ibtn ibtn-edit" onClick={() => setModal({ open: false, emp: null })}><CloseIcon /></button>
             </div>
             <div style={{ padding: 20, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -538,7 +538,7 @@ export default function HRPage() {
 
               {/* OT Preview */}
               {(modal.emp.basic_salary || 0) > 0 && (
-                <div style={{ background: '#f8fafc', borderRadius: 12, padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                <div style={{ background: 'var(--admin-thead)', borderRadius: 12, padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                   {[
                     { label: 'OT Rate', value: `${(((modal.emp.basic_salary || 0) / 30 / 8) * multiplier).toFixed(3)} SAR/hr` },
                     { label: 'OT Pay', value: `${((((modal.emp.basic_salary || 0) / 30 / 8) * multiplier) * (modal.emp.ot_hours || 0)).toFixed(2)} SAR` },
@@ -552,14 +552,14 @@ export default function HRPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#f8fafc', borderRadius: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--admin-thead)', borderRadius: 10 }}>
                 <input type="checkbox" id="spaid" checked={modal.emp.salary_paid ?? false}
                   onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, salary_paid: e.target.checked } }))} />
                 <label htmlFor="spaid" style={{ fontSize: 13, fontWeight: 500, color: '#374151', cursor: 'pointer' }}>Salary Paid</label>
               </div>
             </div>
             <div style={{ padding: '16px 20px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10 }}>
-              <button onClick={() => setModal({ open: false, emp: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setModal({ open: false, emp: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
               <button onClick={saveEmp} disabled={saving} style={{ flex: 2, padding: '11px', borderRadius: 12, border: 'none', background: '#25D366', fontSize: 13, fontWeight: 700, color: 'white', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving...' : 'Save Employee'}
               </button>

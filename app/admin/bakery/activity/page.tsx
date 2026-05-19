@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { bakeryApi } from '@/lib/bakery-api'
 import type { BakeryActivity } from '@/lib/bakery-db'
 
-export default function BakeryActivity() {
+export default function BakeryActivityPage() {
   const [logs, setLogs] = useState<BakeryActivity[]>([])
   const [lightbox, setLightbox] = useState<string | null>(null)
 
@@ -11,14 +11,14 @@ export default function BakeryActivity() {
 
   return (
     <div>
-      <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>Activity Log</div>
+      <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4, color: 'var(--admin-text)' }}>Activity Log</div>
       <div style={{ fontSize: 12, color: '#64748b', marginBottom: 20 }}>All staff actions with photo proof</div>
 
-      {logs.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8', background: 'white', borderRadius: 12, border: '1px solid #e2e8f0' }}>No activity yet</div>}
+      {logs.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8', background: 'var(--admin-card)', borderRadius: 12, border: '1px solid var(--admin-border)' }}>No activity yet</div>}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {logs.map(log => (
-          <div key={log.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 20px' }}>
+          <div key={log.id} style={{ background: 'var(--admin-card)', border: '1px solid var(--admin-border)', borderRadius: 12, padding: '16px 20px' }}>
             <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
               <div style={{
                 width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
@@ -31,7 +31,7 @@ export default function BakeryActivity() {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700 }}>{log.staff_name}</span>
+                  <span style={{ fontWeight: 700, color: 'var(--admin-text)' }}>{log.staff_name}</span>
                   <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, fontWeight: 700, background: log.staff_role === 'admin' ? '#fce7f3' : '#dbeafe', color: log.staff_role === 'admin' ? '#be185d' : '#1d4ed8' }}>
                     {log.staff_role}
                   </span>
@@ -39,13 +39,13 @@ export default function BakeryActivity() {
                     {new Date(log.created_at).toLocaleString()}
                   </span>
                 </div>
-                <p style={{ fontSize: 13, color: '#374151', marginBottom: log.photo_url ? 12 : 0 }}>{log.detail}</p>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: log.photo_url ? 12 : 0 }}>{log.detail}</p>
                 {log.photo_url ? (
                   <img
                     src={log.photo_url}
                     alt="proof"
                     onClick={() => setLightbox(log.photo_url)}
-                    style={{ height: 100, width: 140, objectFit: 'cover', borderRadius: 8, border: '2px solid #e2e8f0', cursor: 'pointer', display: 'block' }}
+                    style={{ height: 100, width: 140, objectFit: 'cover', borderRadius: 8, border: '2px solid var(--admin-border)', cursor: 'pointer', display: 'block' }}
                   />
                 ) : (
                   <span style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>No photo attached</span>

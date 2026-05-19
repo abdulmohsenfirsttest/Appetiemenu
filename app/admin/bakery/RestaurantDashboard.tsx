@@ -22,12 +22,12 @@ function EmpRow({ emp }: { emp: Emp }) {
   const sc = SHIFT_COLORS[emp.shift] || { text: '#64748b', bg: '#f1f5f9' }
   const isSup = ['Supervisor','Manager','Operation Manager','Head Chef'].includes(emp.position)
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--admin-border2)' }}>
       <div style={{ width: 34, height: 34, borderRadius: '50%', background: isSup ? '#7c3aed' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <span style={{ fontSize: 13, fontWeight: 700, color: isSup ? 'white' : '#475569' }}>{emp.name[0]}</span>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.name}</div>
+        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--admin-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.name}</div>
         {emp.position && <div style={{ fontSize: 11, color: POSITION_COLORS[emp.position] || '#64748b', fontWeight: 500 }}>{emp.position}</div>}
       </div>
       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -55,12 +55,11 @@ export default function RestaurantDashboard({ restaurantKey, label, color, emoji
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-        <Link href="/admin/bakery" style={{ fontSize: 12, color: '#64748b', textDecoration: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '4px 10px' }}>← Back</Link>
+        <Link href="/admin/bakery" style={{ fontSize: 12, color: '#64748b', textDecoration: 'none', border: '1px solid var(--admin-border)', borderRadius: 6, padding: '4px 10px' }}>← Back</Link>
         <span style={{ fontSize: 22 }}>{emoji}</span>
-        <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: 0 }}>{label}</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--admin-text)', margin: 0 }}>{label}</h2>
       </div>
 
-      {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 24 }}>
         {[
           { label: 'Total Staff', value: emps.length, color },
@@ -68,25 +67,24 @@ export default function RestaurantDashboard({ restaurantKey, label, color, emoji
           { label: 'Total Salary', value: `${totalSalary.toLocaleString()} SAR`, color: '#16a34a' },
           { label: 'Branches', value: branches.length, color: '#2563eb' },
         ].map(s => (
-          <div key={s.label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,.05)' }}>
+          <div key={s.label} style={{ background: 'var(--admin-card)', border: '1px solid var(--admin-border)', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,.05)' }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginTop: 2 }}>{s.label}</div>
           </div>
         ))}
       </div>
 
-      {/* By Branch */}
       {branches.map(branch => (
-        <div key={branch} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 20px', marginBottom: 14 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a', marginBottom: 4 }}>{branch}</div>
+        <div key={branch} style={{ background: 'var(--admin-card)', border: '1px solid var(--admin-border)', borderRadius: 12, padding: '16px 20px', marginBottom: 14 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--admin-text)', marginBottom: 4 }}>{branch}</div>
           <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 8 }}>{byBranch[branch].length} employees</div>
           {byBranch[branch].map(e => <EmpRow key={e.id} emp={e} />)}
         </div>
       ))}
 
       {noBranch.length > 0 && (
-        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 20px' }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a', marginBottom: 4 }}>Unassigned</div>
+        <div style={{ background: 'var(--admin-card)', border: '1px solid var(--admin-border)', borderRadius: 12, padding: '16px 20px' }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--admin-text)', marginBottom: 4 }}>Unassigned</div>
           <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 8 }}>{noBranch.length} employees</div>
           {noBranch.map(e => <EmpRow key={e.id} emp={e} />)}
         </div>

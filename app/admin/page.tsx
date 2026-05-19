@@ -102,27 +102,25 @@ export default function AdminDashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
-      {/* Header */}
       <div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>Dashboard</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 4 }}>Dashboard</h1>
         <p style={{ fontSize: 13, color: '#64748b' }}>Welcome back — here's your restaurant overview.</p>
       </div>
 
-      {/* Stat Cards */}
       {loading ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} style={{ height: 110, background: 'white', borderRadius: 16, border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }} className="shimmer" />
+            <div key={i} style={{ height: 110, background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }} className="shimmer" />
           ))}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
           {cards.map((card, i) => (
-            <div key={i} style={{ background: 'white', borderRadius: 16, padding: '20px 20px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', position: 'relative', overflow: 'hidden' }}>
+            <div key={i} style={{ background: 'var(--admin-card)', borderRadius: 16, padding: '20px 20px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', border: '1px solid var(--admin-border2)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: card.color, borderRadius: '16px 16px 0 0' }} />
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginTop: 8 }}>
                 <div>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', lineHeight: 1.1 }}>{card.value}</div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--admin-text)', lineHeight: 1.1 }}>{card.value}</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginTop: 4 }}>{card.label}</div>
                   <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>{card.sub}</div>
                 </div>
@@ -135,20 +133,19 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Quick Actions */}
       <div>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>Quick Actions</h2>
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 12 }}>Quick Actions</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           {actions.map((a, i) => (
             <Link key={i} href={a.href} style={{ textDecoration: 'none' }}>
-              <div style={{ background: 'white', borderRadius: 14, padding: '18px 20px', border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'box-shadow 0.15s' }}
+              <div style={{ background: 'var(--admin-card)', borderRadius: 14, padding: '18px 20px', border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'box-shadow 0.15s' }}
                 onMouseOver={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)')}
                 onMouseOut={e => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)')}>
                 <div style={{ width: 42, height: 42, borderRadius: 12, background: a.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', color: a.color, flexShrink: 0 }}>
                   {a.icon}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{a.title}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)' }}>{a.title}</div>
                   <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{a.desc}</div>
                 </div>
                 <div style={{ color: '#cbd5e1', flexShrink: 0 }}><IconArrow /></div>
@@ -158,21 +155,20 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Branches */}
       <div>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>Branches</h2>
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 12 }}>Branches</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           {[
             { name: 'Ar Rayyan', location: 'Ar Rayyan District', color: '#25D366', bg: '#dcfce7' },
             { name: 'Hittin', location: 'Hittin District', color: '#7c3aed', bg: '#ede9fe' },
             { name: 'Malqa', location: 'Malqa District', color: '#2563eb', bg: '#dbeafe' },
           ].map(b => (
-            <div key={b.name} style={{ background: 'white', borderRadius: 14, padding: '16px 20px', border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div key={b.name} style={{ background: 'var(--admin-card)', borderRadius: 14, padding: '16px 20px', border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: b.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, color: b.color, flexShrink: 0 }}>
                 {b.name[0]}
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{b.name}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)' }}>{b.name}</div>
                 <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{b.location}</div>
               </div>
               <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: '#16a34a', background: '#dcfce7', padding: '3px 10px', borderRadius: 20 }}>Active</span>

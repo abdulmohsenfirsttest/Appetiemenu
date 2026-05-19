@@ -85,6 +85,18 @@ body {
 }
 .admin-input::placeholder { color: #94a3b8; }
 
+/* Admin dark mode overrides */
+[data-admin-dark="true"] .admin-input,
+[data-admin-dark="true"] .admin-select {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+[data-admin-dark="true"] .admin-input::placeholder { color: #475569 !important; }
+[data-admin-dark="true"] .ibtn-edit { background: #334155 !important; color: #94a3b8 !important; }
+[data-admin-dark="true"] .ibtn-edit:hover { background: #1e40af !important; color: #93c5fd !important; }
+[data-admin-dark="true"] ::-webkit-scrollbar-thumb { background: #334155; }
+
 /* Admin icon buttons */
 .ibtn {
   width: 32px; height: 32px; border-radius: 8px;

@@ -20,11 +20,11 @@ export default function ManagerSupervisedDashboard() {
           const totalSalary = emps.reduce((s, e) => s + e.basic_salary, 0)
           return (
             <Link key={r.slug} href={`/admin/bakery/${r.slug}`} style={{ textDecoration: 'none' }}>
-              <div style={{ background: 'white', border: `2px solid ${r.color}25`, borderRadius: 16, padding: 28, cursor: 'pointer', transition: 'box-shadow .15s', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}
+              <div style={{ background: 'var(--admin-card)', border: `2px solid ${r.color}25`, borderRadius: 16, padding: 28, cursor: 'pointer', transition: 'box-shadow .15s', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}
                 onMouseOver={e => (e.currentTarget.style.boxShadow = `0 6px 20px ${r.color}30`)}
                 onMouseOut={e => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,.06)')}>
                 <div style={{ fontSize: 40, marginBottom: 14 }}>{r.emoji}</div>
-                <div style={{ fontWeight: 800, fontSize: 20, color: '#0f172a', marginBottom: 12 }}>{r.name}</div>
+                <div style={{ fontWeight: 800, fontSize: 20, color: 'var(--admin-text)', marginBottom: 12 }}>{r.name}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                     <span style={{ color: '#64748b' }}>Total Staff</span>
@@ -32,11 +32,11 @@ export default function ManagerSupervisedDashboard() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                     <span style={{ color: '#64748b' }}>Supervisors</span>
-                    <span style={{ fontWeight: 700, color: '#0f172a' }}>{supervisors.length}</span>
+                    <span style={{ fontWeight: 700, color: 'var(--admin-text)' }}>{supervisors.length}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                     <span style={{ color: '#64748b' }}>Total Salary</span>
-                    <span style={{ fontWeight: 700, color: '#0f172a' }}>{totalSalary.toLocaleString()} SAR</span>
+                    <span style={{ fontWeight: 700, color: 'var(--admin-text)' }}>{totalSalary.toLocaleString()} SAR</span>
                   </div>
                   {branches.length > 0 && (
                     <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>

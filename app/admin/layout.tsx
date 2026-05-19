@@ -5,25 +5,22 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
+import { AdminThemeProvider, useAdminTheme } from './theme'
 
 const NAV = [
-  { href: '/admin',            label: 'Dashboard',   icon: '⊞',  exact: true },
-  { href: '/admin/menu',       label: 'Menu',         icon: '🍽' },
-  { href: '/admin/categories', label: 'Categories',   icon: '◫' },
-  { href: '/admin/hr',         label: 'HR & Payroll', icon: '👤' },
-  { href: '/admin/branches',   label: 'Branches',     icon: '◉' },
-  { href: '/admin/bakery',     label: 'Manager Supervised', icon: '🥐' },
+  { href: '/admin',            label: 'Dashboard',           icon: '⊞',  exact: true },
+  { href: '/admin/menu',       label: 'Menu',                icon: '🍽' },
+  { href: '/admin/categories', label: 'Categories',          icon: '◫' },
+  { href: '/admin/hr',         label: 'HR & Payroll',        icon: '👤' },
+  { href: '/admin/branches',   label: 'Branches',            icon: '◉' },
+  { href: '/admin/bakery',     label: 'Manager Supervised',  icon: '🥐' },
 ]
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { dark, toggle } = useAdminTheme()
   const [collapsed, setCollapsed] = useState(false)
-
-  // Login page: no sidebar, just render children
-  if (pathname === '/admin/login') {
-    return <>{children}</>
-  }
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href)
@@ -39,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div dir="ltr" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f8fafc', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+    <div dir="ltr" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--admin-bg)', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
 
       {/* ── Sidebar ─────────────────────────────────── */}
       <aside style={{
@@ -101,7 +98,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {!collapsed && <span>Customer Menu</span>}
           </Link>
 
-          {/* Sign Out */}
           <button onClick={handleSignOut} style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: collapsed ? '8px 0' : '8px 12px',
@@ -126,22 +122,43 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top bar */}
         <header style={{
-          height: 56, background: 'white', borderBottom: '1px solid #e2e8f0',
-          display: 'flex', alignItems: 'center', padding: '0 24px', flexShrink: 0,
+          height: 56, background: 'var(--admin-header)', borderBottom: '1px solid var(--admin-border)',
+          display: 'flex', alignItems: 'center', padding: '0 24px', flexShrink: 0, gap: 12,
         }}>
           <div style={{ flex: 1 }}>
             <span style={{ fontSize: 13, color: '#64748b' }}>
               {NAV.find(n => isActive(n.href, n.exact))?.label ?? 'Admin'}
             </span>
           </div>
+
+          {/* Dark mode toggle */}
+          <button onClick={toggle} title={dark ? 'Switch to light mode' : 'Switch to dark mode'} style={{
+            width: 36, height: 36, borderRadius: 10, border: '1px solid var(--admin-border)',
+            background: 'var(--admin-card)', cursor: 'pointer', fontSize: 16,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.15s', flexShrink: 0,
+          }}>
+            {dark ? '☀️' : '🌙'}
+          </button>
+
           <div style={{ fontSize: 13, color: '#94a3b8' }}>Appetie · اباتاي</div>
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+        <main style={{ flex: 1, overflowY: 'auto', padding: 24, background: 'var(--admin-bg)' }}>
           {children}
         </main>
       </div>
     </div>
+  )
+}
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  if (pathname === '/admin/login') return <>{children}</>
+  return (
+    <AdminThemeProvider>
+      <AdminLayoutShell>{children}</AdminLayoutShell>
+    </AdminThemeProvider>
   )
 }

@@ -128,7 +128,16 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
             borderRadius: 8, textDecoration: 'none', color: '#475569', fontSize: 12,
           }}>
             <span>↗</span>
-            {!collapsed && <span>Customer Menu</span>}
+            {!collapsed && <span>Appetie Menu</span>}
+          </Link>
+          <Link href="/ghabashi" target="_blank" style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: collapsed ? '8px 0' : '8px 12px',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            borderRadius: 8, textDecoration: 'none', color: '#475569', fontSize: 12,
+          }}>
+            <span>↗</span>
+            {!collapsed && <span>Ghabashi Menu</span>}
           </Link>
 
           <button onClick={handleSignOut} style={{

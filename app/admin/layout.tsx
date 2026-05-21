@@ -9,12 +9,12 @@ import { AdminThemeProvider, useAdminTheme } from './theme'
 
 const NAV = [
   { href: '/admin',            label: 'Dashboard',           icon: '⊞',  exact: true },
-  { href: '/admin/menu',       label: 'Menu',                icon: '🍽' },
+  { href: '/admin/menu',       label: 'Appetie Menu',        icon: '🍽' },
   { href: '/admin/categories', label: 'Categories',          icon: '◫' },
   { href: '/admin/hr',         label: 'HR & Payroll',        icon: '👤' },
   { href: '/admin/branches',   label: 'Branches',            icon: '◉' },
   { href: '/admin/bakery',          label: 'Manager Supervised',  icon: '🥐' },
-  { href: '/admin/ghabashi-menu',   label: 'Appetie Menu',        icon: '🏪' },
+  { href: '/admin/ghabashi-menu',   label: 'Ghabashi Menu',       icon: '🏪' },
 ]
 
 function AdminLayoutShell({ children }: { children: React.ReactNode }) {

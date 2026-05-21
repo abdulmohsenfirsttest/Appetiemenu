@@ -74,7 +74,12 @@ function ConfirmDialog({ name, onConfirm, onCancel }: { name: string; onConfirm:
   )
 }
 
+const DOT_COLORS = ['#25D366','#6366f1','#f59e0b','#ef4444','#0891b2','#ec4899','#8b5cf6','#10b981','#f97316','#14b8a6','#a78bfa']
+
 export default function MenuManagement() {
+  const [tab, setTab] = useState<'items' | 'categories'>('items')
+
+  // ── Items state ──
   const [items, setItems] = useState<Item[]>([])
   const [categories, setCategories] = useState<Cat[]>([])
   const [search, setSearch] = useState('')
@@ -87,6 +92,12 @@ export default function MenuManagement() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [status, setStatus] = useState('')
   const [delConfirm, setDelConfirm] = useState<{ id: number; name: string } | null>(null)
+
+  // ── Categories state ──
+  const [catModal, setCatModal] = useState<{ open: boolean; cat: Partial<Cat & { sort_order: number }> | null }>({ open: false, cat: null })
+  const [catSaving, setCatSaving] = useState(false)
+  const [catStatus, setCatStatus] = useState('')
+  const [catDelConfirm, setCatDelConfirm] = useState<{ id: number; name: string } | null>(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -175,6 +186,33 @@ export default function MenuManagement() {
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_available: !i.is_available } : i))
   }
 
+  // ── Category CRUD ──
+  async function saveCat() {
+    if (!catModal.cat) return
+    setCatSaving(true)
+    try {
+      if (catModal.cat.id) {
+        const { error } = await supabase.from('categories').update({
+          name_en: catModal.cat.name_en, name_ar: catModal.cat.name_ar, sort_order: catModal.cat.sort_order,
+        }).eq('id', catModal.cat.id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('categories').insert({
+          name_en: catModal.cat.name_en, name_ar: catModal.cat.name_ar, sort_order: catModal.cat.sort_order ?? categories.length + 1,
+        })
+        if (error) throw error
+      }
+      setCatModal({ open: false, cat: null }); loadData()
+    } catch (e: any) { setCatStatus('Error: ' + e.message) }
+    setCatSaving(false)
+  }
+
+  async function confirmDeleteCat() {
+    if (!catDelConfirm) return
+    await supabase.from('categories').delete().eq('id', catDelConfirm.id)
+    setCatDelConfirm(null); loadData()
+  }
+
   const filtered = items.filter(i => {
     const matchSearch = !search || i.name_en.toLowerCase().includes(search.toLowerCase()) || i.name_ar.includes(search)
     const matchCat = filterCat === 'all' || String(i.category_id) === filterCat
@@ -188,20 +226,44 @@ export default function MenuManagement() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>Menu Management</h1>
-          <p style={{ fontSize: 13, color: '#64748b' }}>{items.length} items · {items.filter(i => i.is_available).length} available</p>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>Appetie Menu</h1>
+          <p style={{ fontSize: 13, color: '#64748b' }}>{items.length} items · {items.filter(i => i.is_available).length} available · {categories.length} categories</p>
         </div>
-        <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#25D366', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,211,102,0.35)' }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Item
-        </button>
+        {tab === 'items'
+          ? <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#25D366', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,211,102,0.35)' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Item
+            </button>
+          : <button onClick={() => setCatModal({ open: true, cat: { name_en: '', name_ar: '', sort_order: categories.length + 1 } })} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#25D366', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,211,102,0.35)' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Category
+            </button>
+        }
       </div>
 
-      {status && (
+      {/* Tab bar */}
+      <div style={{ display: 'flex', gap: 4, background: 'var(--admin-subcard)', borderRadius: 12, padding: 4, width: 'fit-content' }}>
+        {(['items', 'categories'] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{
+            padding: '8px 20px', borderRadius: 9, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
+            background: tab === t ? 'var(--admin-card)' : 'transparent',
+            color: tab === t ? 'var(--admin-text)' : '#64748b',
+            boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+            transition: 'all 0.15s',
+          }}>
+            {t === 'items' ? '🍽 Items' : '◫ Categories'}
+          </button>
+        ))}
+      </div>
+
+      {status && tab === 'items' && (
         <div style={{ padding: '10px 16px', background: status.startsWith('Error') ? '#fef2f2' : '#f0fdf4', borderRadius: 10, fontSize: 13, color: status.startsWith('Error') ? '#dc2626' : '#16a34a', border: `1px solid ${status.startsWith('Error') ? '#fecaca' : '#bbf7d0'}` }}>
           {status}
         </div>
       )}
+
+      {/* ── Items tab ── */}
+      {tab === 'items' && <>
 
       {/* Search */}
       <div style={{ position: 'relative', maxWidth: 320 }}>
@@ -406,6 +468,107 @@ export default function MenuManagement() {
 
       {/* Delete Confirmation */}
       {delConfirm && <ConfirmDialog name={delConfirm.name} onConfirm={confirmDelete} onCancel={() => setDelConfirm(null)} />}
+
+      </> }
+
+      {/* ── Categories tab ── */}
+      {tab === 'categories' && <>
+
+        {catStatus && (
+          <div style={{ padding: '10px 16px', background: '#fef2f2', borderRadius: 10, fontSize: 13, color: '#dc2626', border: '1px solid #fecaca' }}>{catStatus}</div>
+        )}
+
+        <div style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: 'var(--admin-thead)', borderBottom: '1.5px solid var(--admin-border2)' }}>
+                {['#', 'English Name', 'Arabic Name', 'Order', 'Actions'].map((h, i) => (
+                  <th key={h} style={{ padding: '11px 20px', textAlign: i === 4 ? 'center' : 'left', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map((cat, idx) => (
+                <tr key={cat.id} style={{ borderBottom: idx < categories.length - 1 ? '1px solid var(--admin-border2)' : 'none' }}
+                  onMouseOver={e => (e.currentTarget.style.background = 'var(--admin-subcard)')}
+                  onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
+                  <td style={{ padding: '13px 20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: DOT_COLORS[idx % DOT_COLORS.length], flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>{cat.id}</span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '13px 20px', fontWeight: 600, color: 'var(--admin-text)' }}>{cat.name_en}</td>
+                  <td style={{ padding: '13px 20px', color: '#475569' }} dir="rtl">{cat.name_ar}</td>
+                  <td style={{ padding: '13px 20px' }}>
+                    <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--admin-subcard)', color: '#64748b', fontWeight: 600 }}>{(cat as any).sort_order ?? idx + 1}</span>
+                  </td>
+                  <td style={{ padding: '13px 20px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                      <button className="ibtn ibtn-edit" onClick={() => setCatModal({ open: true, cat: { ...cat } })} title="Edit"><PencilIcon /></button>
+                      <button className="ibtn ibtn-del" onClick={() => setCatDelConfirm({ id: cat.id, name: cat.name_en })} title="Delete"><TrashIcon /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Category Modal */}
+        {catModal.open && catModal.cat && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
+            <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 440, boxShadow: '0 25px 60px rgba(0,0,0,0.18)' }}>
+              <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--admin-text)' }}>{catModal.cat.id ? 'Edit Category' : 'Add Category'}</h2>
+                <button className="ibtn ibtn-edit" onClick={() => setCatModal({ open: false, cat: null })}><CloseIcon /></button>
+              </div>
+              <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>English Name</label>
+                  <input type="text" value={catModal.cat.name_en || ''} className="admin-input"
+                    onChange={e => setCatModal(m => ({ ...m, cat: { ...m.cat!, name_en: e.target.value } }))} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Arabic Name</label>
+                  <input type="text" dir="rtl" value={catModal.cat.name_ar || ''} className="admin-input"
+                    onChange={e => setCatModal(m => ({ ...m, cat: { ...m.cat!, name_ar: e.target.value } }))} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Sort Order</label>
+                  <input type="number" value={catModal.cat.sort_order || ''} className="admin-input"
+                    onChange={e => setCatModal(m => ({ ...m, cat: { ...m.cat!, sort_order: Number(e.target.value) } }))} />
+                </div>
+              </div>
+              <div style={{ padding: '16px 20px', borderTop: '1px solid var(--admin-border2)', display: 'flex', gap: 10 }}>
+                <button onClick={() => setCatModal({ open: false, cat: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: 'var(--admin-text)', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={saveCat} disabled={catSaving} style={{ flex: 2, padding: '11px', borderRadius: 12, border: 'none', background: '#25D366', fontSize: 13, fontWeight: 700, color: 'white', cursor: 'pointer', opacity: catSaving ? 0.6 : 1 }}>
+                  {catSaving ? 'Saving...' : 'Save Category'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {catDelConfirm && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
+            <div style={{ background: 'var(--admin-card)', borderRadius: 20, padding: '32px 28px', maxWidth: 360, width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#ef4444' }}>
+                <TrashIcon size={22} />
+              </div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 8 }}>Delete Category?</h3>
+              <p style={{ fontSize: 13, color: '#64748b', marginBottom: 6 }}><strong>"{catDelConfirm.name}"</strong> will be permanently removed.</p>
+              <p style={{ fontSize: 12, color: '#ef4444', marginBottom: 28 }}>Items in this category will become uncategorized.</p>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button onClick={() => setCatDelConfirm(null)} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: 'var(--admin-text)', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={confirmDeleteCat} style={{ flex: 1, padding: '11px', borderRadius: 12, border: 'none', background: '#ef4444', fontSize: 13, fontWeight: 600, color: 'white', cursor: 'pointer' }}>Delete</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </> }
+
     </div>
   )
 }

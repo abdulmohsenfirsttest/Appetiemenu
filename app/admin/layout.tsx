@@ -22,7 +22,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/admin/menu',          label: 'Appetie Menu',  icon: '🍽' },
       { href: '/admin/ghabashi-menu', label: 'Ghabashi Menu', icon: '🏪' },
-      { href: '/admin/categories',    label: 'Categories',    icon: '◫' },
     ],
   },
   {

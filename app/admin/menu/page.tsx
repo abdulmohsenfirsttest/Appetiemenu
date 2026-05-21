@@ -203,25 +203,56 @@ export default function MenuManagement() {
         </div>
       )}
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }}>
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input type="text" placeholder="Search items..." value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="admin-input" style={{ paddingLeft: 34 }} />
-        </div>
-        <select value={filterCat} onChange={e => setFilterCat(e.target.value)} className="admin-select" style={{ width: 'auto', minWidth: 150 }}>
-          <option value="all">All Categories</option>
-          {categories.map(c => <option key={c.id} value={c.id}>{c.name_en}</option>)}
-        </select>
-        <select value={filterAvail} onChange={e => setFilterAvail(e.target.value)} className="admin-select" style={{ width: 'auto', minWidth: 130 }}>
-          <option value="all">All Status</option>
-          <option value="available">Available</option>
-          <option value="hidden">Hidden</option>
-        </select>
+      {/* Search */}
+      <div style={{ position: 'relative', maxWidth: 320 }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }}>
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" placeholder="Search items..." value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="admin-input" style={{ paddingLeft: 34 }} />
+      </div>
+
+      {/* Foodics-style category + status pills */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* All */}
+        <button onClick={() => { setFilterCat('all'); setFilterAvail('all') }} style={{
+          padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, border: '1.5px solid var(--admin-border)', cursor: 'pointer',
+          background: filterCat === 'all' && filterAvail === 'all' ? '#0f172a' : 'var(--admin-card)',
+          color: filterCat === 'all' && filterAvail === 'all' ? 'white' : '#64748b',
+          boxShadow: filterCat === 'all' && filterAvail === 'all' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+        } as React.CSSProperties}>
+          All <span style={{ fontSize: 11, opacity: 0.7 }}>({items.length})</span>
+        </button>
+
+        {/* Category buttons */}
+        {categories.map(c => {
+          const count = items.filter(i => String(i.category_id) === String(c.id)).length
+          const active = filterCat === String(c.id) && filterAvail === 'all'
+          return (
+            <button key={c.id} onClick={() => { setFilterCat(String(c.id)); setFilterAvail('all') }} style={{
+              padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, border: '1.5px solid var(--admin-border)', cursor: 'pointer',
+              background: active ? '#25D366' : 'var(--admin-card)',
+              color: active ? 'white' : '#374151',
+              boxShadow: active ? '0 2px 8px rgba(37,211,102,0.35)' : 'none',
+            } as React.CSSProperties}>
+              {c.name_en} <span style={{ fontSize: 11, opacity: 0.75 }}>({count})</span>
+            </button>
+          )
+        })}
+
+        {/* Divider */}
+        <div style={{ width: 1, height: 28, background: 'var(--admin-border)', margin: '0 4px' }} />
+
+        {/* Hidden button */}
+        <button onClick={() => { setFilterCat('all'); setFilterAvail(filterAvail === 'hidden' ? 'all' : 'hidden') }} style={{
+          padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, border: '1.5px solid var(--admin-border)', cursor: 'pointer',
+          background: filterAvail === 'hidden' ? '#fef2f2' : 'var(--admin-card)',
+          color: filterAvail === 'hidden' ? '#ef4444' : '#64748b',
+          boxShadow: filterAvail === 'hidden' ? '0 2px 8px rgba(239,68,68,0.2)' : 'none',
+        } as React.CSSProperties}>
+          🚫 Hidden <span style={{ fontSize: 11, opacity: 0.75 }}>({items.filter(i => !i.is_available).length})</span>
+        </button>
       </div>
 
       {/* Table */}

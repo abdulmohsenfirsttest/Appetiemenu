@@ -167,14 +167,8 @@ export default function GhabashiMenuPage() {
       }}>
         <div style={{ maxWidth: 1024, margin: '0 auto', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Brand */}
-          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: C.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
-              🏪
-            </div>
-            <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontWeight: 800, fontSize: 15, color: C.ink }}>Ghabashi</div>
-              <div style={{ fontSize: 10, color: C.muted }}>غبाشي</div>
-            </div>
+          <a href="#" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
+            <Image src="/ghabashi-logo.png" alt="غباشي" width={120} height={51} style={{ objectFit: 'contain', height: 40, width: 'auto' }} priority />
           </a>
 
           {/* Search */}

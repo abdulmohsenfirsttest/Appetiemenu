@@ -7,15 +7,35 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { AdminThemeProvider, useAdminTheme } from './theme'
 
-const NAV = [
-  { href: '/admin',            label: 'Dashboard',           icon: '⊞',  exact: true },
-  { href: '/admin/menu',       label: 'Appetie Menu',        icon: '🍽' },
-  { href: '/admin/categories', label: 'Categories',          icon: '◫' },
-  { href: '/admin/hr',         label: 'HR & Payroll',        icon: '👤' },
-  { href: '/admin/branches',   label: 'Branches',            icon: '◉' },
-  { href: '/admin/bakery',          label: 'Manager Supervised',  icon: '🥐' },
-  { href: '/admin/ghabashi-menu',   label: 'Ghabashi Menu',       icon: '🏪' },
+type NavItem = { href: string; label: string; icon: string; exact?: boolean }
+type NavGroup = { label: string; items: NavItem[] }
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: '',
+    items: [
+      { href: '/admin', label: 'Dashboard', icon: '⊞', exact: true },
+    ],
+  },
+  {
+    label: 'Menus',
+    items: [
+      { href: '/admin/menu',          label: 'Appetie Menu',  icon: '🍽' },
+      { href: '/admin/ghabashi-menu', label: 'Ghabashi Menu', icon: '🏪' },
+      { href: '/admin/categories',    label: 'Categories',    icon: '◫' },
+    ],
+  },
+  {
+    label: 'Management',
+    items: [
+      { href: '/admin/branches', label: 'Branches',            icon: '◉' },
+      { href: '/admin/hr',       label: 'HR & Payroll',        icon: '👤' },
+      { href: '/admin/bakery',   label: 'Manager Supervised',  icon: '🥐' },
+    ],
+  },
 ]
+
+const NAV = NAV_GROUPS.flatMap(g => g.items)
 
 function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -63,28 +83,41 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 8px' }}>
-          {NAV.map(item => {
-            const active = isActive(item.href, item.exact)
-            return (
-              <Link key={item.href} href={item.href} style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: collapsed ? '10px 0' : '9px 12px',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                borderRadius: 8, marginBottom: 2, textDecoration: 'none',
-                background: active ? '#1e293b' : 'transparent',
-                color: active ? '#25D366' : '#94a3b8',
-                fontWeight: active ? 600 : 400, fontSize: 13,
-                transition: 'all 0.15s',
-              }}
-                onMouseOver={e => { if (!active) e.currentTarget.style.background = '#1e293b' }}
-                onMouseOut={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
-                <span style={{ fontSize: 15, flexShrink: 0 }}>{item.icon}</span>
-                {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
-                {!collapsed && active && <span style={{ marginInlineStart: 'auto', width: 6, height: 6, borderRadius: '50%', background: '#25D366', flexShrink: 0 }} />}
-              </Link>
-            )
-          })}
+        <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 8px' }}>
+          {NAV_GROUPS.map((group, gi) => (
+            <div key={gi} style={{ marginBottom: 4 }}>
+              {/* Group label */}
+              {group.label && !collapsed && (
+                <div style={{ padding: '10px 12px 4px', fontSize: 10, fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  {group.label}
+                </div>
+              )}
+              {group.label && collapsed && gi > 0 && (
+                <div style={{ height: 1, background: '#1e293b', margin: '8px 4px' }} />
+              )}
+              {group.items.map(item => {
+                const active = isActive(item.href, item.exact)
+                return (
+                  <Link key={item.href} href={item.href} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: collapsed ? '10px 0' : '9px 12px',
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    borderRadius: 8, marginBottom: 2, textDecoration: 'none',
+                    background: active ? '#1e293b' : 'transparent',
+                    color: active ? '#25D366' : '#94a3b8',
+                    fontWeight: active ? 600 : 400, fontSize: 13,
+                    transition: 'all 0.15s',
+                  }}
+                    onMouseOver={e => { if (!active) e.currentTarget.style.background = '#1e293b' }}
+                    onMouseOut={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
+                    <span style={{ fontSize: 15, flexShrink: 0 }}>{item.icon}</span>
+                    {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
+                    {!collapsed && active && <span style={{ marginInlineStart: 'auto', width: 6, height: 6, borderRadius: '50%', background: '#25D366', flexShrink: 0 }} />}
+                  </Link>
+                )
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Bottom links */}

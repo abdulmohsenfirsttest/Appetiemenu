@@ -14,7 +14,7 @@ const NAV = [
   { href: '/admin/hr',         label: 'HR & Payroll',        icon: '👤' },
   { href: '/admin/branches',   label: 'Branches',            icon: '◉' },
   { href: '/admin/bakery',          label: 'Manager Supervised',  icon: '🥐' },
-  { href: '/admin/ghabashi-menu',   label: 'Ghabashi Menu',       icon: '🏪' },
+  { href: '/admin/ghabashi-menu',   label: 'Appetie Menu',        icon: '🏪' },
 ]
 
 function AdminLayoutShell({ children }: { children: React.ReactNode }) {

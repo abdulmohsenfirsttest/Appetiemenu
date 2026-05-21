@@ -101,7 +101,7 @@ export default function GhabashiMenuPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>Ghabashi Menu</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>Appetie Menu</h1>
           <p style={{ fontSize: 13, color: '#64748b' }}>{items.length} items · {available} available · {unavailable} hidden</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

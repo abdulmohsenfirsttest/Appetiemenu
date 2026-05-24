@@ -801,6 +801,40 @@ export default function HRPage() {
       {/* Payroll History */}
       {activeTab === 'history' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Custom months manager */}
+          {customMonths.length > 0 && (
+            <div style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', padding: '14px 16px' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Your Custom Months</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {customMonths.map(m => (
+                  <div key={m.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 6px 8px 14px', borderRadius: 12,
+                    border: selectedMonth === m.month ? '2px solid #25D366' : '1.5px solid var(--admin-border2)',
+                    background: selectedMonth === m.month ? '#f0fdf4' : 'var(--admin-card)',
+                    transition: 'all 0.15s',
+                  }}>
+                    <button onClick={() => setSelectedMonth(m.month)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: selectedMonth === m.month ? '#16a34a' : 'var(--admin-text)', padding: 0 }}>
+                      {m.month}
+                    </button>
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>{m.records.length} emp</span>
+                    <button
+                      onClick={() => deleteCustomMonth(m.id)}
+                      title="Delete this month"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 8, border: 'none', background: '#fef2f2', color: '#ef4444', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }}
+                      onMouseOver={e => (e.currentTarget.style.background = '#fee2e2')}
+                      onMouseOut={e => (e.currentTarget.style.background = '#fef2f2')}
+                    >
+                      <TrashIcon size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Month selector + actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}

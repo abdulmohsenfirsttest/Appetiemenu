@@ -50,6 +50,7 @@ function parseMonthLabel(label: string): { monthIdx: number; year: number } {
 
 const BRANCHES = ['Ar Rayyan', 'Hittin', 'Malqa', '']
 const SHIFTS = ['Morning', 'Night', 'Double Shift', 'Evening', '']
+const RESTAURANTS = ['Appetie', 'Ghabashi', 'Piece Bakery']
 const POSITIONS = ['Manager', 'Operation Manager', 'Supervisor', 'Head Chef', 'Bakery Chef', 'Grill', 'Pie', 'Cashier / Salad / Prep', 'Pie / Cashier', 'Pie / Grill / Cashier', 'Preparation', 'Salad / Preparation', '']
 
 const BRANCH_COLORS: Record<string, { text: string; bg: string }> = {
@@ -62,6 +63,11 @@ const SHIFT_COLORS: Record<string, { text: string; bg: string }> = {
   'Night': { text: '#4f46e5', bg: '#e0e7ff' },
   'Double Shift': { text: '#ea580c', bg: '#fff7ed' },
   'Evening': { text: '#db2777', bg: '#fce7f3' },
+}
+const RESTAURANT_COLORS: Record<string, { text: string; bg: string }> = {
+  'Appetie':      { text: '#16a34a', bg: '#dcfce7' },
+  'Ghabashi':     { text: '#b45309', bg: '#fef3c7' },
+  'Piece Bakery': { text: '#7c3aed', bg: '#ede9fe' },
 }
 const CHART_COLORS = ['#25D366', '#7c3aed', '#2563eb', '#f59e0b', '#ef4444', '#10b981']
 
@@ -130,6 +136,7 @@ export default function HRPage() {
   const [search, setSearch] = useState('')
   const [filterBranch, setFilterBranch] = useState('all')
   const [filterShift, setFilterShift] = useState('all')
+  const [filterRestaurant, setFilterRestaurant] = useState('all')
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: 'id', dir: 'asc' })
   const [editingOT, setEditingOT] = useState<number | null>(null)
   const [otDraft, setOtDraft] = useState('')
@@ -490,7 +497,8 @@ export default function HRPage() {
       const matchSearch = !search || e.name.toLowerCase().includes(search.toLowerCase()) || e.position.toLowerCase().includes(search.toLowerCase())
       const matchBranch = filterBranch === 'all' || e.branch === filterBranch
       const matchShift = filterShift === 'all' || e.shift === filterShift
-      return matchSearch && matchBranch && matchShift
+      const matchRestaurant = filterRestaurant === 'all' || e.restaurant === filterRestaurant
+      return matchSearch && matchBranch && matchShift && matchRestaurant
     })
     .sort((a, b) => {
       const va = a[sort.key] ?? 0; const vb = b[sort.key] ?? 0
@@ -499,7 +507,11 @@ export default function HRPage() {
       return 0
     })
 
-  const analyticsEmps = filterBranch === 'all' ? employees : employees.filter(e => e.branch === filterBranch)
+  const analyticsEmps = employees.filter(e =>
+    (filterBranch === 'all' || e.branch === filterBranch) &&
+    (filterShift === 'all' || e.shift === filterShift) &&
+    (filterRestaurant === 'all' || e.restaurant === filterRestaurant)
+  )
 
   const totalBasic = analyticsEmps.reduce((s, e) => s + e.basic_salary, 0)
   const totalOTHrs = analyticsEmps.reduce((s, e) => s + e.ot_hours, 0)
@@ -763,6 +775,36 @@ export default function HRPage() {
                     {totalNet.toFixed(0)} SAR
                   </span>
                 )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Restaurant Cards */}
+      {activeTab === 'current' && (
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {[
+            { key: 'all', label: t('All Restaurants', 'جميع المطاعم'), color: '#25D366', bg: '#f0fdf4', count: employees.length },
+            ...RESTAURANTS.map(r => ({
+              key: r, label: r,
+              color: RESTAURANT_COLORS[r]?.text ?? '#374151',
+              bg: RESTAURANT_COLORS[r]?.bg ?? '#f3f4f6',
+              count: employees.filter(e => e.restaurant === r).length,
+            })),
+          ].map(rest => {
+            const active = filterRestaurant === rest.key
+            return (
+              <button key={rest.key} onClick={() => setFilterRestaurant(rest.key)} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px',
+                borderRadius: 14, border: active ? `2px solid ${rest.color}` : '2px solid transparent',
+                background: active ? rest.bg : 'var(--admin-card)',
+                cursor: 'pointer', transition: 'all 0.15s',
+                boxShadow: active ? `0 0 0 3px ${rest.color}22` : '0 1px 3px rgba(0,0,0,0.06)',
+              }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: rest.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: active ? rest.color : 'var(--admin-text)' }}>{rest.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'white', background: active ? rest.color : '#94a3b8', borderRadius: 20, padding: '2px 8px', minWidth: 24, textAlign: 'center' }}>{rest.count}</span>
               </button>
             )
           })}

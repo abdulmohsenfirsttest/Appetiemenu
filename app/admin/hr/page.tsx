@@ -250,6 +250,10 @@ export default function HRPage() {
     name: b, color: CHART_COLORS[i],
     value: Math.round(analyticsEmps.filter(e => e.branch === b).reduce((s, e) => s + e.net_pay, 0)),
   })).filter(b => b.value > 0)
+  const shiftSalary = SHIFTS.filter(s => s).map((s, i) => ({
+    name: s, color: SHIFT_COLORS[s]?.text ?? CHART_COLORS[i],
+    value: Math.round(analyticsEmps.filter(e => e.shift === s).reduce((sum, e) => sum + e.net_pay, 0)),
+  })).filter(s => s.value > 0)
 
   const summaryCards = [
     { label: 'Employees', value: analyticsEmps.length, color: '#25D366' },
@@ -330,11 +334,13 @@ export default function HRPage() {
       ) : null}
 
       {/* Charts */}
-      {activeTab === 'current' && !loading && (topOT.length > 0 || branchSalary.length > 0) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      {activeTab === 'current' && !loading && (topOT.length > 0 || branchSalary.length > 0 || shiftSalary.length > 0) && (
+        <div key={filterBranch} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {topOT.length > 0 && (
             <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>Top OT Hours</h3>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>
+                Top OT Hours{filterBranch !== 'all' ? ` · ${filterBranch}` : ''}
+              </h3>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={topOT} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
@@ -345,19 +351,36 @@ export default function HRPage() {
               </ResponsiveContainer>
             </div>
           )}
-          {branchSalary.length > 0 && (
-            <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>Net Pay by Branch</h3>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie data={branchSalary} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
-                    {branchSalary.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(v) => `${Number(v).toLocaleString()} SAR`} />
-                  <Legend iconSize={10} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+          {filterBranch === 'all' ? (
+            branchSalary.length > 0 && (
+              <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>Net Pay by Branch</h3>
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie data={branchSalary} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
+                      {branchSalary.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip formatter={(v) => `${Number(v).toLocaleString()} SAR`} />
+                    <Legend iconSize={10} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )
+          ) : (
+            shiftSalary.length > 0 && (
+              <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>Net Pay by Shift · {filterBranch}</h3>
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie data={shiftSalary} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
+                      {shiftSalary.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip formatter={(v) => `${Number(v).toLocaleString()} SAR`} />
+                    <Legend iconSize={10} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )
           )}
         </div>
       )}

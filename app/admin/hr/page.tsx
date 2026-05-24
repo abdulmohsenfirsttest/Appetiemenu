@@ -19,6 +19,7 @@ interface CustomPayrollRow {
   basic_salary: number; ot_hours: number; ot_pay: number; net_pay: number
   branch: string; shift: string
   salary_paid?: boolean; vacation_status?: VacationStatus
+  vacation_start?: string; vacation_end?: string
 }
 interface CustomPayrollMonth {
   id: string; month: string; createdAt: string; records: CustomPayrollRow[]
@@ -29,6 +30,7 @@ interface Employee {
   basic_salary: number; position: string; branch: string; shift: string
   ot_hours: number; ot_rate: number; ot_pay: number; net_pay: number
   salary_paid: boolean; vacation_status: VacationStatus; restaurant?: string
+  vacation_start?: string; vacation_end?: string
 }
 
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -138,6 +140,7 @@ export default function HRPage() {
   const [customMonths, setCustomMonths] = useState<CustomPayrollMonth[]>([])
   const [monthModal, setMonthModal] = useState<{ open: boolean; draft: CustomPayrollMonth; setAsCurrent: boolean } | null>(null)
   const [currentMonthLabel, setCurrentMonthLabel] = useState<string | null>(null)
+  const [vacationModal, setVacationModal] = useState<{ type: 'employee' | 'custom'; empId?: number; monthId?: string; rowId?: string; name: string; start: string; end: string } | null>(null)
 
   useEffect(() => { loadData(); loadCustomMonths() }, [])
 
@@ -376,10 +379,50 @@ export default function HRPage() {
     await supabase.from('employees').update({ salary_paid: updated.salary_paid }).eq('id', emp.id)
   }
 
-  async function cycleVacation(emp: Employee) {
-    const next: VacationStatus = emp.vacation_status === 'none' ? 'on_vacation' : emp.vacation_status === 'on_vacation' ? 'taken' : 'none'
-    setEmployees(prev => prev.map(e => e.id === emp.id ? { ...e, vacation_status: next } : e))
-    await supabase.from('employees').update({ vacation_status: next }).eq('id', emp.id)
+  function calcVacationStatus(start?: string, end?: string): VacationStatus {
+    if (!start || !end) return 'none'
+    const today = new Date().toISOString().slice(0, 10)
+    return today > end ? 'taken' : 'on_vacation'
+  }
+
+  function formatVacDates(start?: string, end?: string) {
+    if (!start || !end) return null
+    const fmt = (d: string) => { const [y, m, day] = d.split('-'); return `${day}/${m}/${y.slice(2)}` }
+    return `${fmt(start)} → ${fmt(end)}`
+  }
+
+  async function saveVacation() {
+    if (!vacationModal) return
+    if (vacationModal.type === 'employee' && vacationModal.empId != null) {
+      const status = calcVacationStatus(vacationModal.start, vacationModal.end)
+      setEmployees(prev => prev.map(e => e.id === vacationModal.empId
+        ? { ...e, vacation_start: vacationModal.start, vacation_end: vacationModal.end, vacation_status: status } : e))
+      await supabase.from('employees').update({ vacation_start: vacationModal.start, vacation_end: vacationModal.end, vacation_status: status }).eq('id', vacationModal.empId)
+    } else if (vacationModal.type === 'custom' && vacationModal.monthId && vacationModal.rowId) {
+      const status = calcVacationStatus(vacationModal.start, vacationModal.end)
+      const updated = customMonths.map(m => m.id !== vacationModal.monthId ? m : {
+        ...m, records: m.records.map(r => r.rowId !== vacationModal.rowId ? r
+          : { ...r, vacation_start: vacationModal.start, vacation_end: vacationModal.end, vacation_status: status })
+      })
+      persistCustomMonths(updated)
+    }
+    setVacationModal(null)
+  }
+
+  async function clearVacation() {
+    if (!vacationModal) return
+    if (vacationModal.type === 'employee' && vacationModal.empId != null) {
+      setEmployees(prev => prev.map(e => e.id === vacationModal.empId
+        ? { ...e, vacation_start: undefined, vacation_end: undefined, vacation_status: 'none' } : e))
+      await supabase.from('employees').update({ vacation_start: null, vacation_end: null, vacation_status: 'none' }).eq('id', vacationModal.empId)
+    } else if (vacationModal.type === 'custom' && vacationModal.monthId && vacationModal.rowId) {
+      const updated = customMonths.map(m => m.id !== vacationModal.monthId ? m : {
+        ...m, records: m.records.map(r => r.rowId !== vacationModal.rowId ? r
+          : { ...r, vacation_start: undefined, vacation_end: undefined, vacation_status: 'none' as VacationStatus })
+      })
+      persistCustomMonths(updated)
+    }
+    setVacationModal(null)
   }
 
   async function saveOTInline(emp: Employee) {
@@ -829,10 +872,15 @@ export default function HRPage() {
                       </button>
                     </td>
                     <td style={{ padding: '11px 12px', textAlign: 'center' }}>
-                      <button onClick={() => cycleVacation(emp)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-                        background: emp.vacation_status === 'on_vacation' ? '#fef3c7' : emp.vacation_status === 'taken' ? '#dbeafe' : '#f1f5f9',
-                        color: emp.vacation_status === 'on_vacation' ? '#d97706' : emp.vacation_status === 'taken' ? '#2563eb' : '#94a3b8' }}>
-                        {emp.vacation_status === 'on_vacation' ? t('On Leave', 'في إجازة') : emp.vacation_status === 'taken' ? t('Taken', 'منتهية') : t('None', 'لا شيء')}
+                      <button
+                        onClick={() => setVacationModal({ type: 'employee', empId: emp.id, name: emp.name, start: emp.vacation_start ?? '', end: emp.vacation_end ?? '' })}
+                        style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.15s', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          background: emp.vacation_status === 'on_vacation' ? '#fef3c7' : emp.vacation_status === 'taken' ? '#dbeafe' : '#f1f5f9',
+                          color: emp.vacation_status === 'on_vacation' ? '#d97706' : emp.vacation_status === 'taken' ? '#2563eb' : '#94a3b8' }}
+                        title={formatVacDates(emp.vacation_start, emp.vacation_end) ?? undefined}>
+                        {emp.vacation_status === 'none'
+                          ? t('None', 'لا شيء')
+                          : formatVacDates(emp.vacation_start, emp.vacation_end) ?? (emp.vacation_status === 'on_vacation' ? t('On Leave', 'في إجازة') : t('Taken', 'منتهية'))}
                       </button>
                     </td>
                     <td style={{ padding: '11px 12px', textAlign: 'center' }}>
@@ -1009,11 +1057,15 @@ export default function HRPage() {
                             </button>
                           </td>
                           <td style={{ padding: '11px 12px', textAlign: 'center' }}>
-                            <button onClick={() => cycleCustomVacation(selectedCustomMonth.id, row.rowId)}
-                              style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                            <button
+                              onClick={() => setVacationModal({ type: 'custom', monthId: selectedCustomMonth.id, rowId: row.rowId, name: row.name, start: row.vacation_start ?? '', end: row.vacation_end ?? '' })}
+                              style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.15s', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                 background: vac === 'on_vacation' ? '#fef3c7' : vac === 'taken' ? '#dbeafe' : '#f1f5f9',
-                                color: vac === 'on_vacation' ? '#d97706' : vac === 'taken' ? '#2563eb' : '#94a3b8' }}>
-                              {vac === 'on_vacation' ? t('On Leave', 'في إجازة') : vac === 'taken' ? t('Taken', 'منتهية') : t('None', 'لا شيء')}
+                                color: vac === 'on_vacation' ? '#d97706' : vac === 'taken' ? '#2563eb' : '#94a3b8' }}
+                              title={formatVacDates(row.vacation_start, row.vacation_end) ?? undefined}>
+                              {vac === 'none'
+                                ? t('None', 'لا شيء')
+                                : formatVacDates(row.vacation_start, row.vacation_end) ?? (vac === 'on_vacation' ? t('On Leave', 'في إجازة') : t('Taken', 'منتهية'))}
                             </button>
                           </td>
                           <td style={{ padding: '11px 12px', textAlign: 'center' }}>
@@ -1204,6 +1256,67 @@ export default function HRPage() {
                   {t('Set as Current Month', 'تعيين كشهر حالي')}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vacation Date Picker Modal */}
+      {vacationModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
+          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 380, boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }}>
+            {/* Header */}
+            <div style={{ borderTop: '4px solid #f59e0b', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 2 }}>{t('Set Vacation', 'تحديد الإجازة')}</h2>
+                <p style={{ fontSize: 12, color: '#94a3b8' }}>{vacationModal.name}</p>
+              </div>
+              <button className="ibtn ibtn-edit" onClick={() => setVacationModal(null)}><CloseIcon /></button>
+            </div>
+            {/* Body */}
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('Start Date', 'تاريخ البدء')}</label>
+                <input
+                  type="date"
+                  value={vacationModal.start}
+                  onChange={e => setVacationModal({ ...vacationModal, start: e.target.value })}
+                  className="admin-input"
+                  style={{ fontSize: 14 }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('End Date', 'تاريخ الانتهاء')}</label>
+                <input
+                  type="date"
+                  value={vacationModal.end}
+                  min={vacationModal.start}
+                  onChange={e => setVacationModal({ ...vacationModal, end: e.target.value })}
+                  className="admin-input"
+                  style={{ fontSize: 14 }}
+                />
+              </div>
+              {vacationModal.start && vacationModal.end && (
+                <div style={{ background: '#fef3c7', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#d97706', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {formatVacDates(vacationModal.start, vacationModal.end)}
+                  <span style={{ fontSize: 11, fontWeight: 500, color: '#92400e', marginInlineStart: 4 }}>
+                    ({Math.ceil((new Date(vacationModal.end).getTime() - new Date(vacationModal.start).getTime()) / 86400000) + 1} {t('days', 'يوم')})
+                  </span>
+                </div>
+              )}
+            </div>
+            {/* Footer */}
+            <div style={{ padding: '14px 20px', borderTop: '1px solid var(--admin-border2)', display: 'flex', gap: 10 }}>
+              <button onClick={clearVacation} style={{ flex: 1, padding: '10px', borderRadius: 12, border: '1.5px solid #fecaca', background: '#fef2f2', fontSize: 13, fontWeight: 600, color: '#ef4444', cursor: 'pointer' }}>
+                {t('Clear Vacation', 'إلغاء الإجازة')}
+              </button>
+              <button onClick={saveVacation} disabled={!vacationModal.start || !vacationModal.end}
+                style={{ flex: 2, padding: '10px', borderRadius: 12, border: 'none', fontSize: 13, fontWeight: 700, color: 'white', cursor: vacationModal.start && vacationModal.end ? 'pointer' : 'not-allowed',
+                  background: vacationModal.start && vacationModal.end ? '#f59e0b' : '#94a3b8',
+                  boxShadow: vacationModal.start && vacationModal.end ? '0 2px 8px rgba(245,158,11,0.35)' : 'none' }}>
+                {t('Save Vacation', 'حفظ الإجازة')}
+              </button>
             </div>
           </div>
         </div>

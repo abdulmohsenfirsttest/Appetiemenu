@@ -31,6 +31,21 @@ interface Employee {
   salary_paid: boolean; vacation_status: VacationStatus; restaurant?: string
 }
 
+const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
+const CURRENT_YEAR = new Date().getFullYear()
+const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1]
+
+function formatMonthLabel(monthIdx: number, year: number) {
+  return `${MONTHS_EN[monthIdx]} ${year}`
+}
+function parseMonthLabel(label: string): { monthIdx: number; year: number } {
+  const parts = label.trim().split(' ')
+  const monthIdx = MONTHS_EN.indexOf(parts[0])
+  const year = parseInt(parts[1]) || CURRENT_YEAR
+  return { monthIdx: monthIdx >= 0 ? monthIdx : new Date().getMonth(), year }
+}
+
 const BRANCHES = ['Ar Rayyan', 'Hittin', 'Malqa', '']
 const SHIFTS = ['Morning', 'Night', 'Double Shift', 'Evening', '']
 const POSITIONS = ['Manager', 'Operation Manager', 'Supervisor', 'Head Chef', 'Bakery Chef', 'Grill', 'Pie', 'Cashier / Salad / Prep', 'Pie / Cashier', 'Pie / Grill / Cashier', 'Preparation', 'Salad / Preparation', '']
@@ -167,10 +182,11 @@ export default function HRPage() {
   }
 
   function openNewMonth() {
+    const now = new Date()
     const draft: CustomPayrollMonth = {
       id: `cm_${Date.now()}`,
-      month: '',
-      createdAt: new Date().toISOString(),
+      month: formatMonthLabel(now.getMonth(), now.getFullYear()),
+      createdAt: now.toISOString(),
       records: [emptyRow()],
     }
     setMonthModal({ open: true, draft, setAsCurrent: false })
@@ -1058,15 +1074,33 @@ export default function HRPage() {
             {/* Header */}
             <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 24px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Month Name', 'اسم الشهر')}</label>
-                <input
-                  type="text"
-                  placeholder={t('e.g. April 2026', 'مثال: أبريل 2026')}
-                  value={monthModal.draft.month}
-                  onChange={e => setMonthModal({ ...monthModal, draft: { ...monthModal.draft, month: e.target.value } })}
-                  className="admin-input"
-                  style={{ marginTop: 6, fontWeight: 700, fontSize: 15 }}
-                />
+                <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>{t('Select Month', 'اختر الشهر')}</label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <select
+                    value={parseMonthLabel(monthModal.draft.month).monthIdx}
+                    onChange={e => {
+                      const { year } = parseMonthLabel(monthModal.draft.month)
+                      setMonthModal({ ...monthModal, draft: { ...monthModal.draft, month: formatMonthLabel(Number(e.target.value), year) } })
+                    }}
+                    className="admin-select"
+                    style={{ flex: 2, fontWeight: 700, fontSize: 14 }}
+                  >
+                    {MONTHS_EN.map((m, i) => (
+                      <option key={i} value={i}>{isAr ? MONTHS_AR[i] : m}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={parseMonthLabel(monthModal.draft.month).year}
+                    onChange={e => {
+                      const { monthIdx } = parseMonthLabel(monthModal.draft.month)
+                      setMonthModal({ ...monthModal, draft: { ...monthModal.draft, month: formatMonthLabel(monthIdx, Number(e.target.value)) } })
+                    }}
+                    className="admin-select"
+                    style={{ flex: 1, fontWeight: 700, fontSize: 14 }}
+                  >
+                    {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
               </div>
               <button onClick={copyCurrentEmployees}
                 style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'var(--admin-card)', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }}>

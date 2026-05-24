@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { SEED_EMPLOYEES } from '@/lib/seed-data'
+import { PAYROLL_HISTORY } from '@/lib/payroll-history-data'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -20,7 +21,7 @@ interface Employee {
 
 const BRANCHES = ['Ar Rayyan', 'Hittin', 'Malqa', '']
 const SHIFTS = ['Morning', 'Night', 'Double Shift', 'Evening', '']
-const POSITIONS = ['Manager', 'Operation Manager', 'Head Chef', 'Bakery Chef', 'Grill', 'Pie', 'Cashier / Salad / Prep', 'Pie / Cashier', 'Pie / Grill / Cashier', 'Preparation', 'Salad / Preparation', '']
+const POSITIONS = ['Manager', 'Operation Manager', 'Supervisor', 'Head Chef', 'Bakery Chef', 'Grill', 'Pie', 'Cashier / Salad / Prep', 'Pie / Cashier', 'Pie / Grill / Cashier', 'Preparation', 'Salad / Preparation', '']
 
 const BRANCH_COLORS: Record<string, { text: string; bg: string }> = {
   'Ar Rayyan': { text: '#16a34a', bg: '#dcfce7' },
@@ -103,6 +104,8 @@ export default function HRPage() {
   const [otDraft, setOtDraft] = useState('')
   const [status, setStatus] = useState('')
   const [delConfirm, setDelConfirm] = useState<{ id: number; name: string } | null>(null)
+  const [activeTab, setActiveTab] = useState<'current' | 'history'>('current')
+  const [selectedMonth, setSelectedMonth] = useState(PAYROLL_HISTORY[PAYROLL_HISTORY.length - 1].month)
 
   useEffect(() => { loadData() }, [])
 
@@ -223,6 +226,23 @@ export default function HRPage() {
   const paidCount = employees.filter(e => e.salary_paid).length
   const vacationCount = employees.filter(e => e.vacation_status === 'on_vacation').length
 
+  const historyMonthData = PAYROLL_HISTORY.find(p => p.month === selectedMonth)?.records ?? []
+  const historyTotalBasic = historyMonthData.reduce((s, e) => s + e.basic_salary, 0)
+  const historyTotalOT = historyMonthData.reduce((s, e) => s + e.ot_pay, 0)
+  const historyTotalNet = historyMonthData.reduce((s, e) => s + e.net_pay, 0)
+
+  function exportHistoryExcel() {
+    const rows = historyMonthData.map((e, i) => ({
+      '#': i + 1, Name: e.name, Iqama: e.iqama ?? '', IBAN: e.iban, Bank: e.bank,
+      Nationality: e.nationality, 'Basic SAR': e.basic_salary,
+      'OT Pay': e.ot_pay.toFixed(2), 'Net Pay': e.net_pay.toFixed(2),
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Payroll')
+    XLSX.writeFile(wb, `Payroll_${selectedMonth.replace(' ', '_')}.xlsx`)
+  }
+
   const topOT = [...employees].filter(e => e.ot_hours > 0).sort((a, b) => b.ot_hours - a.ot_hours).slice(0, 8).map(e => ({ name: e.name.split(' ')[0], hrs: e.ot_hours }))
   const branchSalary = ['Ar Rayyan', 'Hittin', 'Malqa'].map((b, i) => ({
     name: b, color: CHART_COLORS[i],
@@ -259,6 +279,18 @@ export default function HRPage() {
           <p style={{ fontSize: 13, color: '#64748b' }}>{employees.length} employees · Current month payroll</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Tab switcher */}
+          <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 10, padding: 3, gap: 2 }}>
+            {(['current', 'history'] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)} style={{
+                padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                background: activeTab === tab ? 'white' : 'transparent',
+                color: activeTab === tab ? '#0f172a' : '#64748b',
+                boxShadow: activeTab === tab ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.15s',
+              }}>{tab === 'current' ? 'Current' : 'History'}</button>
+            ))}
+          </div>
           {/* OT Multiplier */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--admin-card)', border: '1.5px solid var(--admin-border)', borderRadius: 10, padding: '6px 10px' }}>
             <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginRight: 4 }}>OT:</span>
@@ -280,11 +312,11 @@ export default function HRPage() {
       {status && <div style={{ padding: '10px 16px', background: '#fef2f2', borderRadius: 10, fontSize: 13, color: '#dc2626', border: '1px solid #fecaca' }}>{status}</div>}
 
       {/* Summary Cards */}
-      {loading ? (
+      {activeTab === 'current' && loading ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
           {Array.from({ length: 7 }).map((_, i) => <div key={i} style={{ height: 80, background: 'var(--admin-card)', borderRadius: 14, border: '1px solid var(--admin-border2)' }} className="shimmer" />)}
         </div>
-      ) : (
+      ) : activeTab === 'current' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
           {summaryCards.map((card, i) => (
             <div key={i} style={{ background: 'var(--admin-card)', borderRadius: 14, padding: '14px 16px', border: '1px solid var(--admin-border2)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', borderTop: `3px solid ${card.color}` }}>
@@ -293,10 +325,10 @@ export default function HRPage() {
             </div>
           ))}
         </div>
-      )}
+      ) : null}
 
       {/* Charts */}
-      {!loading && (topOT.length > 0 || branchSalary.length > 0) && (
+      {activeTab === 'current' && !loading && (topOT.length > 0 || branchSalary.length > 0) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {topOT.length > 0 && (
             <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
@@ -329,7 +361,7 @@ export default function HRPage() {
       )}
 
       {/* Toolbar */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+      {activeTab === 'current' && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }}>
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -348,10 +380,10 @@ export default function HRPage() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export
         </button>
-      </div>
+      </div>}
 
       {/* Table */}
-      <div style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      {activeTab === 'current' && <div style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, whiteSpace: 'nowrap' }}>
             <thead>
@@ -460,7 +492,77 @@ export default function HRPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </div>}
+
+      {/* Payroll History */}
+      {activeTab === 'history' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Month selector + export */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}
+              className="admin-select" style={{ width: 'auto', minWidth: 180, fontWeight: 600 }}>
+              {PAYROLL_HISTORY.map(p => <option key={p.month} value={p.month}>{p.month}</option>)}
+            </select>
+            <span style={{ fontSize: 13, color: '#64748b' }}>{historyMonthData.length} employees</span>
+            <button onClick={exportHistoryExcel} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer', marginLeft: 'auto' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
+          </div>
+
+          {/* Summary cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            {[
+              { label: 'Employees', value: historyMonthData.length, color: '#25D366' },
+              { label: 'Total Basic', value: `${historyTotalBasic.toLocaleString()} SAR`, color: '#6366f1' },
+              { label: 'Total OT Pay', value: `${historyTotalOT.toFixed(0)} SAR`, color: '#f59e0b' },
+              { label: 'Total Net Pay', value: `${historyTotalNet.toFixed(0)} SAR`, color: '#10b981' },
+            ].map((card, i) => (
+              <div key={i} style={{ background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', borderTop: `3px solid ${card.color}` }}>
+                <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', lineHeight: 1.1, marginTop: 4 }}>{card.value}</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{card.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Table */}
+          <div style={{ background: 'white', borderRadius: 16, border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, whiteSpace: 'nowrap' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #f1f5f9' }}>
+                    {['#', 'Name', 'Nationality', 'IBAN', 'Bank', 'Basic SAR', 'OT Pay', 'Net Pay'].map(h => (
+                      <th key={h} style={{ padding: '11px 12px', textAlign: h === '#' || h === 'Name' || h === 'Nationality' || h === 'IBAN' || h === 'Bank' ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {historyMonthData.map((emp, idx) => (
+                    <tr key={idx} style={{ borderBottom: idx < historyMonthData.length - 1 ? '1px solid #f8fafc' : 'none' }}
+                      onMouseOver={e => (e.currentTarget.style.background = '#fafbfc')}
+                      onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
+                      <td style={{ padding: '11px 12px', color: '#94a3b8', fontSize: 12 }}>{idx + 1}</td>
+                      <td style={{ padding: '11px 12px' }}>
+                        <p style={{ fontWeight: 600, color: '#0f172a' }}>{emp.name}</p>
+                        <p style={{ fontSize: 11, color: '#94a3b8' }}>{emp.iqama ?? '–'}</p>
+                      </td>
+                      <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 12 }}>{emp.nationality || '–'}</td>
+                      <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 11, fontFamily: 'monospace' }}>{emp.iban === 'BY CASH' ? <span style={{ color: '#d97706', fontFamily: 'inherit', fontWeight: 600 }}>Cash</span> : emp.iban}</td>
+                      <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 12 }}>{emp.bank || '–'}</td>
+                      <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>{emp.basic_salary.toLocaleString()}</td>
+                      <td style={{ padding: '11px 12px', textAlign: 'right', color: emp.ot_pay > 0 ? '#25D366' : '#94a3b8', fontWeight: emp.ot_pay > 0 ? 600 : 400 }}>{emp.ot_pay.toFixed(2)}</td>
+                      <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 800, color: '#25D366' }}>{emp.net_pay.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                  {historyMonthData.length === 0 && (
+                    <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No data</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Employee Modal */}
       {modal.open && modal.emp && (
@@ -523,7 +625,7 @@ export default function HRPage() {
                   <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Restaurant</label>
                   <input list="restaurants" type="text" value={modal.emp.restaurant || ''} className="admin-input"
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, restaurant: e.target.value } }))} />
-                  <datalist id="restaurants"><option value="Appetie" /><option value="Ghabashi" /><option value="Piece Bakery" /></datalist>
+                  <datalist id="restaurants"><option value="Appetie" /><option value="Ghabashi" /><option value="Piece Bakery" /><option value="Manager Supervised" /></datalist>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Vacation Status</label>

@@ -117,7 +117,8 @@ export default function HRPage() {
   const [activeTab, setActiveTab] = useState<'current' | 'history'>('current')
   const [selectedMonth, setSelectedMonth] = useState(PAYROLL_HISTORY[PAYROLL_HISTORY.length - 1].month)
   const [customMonths, setCustomMonths] = useState<CustomPayrollMonth[]>([])
-  const [monthModal, setMonthModal] = useState<{ open: boolean; draft: CustomPayrollMonth } | null>(null)
+  const [monthModal, setMonthModal] = useState<{ open: boolean; draft: CustomPayrollMonth; setAsCurrent: boolean } | null>(null)
+  const [currentMonthLabel, setCurrentMonthLabel] = useState<string | null>(null)
 
   useEffect(() => { loadData(); loadCustomMonths() }, [])
 
@@ -125,7 +126,35 @@ export default function HRPage() {
     try {
       const raw = localStorage.getItem('hr_custom_months')
       if (raw) setCustomMonths(JSON.parse(raw))
+      const label = localStorage.getItem('hr_current_month_label')
+      if (label) setCurrentMonthLabel(label)
     } catch {}
+  }
+
+  function customToEmployees(records: CustomPayrollRow[]): Employee[] {
+    return records.map((r, i) => ({
+      id: i + 1,
+      name: r.name, iqama: r.iqama, iban: r.iban,
+      basic_salary: r.basic_salary, position: '',
+      branch: r.branch, shift: r.shift,
+      ot_hours: r.ot_hours,
+      ot_rate: r.basic_salary / 30 / 8,
+      ot_pay: r.ot_pay, net_pay: r.net_pay,
+      salary_paid: false, vacation_status: 'none' as VacationStatus,
+      restaurant: '',
+    }))
+  }
+
+  function setAsCurrentMonth(records: CustomPayrollRow[], label: string) {
+    setEmployees(customToEmployees(records))
+    setCurrentMonthLabel(label)
+    localStorage.setItem('hr_current_month_label', label)
+  }
+
+  function resetToLiveData() {
+    setCurrentMonthLabel(null)
+    localStorage.removeItem('hr_current_month_label')
+    loadData()
   }
 
   function persistCustomMonths(months: CustomPayrollMonth[]) {
@@ -140,7 +169,7 @@ export default function HRPage() {
       createdAt: new Date().toISOString(),
       records: [emptyRow()],
     }
-    setMonthModal({ open: true, draft })
+    setMonthModal({ open: true, draft, setAsCurrent: false })
   }
 
   function emptyRow(): CustomPayrollRow {
@@ -255,8 +284,13 @@ export default function HRPage() {
       ? customMonths.map(m => m.id === monthModal.draft.id ? monthModal.draft : m)
       : [...customMonths, monthModal.draft]
     persistCustomMonths(updated)
-    setSelectedMonth(monthModal.draft.month)
-    setActiveTab('history')
+    if (monthModal.setAsCurrent) {
+      setAsCurrentMonth(monthModal.draft.records, monthModal.draft.month)
+      setActiveTab('current')
+    } else {
+      setSelectedMonth(monthModal.draft.month)
+      setActiveTab('history')
+    }
     setMonthModal(null)
   }
 
@@ -477,12 +511,28 @@ export default function HRPage() {
               }}>{v}x</button>
             ))}
           </div>
+          <button onClick={openNewMonth} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'var(--admin-card)', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            New Month
+          </button>
           <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#25D366', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,211,102,0.35)' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Employee
           </button>
         </div>
       </div>
+
+      {/* Custom month banner */}
+      {activeTab === 'current' && currentMonthLabel && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, fontSize: 13 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span style={{ color: '#1d4ed8', fontWeight: 600 }}>Showing: {currentMonthLabel}</span>
+          <span style={{ color: '#64748b' }}>— custom month data</span>
+          <button onClick={resetToLiveData} style={{ marginLeft: 'auto', padding: '5px 12px', borderRadius: 8, border: '1.5px solid #bfdbfe', background: 'white', fontSize: 12, fontWeight: 600, color: '#2563eb', cursor: 'pointer' }}>
+            Reset to live data
+          </button>
+        </div>
+      )}
 
       {status && <div style={{ padding: '10px 16px', background: '#fef2f2', borderRadius: 10, fontSize: 13, color: '#dc2626', border: '1px solid #fecaca' }}>{status}</div>}
 
@@ -768,7 +818,7 @@ export default function HRPage() {
             <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
               {selectedCustomMonth && (
                 <>
-                  <button onClick={() => setMonthModal({ open: true, draft: { ...selectedCustomMonth, records: selectedCustomMonth.records.map(r => ({ ...r })) } })}
+                  <button onClick={() => setMonthModal({ open: true, draft: { ...selectedCustomMonth, records: selectedCustomMonth.records.map(r => ({ ...r })) }, setAsCurrent: false })}
                     style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     Edit
@@ -939,12 +989,18 @@ export default function HRPage() {
             </div>
 
             {/* Footer */}
-            <div style={{ padding: '14px 24px', borderTop: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ padding: '14px 24px', borderTop: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <button onClick={addRow} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: '1.5px dashed #e2e8f0', borderRadius: 10, background: 'transparent', fontSize: 12, fontWeight: 600, color: '#64748b', cursor: 'pointer' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add Row
               </button>
-              <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 8 }}>{monthModal.draft.records.length} employees · Total net: {monthModal.draft.records.reduce((s, r) => s + r.net_pay, 0).toLocaleString()} SAR</span>
+              <span style={{ fontSize: 12, color: '#94a3b8' }}>{monthModal.draft.records.length} employees · {monthModal.draft.records.reduce((s, r) => s + r.net_pay, 0).toLocaleString()} SAR</span>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#2563eb', cursor: 'pointer', marginLeft: 8, padding: '6px 12px', background: monthModal.setAsCurrent ? '#eff6ff' : 'transparent', borderRadius: 8, border: monthModal.setAsCurrent ? '1.5px solid #bfdbfe' : '1.5px solid transparent', transition: 'all 0.15s' }}>
+                <input type="checkbox" checked={monthModal.setAsCurrent}
+                  onChange={e => setMonthModal({ ...monthModal, setAsCurrent: e.target.checked })}
+                  style={{ accentColor: '#2563eb' }} />
+                Set as Current Month
+              </label>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
                 <button onClick={() => setMonthModal(null)} style={{ padding: '10px 20px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
                 <button onClick={saveMonth} disabled={!monthModal.draft.month.trim()} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: monthModal.draft.month.trim() ? '#25D366' : '#94a3b8', fontSize: 13, fontWeight: 700, color: 'white', cursor: monthModal.draft.month.trim() ? 'pointer' : 'not-allowed', boxShadow: monthModal.draft.month.trim() ? '0 2px 8px rgba(37,211,102,0.3)' : 'none' }}>

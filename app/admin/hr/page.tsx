@@ -12,6 +12,16 @@ import * as XLSX from 'xlsx'
 
 type VacationStatus = 'none' | 'on_vacation' | 'taken'
 
+interface CustomPayrollRow {
+  rowId: string
+  name: string; iqama: string; iban: string; bank: string; nationality: string
+  basic_salary: number; ot_hours: number; ot_pay: number; net_pay: number
+  branch: string; shift: string
+}
+interface CustomPayrollMonth {
+  id: string; month: string; createdAt: string; records: CustomPayrollRow[]
+}
+
 interface Employee {
   id: number; name: string; iqama: string; iban: string
   basic_salary: number; position: string; branch: string; shift: string
@@ -106,8 +116,105 @@ export default function HRPage() {
   const [delConfirm, setDelConfirm] = useState<{ id: number; name: string } | null>(null)
   const [activeTab, setActiveTab] = useState<'current' | 'history'>('current')
   const [selectedMonth, setSelectedMonth] = useState(PAYROLL_HISTORY[PAYROLL_HISTORY.length - 1].month)
+  const [customMonths, setCustomMonths] = useState<CustomPayrollMonth[]>([])
+  const [monthModal, setMonthModal] = useState<{ open: boolean; draft: CustomPayrollMonth } | null>(null)
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => { loadData(); loadCustomMonths() }, [])
+
+  function loadCustomMonths() {
+    try {
+      const raw = localStorage.getItem('hr_custom_months')
+      if (raw) setCustomMonths(JSON.parse(raw))
+    } catch {}
+  }
+
+  function persistCustomMonths(months: CustomPayrollMonth[]) {
+    setCustomMonths(months)
+    localStorage.setItem('hr_custom_months', JSON.stringify(months))
+  }
+
+  function openNewMonth() {
+    const draft: CustomPayrollMonth = {
+      id: `cm_${Date.now()}`,
+      month: '',
+      createdAt: new Date().toISOString(),
+      records: [emptyRow()],
+    }
+    setMonthModal({ open: true, draft })
+  }
+
+  function emptyRow(): CustomPayrollRow {
+    return {
+      rowId: `r_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      name: '', iqama: '', iban: '', bank: '', nationality: '',
+      basic_salary: 1500, ot_hours: 0, ot_pay: 0, net_pay: 1500,
+      branch: 'Ar Rayyan', shift: 'Morning',
+    }
+  }
+
+  function calcRow(basic: number, otHrs: number) {
+    const otPay = (basic / 30 / 8) * 1.25 * otHrs
+    return { ot_pay: Math.round(otPay * 100) / 100, net_pay: Math.round((basic + otPay) * 100) / 100 }
+  }
+
+  function updateRow(rowId: string, field: keyof CustomPayrollRow, value: string | number) {
+    if (!monthModal) return
+    const rows = monthModal.draft.records.map(r => {
+      if (r.rowId !== rowId) return r
+      const updated = { ...r, [field]: value }
+      if (field === 'basic_salary' || field === 'ot_hours') {
+        const { ot_pay, net_pay } = calcRow(
+          field === 'basic_salary' ? Number(value) : r.basic_salary,
+          field === 'ot_hours' ? Number(value) : r.ot_hours,
+        )
+        return { ...updated, ot_pay, net_pay }
+      }
+      return updated
+    })
+    setMonthModal({ ...monthModal, draft: { ...monthModal.draft, records: rows } })
+  }
+
+  function addRow() {
+    if (!monthModal) return
+    setMonthModal({ ...monthModal, draft: { ...monthModal.draft, records: [...monthModal.draft.records, emptyRow()] } })
+  }
+
+  function removeRow(rowId: string) {
+    if (!monthModal) return
+    setMonthModal({ ...monthModal, draft: { ...monthModal.draft, records: monthModal.draft.records.filter(r => r.rowId !== rowId) } })
+  }
+
+  function copyCurrentEmployees() {
+    if (!monthModal) return
+    const rows: CustomPayrollRow[] = employees.map(e => ({
+      rowId: `r_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      name: e.name, iqama: e.iqama ?? '', iban: e.iban ?? '', bank: '', nationality: '',
+      basic_salary: e.basic_salary, ot_hours: e.ot_hours,
+      ot_pay: e.ot_pay, net_pay: e.net_pay,
+      branch: e.branch ?? '', shift: e.shift ?? '',
+    }))
+    setMonthModal({ ...monthModal, draft: { ...monthModal.draft, records: rows } })
+  }
+
+  function saveMonth() {
+    if (!monthModal || !monthModal.draft.month.trim()) return
+    const existing = customMonths.find(m => m.id === monthModal.draft.id)
+    const updated = existing
+      ? customMonths.map(m => m.id === monthModal.draft.id ? monthModal.draft : m)
+      : [...customMonths, monthModal.draft]
+    persistCustomMonths(updated)
+    setSelectedMonth(monthModal.draft.month)
+    setActiveTab('history')
+    setMonthModal(null)
+  }
+
+  function deleteCustomMonth(id: string) {
+    const updated = customMonths.filter(m => m.id !== id)
+    persistCustomMonths(updated)
+    if (!PAYROLL_HISTORY.find(p => p.month === selectedMonth) && !updated.find(m => m.month === selectedMonth)) {
+      setSelectedMonth(PAYROLL_HISTORY[PAYROLL_HISTORY.length - 1].month)
+    }
+  }
 
   async function loadData() {
     setLoading(true)
@@ -228,7 +335,17 @@ export default function HRPage() {
   const paidCount = analyticsEmps.filter(e => e.salary_paid).length
   const vacationCount = analyticsEmps.filter(e => e.vacation_status === 'on_vacation').length
 
-  const historyMonthData = PAYROLL_HISTORY.find(p => p.month === selectedMonth)?.records ?? []
+  const historyMonthData = (() => {
+    const seed = PAYROLL_HISTORY.find(p => p.month === selectedMonth)
+    if (seed) return seed.records
+    const custom = customMonths.find(m => m.month === selectedMonth)
+    if (custom) return custom.records.map(r => ({
+      name: r.name, iqama: r.iqama || null, iban: r.iban, bank: r.bank,
+      nationality: r.nationality, basic_salary: r.basic_salary, ot_pay: r.ot_pay, net_pay: r.net_pay,
+    }))
+    return []
+  })()
+  const selectedCustomMonth = customMonths.find(m => m.month === selectedMonth)
   const historyTotalBasic = historyMonthData.reduce((s, e) => s + e.basic_salary, 0)
   const historyTotalOT = historyMonthData.reduce((s, e) => s + e.ot_pay, 0)
   const historyTotalNet = historyMonthData.reduce((s, e) => s + e.net_pay, 0)
@@ -582,17 +699,44 @@ export default function HRPage() {
       {/* Payroll History */}
       {activeTab === 'history' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Month selector + export */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Month selector + actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}
               className="admin-select" style={{ width: 'auto', minWidth: 180, fontWeight: 600 }}>
-              {PAYROLL_HISTORY.map(p => <option key={p.month} value={p.month}>{p.month}</option>)}
+              <optgroup label="Imported">
+                {PAYROLL_HISTORY.map(p => <option key={p.month} value={p.month}>{p.month}</option>)}
+              </optgroup>
+              {customMonths.length > 0 && (
+                <optgroup label="Custom">
+                  {customMonths.map(m => <option key={m.id} value={m.month}>{m.month}</option>)}
+                </optgroup>
+              )}
             </select>
             <span style={{ fontSize: 13, color: '#64748b' }}>{historyMonthData.length} employees</span>
-            <button onClick={exportHistoryExcel} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer', marginLeft: 'auto' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Export
-            </button>
+            <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+              {selectedCustomMonth && (
+                <>
+                  <button onClick={() => setMonthModal({ open: true, draft: { ...selectedCustomMonth, records: selectedCustomMonth.records.map(r => ({ ...r })) } })}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button onClick={() => deleteCustomMonth(selectedCustomMonth.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', border: '1.5px solid #fecaca', borderRadius: 10, background: '#fef2f2', fontSize: 13, fontWeight: 600, color: '#ef4444', cursor: 'pointer' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    Delete
+                  </button>
+                </>
+              )}
+              <button onClick={exportHistoryExcel} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export
+              </button>
+              <button onClick={openNewMonth} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', background: '#25D366', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,211,102,0.3)' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New Month
+              </button>
+            </div>
           </div>
 
           {/* Summary cards */}
@@ -644,6 +788,107 @@ export default function HRPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New / Edit Month Modal */}
+      {monthModal?.open && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 150, padding: 16, overflowY: 'auto' }}>
+          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 900, boxShadow: '0 25px 60px rgba(0,0,0,0.22)', margin: '16px auto', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Header */}
+            <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 24px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Month Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. April 2026"
+                  value={monthModal.draft.month}
+                  onChange={e => setMonthModal({ ...monthModal, draft: { ...monthModal.draft, month: e.target.value } })}
+                  className="admin-input"
+                  style={{ marginTop: 6, fontWeight: 700, fontSize: 15 }}
+                />
+              </div>
+              <button onClick={copyCurrentEmployees}
+                style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'var(--admin-card)', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy Current Employees
+              </button>
+              <button onClick={() => setMonthModal(null)} className="ibtn ibtn-edit"><CloseIcon /></button>
+            </div>
+
+            {/* Table */}
+            <div style={{ overflowX: 'auto', padding: '0 0 4px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: 'var(--admin-thead)', borderBottom: '1.5px solid var(--admin-border2)' }}>
+                    {['#', 'Name', 'Branch', 'Shift', 'Basic SAR', 'OT Hours', 'OT Pay', 'Net Pay', 'Iqama', 'IBAN', ''].map((h, i) => (
+                      <th key={i} style={{ padding: '10px 10px', textAlign: i >= 4 && i <= 7 ? 'right' : 'left', fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthModal.draft.records.map((row, idx) => (
+                    <tr key={row.rowId} style={{ borderBottom: '1px solid var(--admin-border2)' }}>
+                      <td style={{ padding: '6px 10px', color: '#94a3b8', fontSize: 11, width: 32 }}>{idx + 1}</td>
+                      <td style={{ padding: '4px 6px', minWidth: 160 }}>
+                        <input value={row.name} onChange={e => updateRow(row.rowId, 'name', e.target.value)}
+                          placeholder="Full name" className="admin-input" style={{ fontSize: 12, padding: '6px 10px' }} />
+                      </td>
+                      <td style={{ padding: '4px 6px', minWidth: 120 }}>
+                        <select value={row.branch} onChange={e => updateRow(row.rowId, 'branch', e.target.value)} className="admin-select" style={{ fontSize: 12, padding: '6px 8px' }}>
+                          <option value="">–</option>
+                          {BRANCHES.filter(b => b).map(b => <option key={b} value={b}>{b}</option>)}
+                        </select>
+                      </td>
+                      <td style={{ padding: '4px 6px', minWidth: 120 }}>
+                        <select value={row.shift} onChange={e => updateRow(row.rowId, 'shift', e.target.value)} className="admin-select" style={{ fontSize: 12, padding: '6px 8px' }}>
+                          <option value="">–</option>
+                          {SHIFTS.filter(s => s).map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </td>
+                      <td style={{ padding: '4px 6px', minWidth: 90 }}>
+                        <input type="number" value={row.basic_salary} onChange={e => updateRow(row.rowId, 'basic_salary', Number(e.target.value))}
+                          className="admin-input" style={{ fontSize: 12, padding: '6px 10px', textAlign: 'right' }} />
+                      </td>
+                      <td style={{ padding: '4px 6px', minWidth: 80 }}>
+                        <input type="number" value={row.ot_hours} onChange={e => updateRow(row.rowId, 'ot_hours', Number(e.target.value))}
+                          className="admin-input" style={{ fontSize: 12, padding: '6px 10px', textAlign: 'right' }} />
+                      </td>
+                      <td style={{ padding: '6px 10px', textAlign: 'right', color: row.ot_pay > 0 ? '#25D366' : '#94a3b8', fontWeight: 600, minWidth: 80 }}>{row.ot_pay.toFixed(2)}</td>
+                      <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 800, color: '#25D366', minWidth: 90 }}>{row.net_pay.toFixed(2)}</td>
+                      <td style={{ padding: '4px 6px', minWidth: 110 }}>
+                        <input value={row.iqama} onChange={e => updateRow(row.rowId, 'iqama', e.target.value)}
+                          placeholder="Iqama/ID" className="admin-input" style={{ fontSize: 12, padding: '6px 10px' }} />
+                      </td>
+                      <td style={{ padding: '4px 6px', minWidth: 140 }}>
+                        <input value={row.iban} onChange={e => updateRow(row.rowId, 'iban', e.target.value)}
+                          placeholder="IBAN / BY CASH" className="admin-input" style={{ fontSize: 12, padding: '6px 10px' }} />
+                      </td>
+                      <td style={{ padding: '4px 8px' }}>
+                        <button onClick={() => removeRow(row.rowId)} className="ibtn ibtn-del" title="Remove"><TrashIcon size={13} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '14px 24px', borderTop: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button onClick={addRow} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: '1.5px dashed #e2e8f0', borderRadius: 10, background: 'transparent', fontSize: 12, fontWeight: 600, color: '#64748b', cursor: 'pointer' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Row
+              </button>
+              <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 8 }}>{monthModal.draft.records.length} employees · Total net: {monthModal.draft.records.reduce((s, r) => s + r.net_pay, 0).toLocaleString()} SAR</span>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+                <button onClick={() => setMonthModal(null)} style={{ padding: '10px 20px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={saveMonth} disabled={!monthModal.draft.month.trim()} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: monthModal.draft.month.trim() ? '#25D366' : '#94a3b8', fontSize: 13, fontWeight: 700, color: 'white', cursor: monthModal.draft.month.trim() ? 'pointer' : 'not-allowed', boxShadow: monthModal.draft.month.trim() ? '0 2px 8px rgba(37,211,102,0.3)' : 'none' }}>
+                  Save Month
+                </button>
+              </div>
             </div>
           </div>
         </div>

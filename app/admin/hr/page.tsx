@@ -18,6 +18,7 @@ interface CustomPayrollRow {
   name: string; iqama: string; iban: string; bank: string; nationality: string
   basic_salary: number; ot_hours: number; ot_pay: number; net_pay: number
   branch: string; shift: string
+  salary_paid?: boolean; vacation_status?: VacationStatus
 }
 interface CustomPayrollMonth {
   id: string; month: string; createdAt: string; records: CustomPayrollRow[]
@@ -303,6 +304,31 @@ export default function HRPage() {
     }
   }
 
+  function toggleCustomPaid(monthId: string, rowId: string) {
+    const updated = customMonths.map(m => m.id !== monthId ? m : {
+      ...m, records: m.records.map(r => r.rowId !== rowId ? r : { ...r, salary_paid: !r.salary_paid })
+    })
+    persistCustomMonths(updated)
+  }
+
+  function cycleCustomVacation(monthId: string, rowId: string) {
+    const updated = customMonths.map(m => m.id !== monthId ? m : {
+      ...m, records: m.records.map(r => {
+        if (r.rowId !== rowId) return r
+        const next: VacationStatus = !r.vacation_status || r.vacation_status === 'none' ? 'on_vacation' : r.vacation_status === 'on_vacation' ? 'taken' : 'none'
+        return { ...r, vacation_status: next }
+      })
+    })
+    persistCustomMonths(updated)
+  }
+
+  function deleteCustomRow(monthId: string, rowId: string) {
+    const updated = customMonths.map(m => m.id !== monthId ? m : {
+      ...m, records: m.records.filter(r => r.rowId !== rowId)
+    })
+    persistCustomMonths(updated)
+  }
+
   async function loadData() {
     setLoading(true)
     const { data } = await supabase.from('employees').select('*').order('id')
@@ -438,11 +464,21 @@ export default function HRPage() {
   const historyTotalNet = historyMonthData.reduce((s, e) => s + e.net_pay, 0)
 
   function exportHistoryExcel() {
-    const rows = historyMonthData.map((e, i) => ({
-      '#': i + 1, Name: e.name, Iqama: e.iqama ?? '', IBAN: e.iban, Bank: e.bank,
-      Nationality: e.nationality, 'Basic SAR': e.basic_salary,
-      'OT Pay': e.ot_pay.toFixed(2), 'Net Pay': e.net_pay.toFixed(2),
-    }))
+    const rows = selectedCustomMonth
+      ? selectedCustomMonth.records.map((r, i) => ({
+          '#': i + 1, Name: r.name, Iqama: r.iqama, IBAN: r.iban,
+          Branch: r.branch, Shift: r.shift,
+          'Basic SAR': r.basic_salary, 'OT Hours': r.ot_hours,
+          'OT Rate': (r.basic_salary / 30 / 8).toFixed(4),
+          'OT Pay': r.ot_pay.toFixed(2), 'Net Pay': r.net_pay.toFixed(2),
+          'Salary Paid': r.salary_paid ? 'Yes' : 'No',
+          Vacation: r.vacation_status ?? 'none',
+        }))
+      : historyMonthData.map((e, i) => ({
+          '#': i + 1, Name: e.name, Iqama: e.iqama ?? '', IBAN: e.iban, Bank: e.bank,
+          Nationality: e.nationality, 'Basic SAR': e.basic_salary,
+          'OT Pay': e.ot_pay.toFixed(2), 'Net Pay': e.net_pay.toFixed(2),
+        }))
     const ws = XLSX.utils.json_to_sheet(rows)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Payroll')
@@ -891,40 +927,124 @@ export default function HRPage() {
             ))}
           </div>
 
-          {/* Table */}
-          <div style={{ background: 'white', borderRadius: 16, border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+          {/* Table — full view for custom months, compact for imported */}
+          <div style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, whiteSpace: 'nowrap' }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #f1f5f9' }}>
-                    {['#', t('Name', 'الاسم'), t('Nationality', 'الجنسية'), 'IBAN', t('Bank', 'البنك'), t('Basic SAR', 'الأساسي'), t('OT Pay', 'أجر الإضافي'), t('Net Pay', 'صافي الراتب')].map((h, i) => (
-                      <th key={i} style={{ padding: '11px 12px', textAlign: i <= 4 ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {historyMonthData.map((emp, idx) => (
-                    <tr key={idx} style={{ borderBottom: idx < historyMonthData.length - 1 ? '1px solid #f8fafc' : 'none' }}
-                      onMouseOver={e => (e.currentTarget.style.background = '#fafbfc')}
-                      onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
-                      <td style={{ padding: '11px 12px', color: '#94a3b8', fontSize: 12 }}>{idx + 1}</td>
-                      <td style={{ padding: '11px 12px' }}>
-                        <p style={{ fontWeight: 600, color: '#0f172a' }}>{emp.name}</p>
-                        <p style={{ fontSize: 11, color: '#94a3b8' }}>{emp.iqama ?? '–'}</p>
-                      </td>
-                      <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 12 }}>{emp.nationality || '–'}</td>
-                      <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 11, fontFamily: 'monospace' }}>{emp.iban === 'BY CASH' ? <span style={{ color: '#d97706', fontFamily: 'inherit', fontWeight: 600 }}>{t('Cash', 'نقدي')}</span> : emp.iban}</td>
-                      <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 12 }}>{emp.bank || '–'}</td>
-                      <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>{emp.basic_salary.toLocaleString()}</td>
-                      <td style={{ padding: '11px 12px', textAlign: 'right', color: emp.ot_pay > 0 ? '#25D366' : '#94a3b8', fontWeight: emp.ot_pay > 0 ? 600 : 400 }}>{emp.ot_pay.toFixed(2)}</td>
-                      <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 800, color: '#25D366' }}>{emp.net_pay.toFixed(2)}</td>
+              {selectedCustomMonth ? (
+                /* Full Current-style table for custom months */
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, whiteSpace: 'nowrap' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--admin-thead)', borderBottom: '1.5px solid #f1f5f9' }}>
+                      <th style={{ padding: '11px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>#</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Name', 'الاسم')}</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Branch', 'الفرع')}</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Shift', 'الوردية')}</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Basic', 'الأساسي')}</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('OT Hrs', 'س.إضافي')}</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('OT Rate', 'معدل الإضافي')}</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('OT Pay', 'أجر الإضافي')}</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Net Pay', 'صافي الراتب')}</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Paid', 'مدفوع')}</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Vacation', 'إجازة')}</th>
+                      <th style={{ padding: '11px 12px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Actions', 'إجراءات')}</th>
                     </tr>
-                  ))}
-                  {historyMonthData.length === 0 && (
-                    <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>{t('No data', 'لا توجد بيانات')}</td></tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {selectedCustomMonth.records.map((row, idx) => {
+                      const branchColor = BRANCH_COLORS[row.branch]
+                      const shiftColor = SHIFT_COLORS[row.shift]
+                      const otRate = row.basic_salary / 30 / 8
+                      const paid = row.salary_paid ?? false
+                      const vac = row.vacation_status ?? 'none'
+                      return (
+                        <tr key={row.rowId} style={{ borderBottom: idx < selectedCustomMonth.records.length - 1 ? '1px solid #f8fafc' : 'none' }}
+                          onMouseOver={e => (e.currentTarget.style.background = '#fafbfc')}
+                          onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
+                          <td style={{ padding: '11px 12px', color: '#94a3b8', fontSize: 12 }}>{idx + 1}</td>
+                          <td style={{ padding: '11px 12px' }}>
+                            <p style={{ fontWeight: 600, color: 'var(--admin-text)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.name}</p>
+                            <p style={{ fontSize: 11, color: '#94a3b8' }}>{row.iqama || '–'}</p>
+                          </td>
+                          <td style={{ padding: '11px 12px' }}>
+                            {row.branch ? (
+                              <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, fontWeight: 600, color: branchColor?.text ?? '#374151', background: branchColor?.bg ?? '#f3f4f6' }}>{row.branch}</span>
+                            ) : <span style={{ color: '#cbd5e1' }}>–</span>}
+                          </td>
+                          <td style={{ padding: '11px 12px' }}>
+                            {row.shift ? (
+                              <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, fontWeight: 600, color: shiftColor?.text ?? '#374151', background: shiftColor?.bg ?? '#f3f4f6' }}>{row.shift}</span>
+                            ) : <span style={{ color: '#cbd5e1' }}>–</span>}
+                          </td>
+                          <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--admin-text)' }}>{row.basic_salary.toLocaleString()}</td>
+                          <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 600, color: row.ot_hours > 0 ? '#25D366' : '#94a3b8' }}>{row.ot_hours || '0'}</td>
+                          <td style={{ padding: '11px 12px', textAlign: 'right', color: '#64748b', fontSize: 12 }}>{otRate.toFixed(2)}</td>
+                          <td style={{ padding: '11px 12px', textAlign: 'right', color: '#475569' }}>{row.ot_pay.toFixed(2)}</td>
+                          <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 800, color: '#25D366' }}>{row.net_pay.toFixed(2)}</td>
+                          <td style={{ padding: '11px 12px', textAlign: 'center' }}>
+                            <button onClick={() => toggleCustomPaid(selectedCustomMonth.id, row.rowId)}
+                              title={paid ? t('Mark unpaid', 'تعيين غير مدفوع') : t('Mark paid', 'تعيين مدفوع')}
+                              style={{ width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: paid ? '#dcfce7' : '#fef2f2', color: paid ? '#16a34a' : '#ef4444', transition: 'all 0.15s' }}>
+                              {paid ? (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                              ) : (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              )}
+                            </button>
+                          </td>
+                          <td style={{ padding: '11px 12px', textAlign: 'center' }}>
+                            <button onClick={() => cycleCustomVacation(selectedCustomMonth.id, row.rowId)}
+                              style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                                background: vac === 'on_vacation' ? '#fef3c7' : vac === 'taken' ? '#dbeafe' : '#f1f5f9',
+                                color: vac === 'on_vacation' ? '#d97706' : vac === 'taken' ? '#2563eb' : '#94a3b8' }}>
+                              {vac === 'on_vacation' ? t('On Leave', 'في إجازة') : vac === 'taken' ? t('Taken', 'منتهية') : t('None', 'لا شيء')}
+                            </button>
+                          </td>
+                          <td style={{ padding: '11px 12px', textAlign: 'center' }}>
+                            <button onClick={() => deleteCustomRow(selectedCustomMonth.id, row.rowId)}
+                              className="ibtn ibtn-del" title={t('Delete', 'حذف')}><TrashIcon /></button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                    {selectedCustomMonth.records.length === 0 && (
+                      <tr><td colSpan={12} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>{t('No employees', 'لا يوجد موظفون')}</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              ) : (
+                /* Compact table for imported history months */
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, whiteSpace: 'nowrap' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--admin-thead)', borderBottom: '1.5px solid #f1f5f9' }}>
+                      {['#', t('Name', 'الاسم'), t('Nationality', 'الجنسية'), 'IBAN', t('Bank', 'البنك'), t('Basic SAR', 'الأساسي'), t('OT Pay', 'أجر الإضافي'), t('Net Pay', 'صافي الراتب')].map((h, i) => (
+                        <th key={i} style={{ padding: '11px 12px', textAlign: i <= 4 ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historyMonthData.map((emp, idx) => (
+                      <tr key={idx} style={{ borderBottom: idx < historyMonthData.length - 1 ? '1px solid #f8fafc' : 'none' }}
+                        onMouseOver={e => (e.currentTarget.style.background = '#fafbfc')}
+                        onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
+                        <td style={{ padding: '11px 12px', color: '#94a3b8', fontSize: 12 }}>{idx + 1}</td>
+                        <td style={{ padding: '11px 12px' }}>
+                          <p style={{ fontWeight: 600, color: 'var(--admin-text)' }}>{emp.name}</p>
+                          <p style={{ fontSize: 11, color: '#94a3b8' }}>{emp.iqama ?? '–'}</p>
+                        </td>
+                        <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 12 }}>{emp.nationality || '–'}</td>
+                        <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 11, fontFamily: 'monospace' }}>{emp.iban === 'BY CASH' ? <span style={{ color: '#d97706', fontFamily: 'inherit', fontWeight: 600 }}>{t('Cash', 'نقدي')}</span> : emp.iban}</td>
+                        <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 12 }}>{emp.bank || '–'}</td>
+                        <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--admin-text)' }}>{emp.basic_salary.toLocaleString()}</td>
+                        <td style={{ padding: '11px 12px', textAlign: 'right', color: emp.ot_pay > 0 ? '#25D366' : '#94a3b8', fontWeight: emp.ot_pay > 0 ? 600 : 400 }}>{emp.ot_pay.toFixed(2)}</td>
+                        <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 800, color: '#25D366' }}>{emp.net_pay.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    {historyMonthData.length === 0 && (
+                      <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>{t('No data', 'لا توجد بيانات')}</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>

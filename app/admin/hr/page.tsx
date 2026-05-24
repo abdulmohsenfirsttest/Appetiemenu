@@ -152,6 +152,58 @@ export default function HRPage() {
     }
   }
 
+  const knownEmployees = (() => {
+    const map = new Map<string, Partial<CustomPayrollRow>>()
+    // current roster has branch/shift/basic — highest priority
+    employees.forEach(e => {
+      map.set(e.name.trim().toLowerCase(), {
+        name: e.name.trim(), iqama: e.iqama ?? '', iban: e.iban ?? '',
+        bank: '', nationality: '', basic_salary: e.basic_salary,
+        branch: e.branch ?? '', shift: e.shift ?? '',
+      })
+    })
+    // payroll history has iqama/iban/bank/nationality — fill gaps
+    PAYROLL_HISTORY.forEach(m => m.records.forEach(r => {
+      const key = r.name.trim().toLowerCase()
+      const existing = map.get(key)
+      map.set(key, {
+        name: r.name.trim(),
+        iqama: existing?.iqama || r.iqama || '',
+        iban: existing?.iban || r.iban || '',
+        bank: existing?.bank || r.bank || '',
+        nationality: existing?.nationality || r.nationality || '',
+        basic_salary: existing?.basic_salary ?? r.basic_salary,
+        branch: existing?.branch || '',
+        shift: existing?.shift || '',
+      })
+    }))
+    return Array.from(map.values())
+  })()
+
+  function selectEmployee(rowId: string, name: string) {
+    const match = knownEmployees.find(e => (e.name ?? '').toLowerCase() === name.trim().toLowerCase())
+    if (!monthModal) return
+    const rows = monthModal.draft.records.map(r => {
+      if (r.rowId !== rowId) return r
+      if (!match) return { ...r, name }
+      const basic = match.basic_salary ?? r.basic_salary
+      const { ot_pay, net_pay } = calcRow(basic, r.ot_hours)
+      return {
+        ...r,
+        name: match.name ?? name,
+        iqama: match.iqama ?? r.iqama,
+        iban: match.iban ?? r.iban,
+        bank: match.bank ?? r.bank,
+        nationality: match.nationality ?? r.nationality,
+        basic_salary: basic,
+        branch: match.branch || r.branch,
+        shift: match.shift || r.shift,
+        ot_pay, net_pay,
+      }
+    })
+    setMonthModal({ ...monthModal, draft: { ...monthModal.draft, records: rows } })
+  }
+
   function calcRow(basic: number, otHrs: number) {
     const otPay = (basic / 30 / 8) * 1.25 * otHrs
     return { ot_pay: Math.round(otPay * 100) / 100, net_pay: Math.round((basic + otPay) * 100) / 100 }
@@ -819,6 +871,10 @@ export default function HRPage() {
               <button onClick={() => setMonthModal(null)} className="ibtn ibtn-edit"><CloseIcon /></button>
             </div>
 
+            <datalist id="known-employees-list">
+              {knownEmployees.map((e, i) => <option key={i} value={e.name ?? ''} />)}
+            </datalist>
+
             {/* Table */}
             <div style={{ overflowX: 'auto', padding: '0 0 4px' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -833,9 +889,15 @@ export default function HRPage() {
                   {monthModal.draft.records.map((row, idx) => (
                     <tr key={row.rowId} style={{ borderBottom: '1px solid var(--admin-border2)' }}>
                       <td style={{ padding: '6px 10px', color: '#94a3b8', fontSize: 11, width: 32 }}>{idx + 1}</td>
-                      <td style={{ padding: '4px 6px', minWidth: 160 }}>
-                        <input value={row.name} onChange={e => updateRow(row.rowId, 'name', e.target.value)}
-                          placeholder="Full name" className="admin-input" style={{ fontSize: 12, padding: '6px 10px' }} />
+                      <td style={{ padding: '4px 6px', minWidth: 180 }}>
+                        <input
+                          list="known-employees-list"
+                          value={row.name}
+                          onChange={e => selectEmployee(row.rowId, e.target.value)}
+                          placeholder="Type or pick name…"
+                          className="admin-input"
+                          style={{ fontSize: 12, padding: '6px 10px' }}
+                        />
                       </td>
                       <td style={{ padding: '4px 6px', minWidth: 120 }}>
                         <select value={row.branch} onChange={e => updateRow(row.rowId, 'branch', e.target.value)} className="admin-select" style={{ fontSize: 12, padding: '6px 8px' }}>

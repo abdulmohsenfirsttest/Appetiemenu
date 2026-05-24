@@ -189,7 +189,7 @@ export default function HRPage() {
       createdAt: now.toISOString(),
       records: [emptyRow()],
     }
-    setMonthModal({ open: true, draft, setAsCurrent: false })
+    setMonthModal({ open: true, draft, setAsCurrent: true })
   }
 
   function emptyRow(): CustomPayrollRow {
@@ -295,14 +295,15 @@ export default function HRPage() {
     setMonthModal({ ...monthModal, draft: { ...monthModal.draft, records: rows } })
   }
 
-  function saveMonth() {
+  function saveMonth(asCurrent?: boolean) {
     if (!monthModal || !monthModal.draft.month.trim()) return
+    const setCurrent = asCurrent ?? monthModal.setAsCurrent
     const existing = customMonths.find(m => m.id === monthModal.draft.id)
     const updated = existing
       ? customMonths.map(m => m.id === monthModal.draft.id ? monthModal.draft : m)
       : [...customMonths, monthModal.draft]
     persistCustomMonths(updated)
-    if (monthModal.setAsCurrent) {
+    if (setCurrent) {
       setAsCurrentMonth(monthModal.draft.records, monthModal.draft.month)
       setActiveTab('current')
     } else {
@@ -1184,16 +1185,23 @@ export default function HRPage() {
                 {t('Add Row', 'إضافة صف')}
               </button>
               <span style={{ fontSize: 12, color: '#94a3b8' }}>{monthModal.draft.records.length} {t('employees', 'موظف')} · {monthModal.draft.records.reduce((s, r) => s + r.net_pay, 0).toLocaleString()} SAR</span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#2563eb', cursor: 'pointer', marginInlineStart: 8, padding: '6px 12px', background: monthModal.setAsCurrent ? '#eff6ff' : 'transparent', borderRadius: 8, border: monthModal.setAsCurrent ? '1.5px solid #bfdbfe' : '1.5px solid transparent', transition: 'all 0.15s' }}>
-                <input type="checkbox" checked={monthModal.setAsCurrent}
-                  onChange={e => setMonthModal({ ...monthModal, setAsCurrent: e.target.checked })}
-                  style={{ accentColor: '#2563eb' }} />
-                {t('Set as Current Month', 'تعيين كشهر حالي')}
-              </label>
-              <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 10 }}>
+              <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
                 <button onClick={() => setMonthModal(null)} style={{ padding: '10px 20px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>{t('Cancel', 'إلغاء')}</button>
-                <button onClick={saveMonth} disabled={!monthModal.draft.month.trim()} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: monthModal.draft.month.trim() ? '#25D366' : '#94a3b8', fontSize: 13, fontWeight: 700, color: 'white', cursor: monthModal.draft.month.trim() ? 'pointer' : 'not-allowed', boxShadow: monthModal.draft.month.trim() ? '0 2px 8px rgba(37,211,102,0.3)' : 'none' }}>
-                  {t('Save Month', 'حفظ الشهر')}
+                {/* Save to History only */}
+                <button
+                  onClick={() => saveMonth(false)}
+                  disabled={!monthModal.draft.month.trim()}
+                  style={{ padding: '10px 18px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#64748b', cursor: monthModal.draft.month.trim() ? 'pointer' : 'not-allowed', opacity: monthModal.draft.month.trim() ? 1 : 0.5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  {t('Save to History', 'حفظ في السجل')}
+                </button>
+                {/* Save as Current Month — primary */}
+                <button
+                  onClick={() => saveMonth(true)}
+                  disabled={!monthModal.draft.month.trim()}
+                  style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: monthModal.draft.month.trim() ? '#25D366' : '#94a3b8', fontSize: 13, fontWeight: 700, color: 'white', cursor: monthModal.draft.month.trim() ? 'pointer' : 'not-allowed', boxShadow: monthModal.draft.month.trim() ? '0 2px 8px rgba(37,211,102,0.3)' : 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {t('Set as Current Month', 'تعيين كشهر حالي')}
                 </button>
               </div>
             </div>

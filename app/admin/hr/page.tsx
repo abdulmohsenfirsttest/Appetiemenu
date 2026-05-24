@@ -219,12 +219,14 @@ export default function HRPage() {
       return 0
     })
 
-  const totalBasic = employees.reduce((s, e) => s + e.basic_salary, 0)
-  const totalOTHrs = employees.reduce((s, e) => s + e.ot_hours, 0)
-  const totalOTPay = employees.reduce((s, e) => s + e.ot_pay, 0)
-  const totalNet = employees.reduce((s, e) => s + e.net_pay, 0)
-  const paidCount = employees.filter(e => e.salary_paid).length
-  const vacationCount = employees.filter(e => e.vacation_status === 'on_vacation').length
+  const analyticsEmps = filterBranch === 'all' ? employees : employees.filter(e => e.branch === filterBranch)
+
+  const totalBasic = analyticsEmps.reduce((s, e) => s + e.basic_salary, 0)
+  const totalOTHrs = analyticsEmps.reduce((s, e) => s + e.ot_hours, 0)
+  const totalOTPay = analyticsEmps.reduce((s, e) => s + e.ot_pay, 0)
+  const totalNet = analyticsEmps.reduce((s, e) => s + e.net_pay, 0)
+  const paidCount = analyticsEmps.filter(e => e.salary_paid).length
+  const vacationCount = analyticsEmps.filter(e => e.vacation_status === 'on_vacation').length
 
   const historyMonthData = PAYROLL_HISTORY.find(p => p.month === selectedMonth)?.records ?? []
   const historyTotalBasic = historyMonthData.reduce((s, e) => s + e.basic_salary, 0)
@@ -243,19 +245,19 @@ export default function HRPage() {
     XLSX.writeFile(wb, `Payroll_${selectedMonth.replace(' ', '_')}.xlsx`)
   }
 
-  const topOT = [...employees].filter(e => e.ot_hours > 0).sort((a, b) => b.ot_hours - a.ot_hours).slice(0, 8).map(e => ({ name: e.name.split(' ')[0], hrs: e.ot_hours }))
+  const topOT = [...analyticsEmps].filter(e => e.ot_hours > 0).sort((a, b) => b.ot_hours - a.ot_hours).slice(0, 8).map(e => ({ name: e.name.split(' ')[0], hrs: e.ot_hours }))
   const branchSalary = ['Ar Rayyan', 'Hittin', 'Malqa'].map((b, i) => ({
     name: b, color: CHART_COLORS[i],
-    value: Math.round(employees.filter(e => e.branch === b).reduce((s, e) => s + e.net_pay, 0)),
+    value: Math.round(analyticsEmps.filter(e => e.branch === b).reduce((s, e) => s + e.net_pay, 0)),
   })).filter(b => b.value > 0)
 
   const summaryCards = [
-    { label: 'Employees', value: employees.length, color: '#25D366' },
+    { label: 'Employees', value: analyticsEmps.length, color: '#25D366' },
     { label: 'Basic Salary', value: `${totalBasic.toLocaleString()} SAR`, color: '#6366f1' },
     { label: 'OT Hours', value: totalOTHrs.toFixed(1), color: '#f59e0b' },
     { label: 'OT Cost', value: `${totalOTPay.toFixed(0)} SAR`, color: '#ef4444' },
     { label: 'Net Pay', value: `${totalNet.toFixed(0)} SAR`, color: '#10b981' },
-    { label: 'Salary Paid', value: `${paidCount} / ${employees.length}`, color: '#0891b2' },
+    { label: 'Salary Paid', value: `${paidCount} / ${analyticsEmps.length}`, color: '#0891b2' },
     { label: 'On Vacation', value: vacationCount, color: '#d97706' },
   ]
 
@@ -276,7 +278,7 @@ export default function HRPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>HR & Payroll</h1>
-          <p style={{ fontSize: 13, color: '#64748b' }}>{employees.length} employees · Current month payroll</p>
+          <p style={{ fontSize: 13, color: '#64748b' }}>{analyticsEmps.length} employees · {filterBranch === 'all' ? 'All branches' : filterBranch}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Tab switcher */}

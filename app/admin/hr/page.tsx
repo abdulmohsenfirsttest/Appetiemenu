@@ -360,6 +360,36 @@ export default function HRPage() {
         </div>
       )}
 
+      {/* Branch Cards */}
+      {activeTab === 'current' && (
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {[
+            { key: 'all', label: 'All Branches', color: '#25D366', bg: '#f0fdf4', count: employees.length },
+            ...BRANCHES.filter(b => b).map(b => ({
+              key: b, label: b,
+              color: BRANCH_COLORS[b]?.text ?? '#374151',
+              bg: BRANCH_COLORS[b]?.bg ?? '#f3f4f6',
+              count: employees.filter(e => e.branch === b).length,
+            })),
+          ].map(branch => {
+            const active = filterBranch === branch.key
+            return (
+              <button key={branch.key} onClick={() => setFilterBranch(branch.key)} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px',
+                borderRadius: 14, border: active ? `2px solid ${branch.color}` : '2px solid transparent',
+                background: active ? branch.bg : 'var(--admin-card)',
+                cursor: 'pointer', transition: 'all 0.15s',
+                boxShadow: active ? `0 0 0 3px ${branch.color}22` : '0 1px 3px rgba(0,0,0,0.06)',
+              }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: branch.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: active ? branch.color : 'var(--admin-text)' }}>{branch.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'white', background: active ? branch.color : '#94a3b8', borderRadius: 20, padding: '2px 8px', minWidth: 24, textAlign: 'center' }}>{branch.count}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {/* Toolbar */}
       {activeTab === 'current' && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
@@ -368,10 +398,6 @@ export default function HRPage() {
           </svg>
           <input type="text" placeholder="Search employees..." value={search} onChange={e => setSearch(e.target.value)} className="admin-input" style={{ paddingLeft: 34 }} />
         </div>
-        <select value={filterBranch} onChange={e => setFilterBranch(e.target.value)} className="admin-select" style={{ width: 'auto', minWidth: 140 }}>
-          <option value="all">All Branches</option>
-          {BRANCHES.filter(b => b).map(b => <option key={b} value={b}>{b}</option>)}
-        </select>
         <select value={filterShift} onChange={e => setFilterShift(e.target.value)} className="admin-select" style={{ width: 'auto', minWidth: 120 }}>
           <option value="all">All Shifts</option>
           {SHIFTS.filter(s => s).map(s => <option key={s} value={s}>{s}</option>)}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { SEED_MENU_ITEMS, SEED_EMPLOYEES } from '@/lib/seed-data'
 import Link from 'next/link'
+import { useLanguage } from '@/lib/language-context'
 
 interface Stats {
   totalItems: number; availableItems: number; totalEmployees: number
@@ -40,6 +41,7 @@ const IconArrow = () => (
 )
 
 export default function AdminDashboard() {
+  const { t } = useLanguage()
   const [stats, setStats] = useState<Stats>({
     totalItems: 0, availableItems: 0, totalEmployees: 0,
     totalPayroll: 0, onVacation: 0, salaryPaid: 0, salaryPending: 0,
@@ -82,29 +84,35 @@ export default function AdminDashboard() {
   }
 
   const cards = [
-    { label: 'Menu Items', value: stats.totalItems, sub: `${stats.availableItems} available`, icon: <IconMenu />, color: '#25D366' },
-    { label: 'Employees', value: stats.totalEmployees, sub: `${stats.onVacation} on vacation`, icon: <IconPeople />, color: '#6366f1' },
-    { label: 'Monthly Payroll', value: `${stats.totalPayroll.toLocaleString()} SAR`, sub: 'Total net pay', icon: <IconMoney />, color: '#f59e0b' },
-    { label: 'Salary Paid', value: stats.salaryPaid, sub: `${stats.salaryPending} pending`, icon: <IconCheck />, color: '#10b981' },
+    { label: t('Menu Items', 'عناصر القائمة'), value: stats.totalItems, sub: `${stats.availableItems} ${t('available', 'متاح')}`, icon: <IconMenu />, color: '#25D366' },
+    { label: t('Employees', 'الموظفون'), value: stats.totalEmployees, sub: `${stats.onVacation} ${t('on vacation', 'في إجازة')}`, icon: <IconPeople />, color: '#6366f1' },
+    { label: t('Monthly Payroll', 'الراتب الشهري'), value: `${stats.totalPayroll.toLocaleString()} SAR`, sub: t('Total net pay', 'إجمالي صافي الراتب'), icon: <IconMoney />, color: '#f59e0b' },
+    { label: t('Salary Paid', 'الراتب المدفوع'), value: stats.salaryPaid, sub: `${stats.salaryPending} ${t('pending', 'معلق')}`, icon: <IconCheck />, color: '#10b981' },
   ]
 
   const actions = [
-    { href: '/admin/menu', icon: <IconMenu />, color: '#25D366', title: 'Manage Menu', desc: 'Add, edit, or hide items' },
-    { href: '/admin/hr', icon: <IconPeople />, color: '#6366f1', title: 'HR & Payroll', desc: 'Employees & OT tracking' },
+    { href: '/admin/menu', icon: <IconMenu />, color: '#25D366', title: t('Manage Menu', 'إدارة القائمة'), desc: t('Add, edit, or hide items', 'إضافة أو تعديل أو إخفاء العناصر') },
+    { href: '/admin/hr', icon: <IconPeople />, color: '#6366f1', title: t('HR & Payroll', 'الرواتب والموارد البشرية'), desc: t('Employees & OT tracking', 'الموظفون وتتبع العمل الإضافي') },
     { href: '/admin/categories', icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
         <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
       </svg>
-    ), color: '#f59e0b', title: 'Categories', desc: 'Organize menu sections' },
+    ), color: '#f59e0b', title: t('Categories', 'الفئات'), desc: t('Organize menu sections', 'تنظيم أقسام القائمة') },
+  ]
+
+  const branches = [
+    { name: t('Ar Rayyan', 'الريان'), location: t('Ar Rayyan District', 'حي الريان'), color: '#25D366', bg: '#dcfce7' },
+    { name: t('Hittin', 'حطين'), location: t('Hittin District', 'حي حطين'), color: '#7c3aed', bg: '#ede9fe' },
+    { name: t('Malqa', 'الملقا'), location: t('Malqa District', 'حي الملقا'), color: '#2563eb', bg: '#dbeafe' },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
       <div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 4 }}>Dashboard</h1>
-        <p style={{ fontSize: 13, color: '#64748b' }}>Welcome back — here's your restaurant overview.</p>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 4 }}>{t('Dashboard', 'لوحة التحكم')}</h1>
+        <p style={{ fontSize: 13, color: '#64748b' }}>{t("Welcome back — here's your restaurant overview.", 'مرحباً بعودتك — إليك نظرة عامة على مطعمك.')}</p>
       </div>
 
       {loading ? (
@@ -134,7 +142,7 @@ export default function AdminDashboard() {
       )}
 
       <div>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 12 }}>Quick Actions</h2>
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 12 }}>{t('Quick Actions', 'الإجراءات السريعة')}</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           {actions.map((a, i) => (
             <Link key={i} href={a.href} style={{ textDecoration: 'none' }}>
@@ -156,13 +164,9 @@ export default function AdminDashboard() {
       </div>
 
       <div>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 12 }}>Branches</h2>
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 12 }}>{t('Branches', 'الفروع')}</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-          {[
-            { name: 'Ar Rayyan', location: 'Ar Rayyan District', color: '#25D366', bg: '#dcfce7' },
-            { name: 'Hittin', location: 'Hittin District', color: '#7c3aed', bg: '#ede9fe' },
-            { name: 'Malqa', location: 'Malqa District', color: '#2563eb', bg: '#dbeafe' },
-          ].map(b => (
+          {branches.map(b => (
             <div key={b.name} style={{ background: 'var(--admin-card)', borderRadius: 14, padding: '16px 20px', border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: b.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, color: b.color, flexShrink: 0 }}>
                 {b.name[0]}
@@ -171,7 +175,7 @@ export default function AdminDashboard() {
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)' }}>{b.name}</div>
                 <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{b.location}</div>
               </div>
-              <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: '#16a34a', background: '#dcfce7', padding: '3px 10px', borderRadius: 20 }}>Active</span>
+              <span style={{ marginInlineStart: 'auto', fontSize: 11, fontWeight: 600, color: '#16a34a', background: '#dcfce7', padding: '3px 10px', borderRadius: 20 }}>{t('Active', 'نشط')}</span>
             </div>
           ))}
         </div>

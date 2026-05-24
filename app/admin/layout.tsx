@@ -6,44 +6,51 @@ import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { AdminThemeProvider, useAdminTheme } from './theme'
+import { LanguageProvider, useLanguage } from '@/lib/language-context'
 
-type NavItem = { href: string; label: string; icon: string; exact?: boolean }
-type NavGroup = { label: string; items: NavItem[] }
+type NavItem = { href: string; labelEn: string; labelAr: string; icon: string; exact?: boolean }
+type NavGroup = { labelEn: string; labelAr: string; items: NavItem[] }
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: '',
+    labelEn: '',
+    labelAr: '',
     items: [
-      { href: '/admin', label: 'Dashboard', icon: '⊞', exact: true },
+      { href: '/admin', labelEn: 'Dashboard', labelAr: 'لوحة التحكم', icon: '⊞', exact: true },
     ],
   },
   {
-    label: 'Menus',
+    labelEn: 'Menus',
+    labelAr: 'القوائم',
     items: [
-      { href: '/admin/menu',          label: 'Appetie Menu',  icon: '🍽' },
-      { href: '/admin/ghabashi-menu', label: 'Ghabashi Menu', icon: '🏪' },
+      { href: '/admin/menu',          labelEn: 'Appetie Menu',  labelAr: 'قائمة أباتاي',  icon: '🍽' },
+      { href: '/admin/ghabashi-menu', labelEn: 'Ghabashi Menu', labelAr: 'قائمة الغباشي', icon: '🏪' },
     ],
   },
   {
-    label: 'Management',
+    labelEn: 'Management',
+    labelAr: 'الإدارة',
     items: [
-      { href: '/admin/branches', label: 'Branches',            icon: '◉' },
-      { href: '/admin/hr',       label: 'HR & Payroll',        icon: '👤' },
-      { href: '/admin/bakery',   label: 'Manager Supervised',  icon: '🥐' },
+      { href: '/admin/branches', labelEn: 'Branches',           labelAr: 'الفروع',                       icon: '◉' },
+      { href: '/admin/hr',       labelEn: 'HR & Payroll',       labelAr: 'الرواتب والموارد البشرية',      icon: '👤' },
+      { href: '/admin/bakery',   labelEn: 'Manager Supervised', labelAr: 'إشراف المدير',                  icon: '🥐' },
     ],
   },
 ]
 
-const NAV = NAV_GROUPS.flatMap(g => g.items)
-
 function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { dark, toggle } = useAdminTheme()
+  const { dark, toggle: toggleTheme } = useAdminTheme()
+  const { lang, toggle: toggleLang, t, isAr } = useLanguage()
   const [collapsed, setCollapsed] = useState(false)
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href)
+
+  const allNavItems = NAV_GROUPS.flatMap(g => g.items)
+  const activeItem = allNavItems.find(n => isActive(n.href, n.exact))
+  const activeLabel = activeItem ? (isAr ? activeItem.labelAr : activeItem.labelEn) : 'Admin'
 
   async function handleSignOut() {
     const supabase = createBrowserClient(
@@ -56,7 +63,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div dir="ltr" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--admin-bg)', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+    <div dir={isAr ? 'rtl' : 'ltr'} style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--admin-bg)', fontFamily: isAr ? 'Tajawal, var(--font-dm-sans), sans-serif' : 'var(--font-dm-sans), sans-serif' }}>
 
       {/* ── Sidebar ─────────────────────────────────── */}
       <aside style={{
@@ -72,12 +79,12 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
           {!collapsed && (
             <div style={{ overflow: 'hidden' }}>
               <div style={{ fontWeight: 700, fontSize: 14, color: 'white', whiteSpace: 'nowrap' }}>Appetie</div>
-              <div style={{ fontSize: 10, color: '#64748b', whiteSpace: 'nowrap' }}>Admin Panel</div>
+              <div style={{ fontSize: 10, color: '#64748b', whiteSpace: 'nowrap' }}>{t('Admin Panel', 'لوحة الإدارة')}</div>
             </div>
           )}
           <button onClick={() => setCollapsed(c => !c)}
             style={{ marginInlineStart: 'auto', background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: 16, flexShrink: 0, padding: 2 }}>
-            {collapsed ? '›' : '‹'}
+            {collapsed ? (isAr ? '‹' : '›') : (isAr ? '›' : '‹')}
           </button>
         </div>
 
@@ -85,13 +92,12 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 8px' }}>
           {NAV_GROUPS.map((group, gi) => (
             <div key={gi} style={{ marginBottom: 4 }}>
-              {/* Group label */}
-              {group.label && !collapsed && (
+              {group.labelEn && !collapsed && (
                 <div style={{ padding: '10px 12px 4px', fontSize: 10, fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {group.label}
+                  {isAr ? group.labelAr : group.labelEn}
                 </div>
               )}
-              {group.label && collapsed && gi > 0 && (
+              {group.labelEn && collapsed && gi > 0 && (
                 <div style={{ height: 1, background: '#1e293b', margin: '8px 4px' }} />
               )}
               {group.items.map(item => {
@@ -110,7 +116,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
                     onMouseOver={e => { if (!active) e.currentTarget.style.background = '#1e293b' }}
                     onMouseOut={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
                     <span style={{ fontSize: 15, flexShrink: 0 }}>{item.icon}</span>
-                    {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
+                    {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{isAr ? item.labelAr : item.labelEn}</span>}
                     {!collapsed && active && <span style={{ marginInlineStart: 'auto', width: 6, height: 6, borderRadius: '50%', background: '#25D366', flexShrink: 0 }} />}
                   </Link>
                 )
@@ -128,7 +134,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
             borderRadius: 8, textDecoration: 'none', color: '#475569', fontSize: 12,
           }}>
             <span>↗</span>
-            {!collapsed && <span>Appetie Menu</span>}
+            {!collapsed && <span>{t('Appetie Menu', 'قائمة أباتاي')}</span>}
           </Link>
           <Link href="/ghabashi" target="_blank" style={{
             display: 'flex', alignItems: 'center', gap: 8,
@@ -137,7 +143,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
             borderRadius: 8, textDecoration: 'none', color: '#475569', fontSize: 12,
           }}>
             <span>↗</span>
-            {!collapsed && <span>Ghabashi Menu</span>}
+            {!collapsed && <span>{t('Ghabashi Menu', 'قائمة الغباشي')}</span>}
           </Link>
 
           <button onClick={handleSignOut} style={{
@@ -155,7 +161,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
               <polyline points="16 17 21 12 16 7"/>
               <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
-            {!collapsed && <span>Sign Out</span>}
+            {!collapsed && <span>{t('Sign Out', 'تسجيل الخروج')}</span>}
           </button>
         </div>
       </aside>
@@ -168,13 +174,22 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
           display: 'flex', alignItems: 'center', padding: '0 24px', flexShrink: 0, gap: 12,
         }}>
           <div style={{ flex: 1 }}>
-            <span style={{ fontSize: 13, color: '#64748b' }}>
-              {NAV.find(n => isActive(n.href, n.exact))?.label ?? 'Admin'}
-            </span>
+            <span style={{ fontSize: 13, color: '#64748b' }}>{activeLabel}</span>
           </div>
 
+          {/* Language toggle */}
+          <button onClick={toggleLang} title={isAr ? 'Switch to English' : 'التبديل إلى العربية'} style={{
+            height: 36, padding: '0 14px', borderRadius: 10, border: '1.5px solid var(--admin-border)',
+            background: isAr ? '#25D366' : 'var(--admin-card)', cursor: 'pointer',
+            fontSize: 12, fontWeight: 700, color: isAr ? 'white' : 'var(--admin-text)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.15s', flexShrink: 0, letterSpacing: '0.04em',
+          }}>
+            {isAr ? 'EN' : 'AR'}
+          </button>
+
           {/* Dark mode toggle */}
-          <button onClick={toggle} title={dark ? 'Switch to light mode' : 'Switch to dark mode'} style={{
+          <button onClick={toggleTheme} title={dark ? 'Switch to light mode' : 'Switch to dark mode'} style={{
             width: 36, height: 36, borderRadius: 10, border: '1px solid var(--admin-border)',
             background: 'var(--admin-card)', cursor: 'pointer', fontSize: 16,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -200,7 +215,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (pathname === '/admin/login') return <>{children}</>
   return (
     <AdminThemeProvider>
-      <AdminLayoutShell>{children}</AdminLayoutShell>
+      <LanguageProvider>
+        <AdminLayoutShell>{children}</AdminLayoutShell>
+      </LanguageProvider>
     </AdminThemeProvider>
   )
 }

@@ -9,6 +9,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts'
 import * as XLSX from 'xlsx'
+import { useLanguage } from '@/lib/language-context'
 
 type VacationStatus = 'none' | 'on_vacation' | 'taken'
 
@@ -73,17 +74,18 @@ const CloseIcon = () => (
 )
 
 function ConfirmDialog({ name, onConfirm, onCancel }: { name: string; onConfirm: () => void; onCancel: () => void }) {
+  const { t } = useLanguage()
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
       <div style={{ background: 'var(--admin-card)', borderRadius: 20, padding: '32px 28px', maxWidth: 360, width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
         <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#ef4444' }}>
           <TrashIcon size={22} />
         </div>
-        <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 8 }}>Remove Employee?</h3>
-        <p style={{ fontSize: 13, color: '#64748b', marginBottom: 28 }}><strong>"{name}"</strong> will be permanently removed.</p>
+        <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 8 }}>{t('Remove Employee?', 'حذف الموظف؟')}</h3>
+        <p style={{ fontSize: 13, color: '#64748b', marginBottom: 28 }}><strong>"{name}"</strong> {t('will be permanently removed.', 'سيتم حذفه نهائياً.')}</p>
         <div style={{ display: 'flex', gap: 12 }}>
-          <button onClick={onCancel} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
-          <button onClick={onConfirm} style={{ flex: 1, padding: '11px', borderRadius: 12, border: 'none', background: '#ef4444', fontSize: 13, fontWeight: 600, color: 'white', cursor: 'pointer' }}>Remove</button>
+          <button onClick={onCancel} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>{t('Cancel', 'إلغاء')}</button>
+          <button onClick={onConfirm} style={{ flex: 1, padding: '11px', borderRadius: 12, border: 'none', background: '#ef4444', fontSize: 13, fontWeight: 600, color: 'white', cursor: 'pointer' }}>{t('Remove', 'حذف')}</button>
         </div>
       </div>
     </div>
@@ -101,6 +103,7 @@ function SortArrow({ active, dir }: { active: boolean; dir: SortDir }) {
 }
 
 export default function HRPage() {
+  const { t, isAr } = useLanguage()
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [multiplier, setMultiplier] = useState(1.25)
@@ -183,7 +186,6 @@ export default function HRPage() {
 
   const knownEmployees = (() => {
     const map = new Map<string, Partial<CustomPayrollRow>>()
-    // current roster has branch/shift/basic — highest priority
     employees.forEach(e => {
       map.set(e.name.trim().toLowerCase(), {
         name: e.name.trim(), iqama: e.iqama ?? '', iban: e.iban ?? '',
@@ -191,7 +193,6 @@ export default function HRPage() {
         branch: e.branch ?? '', shift: e.shift ?? '',
       })
     })
-    // payroll history has iqama/iban/bank/nationality — fill gaps
     PAYROLL_HISTORY.forEach(m => m.records.forEach(r => {
       const key = r.name.trim().toLowerCase()
       const existing = map.get(key)
@@ -459,13 +460,13 @@ export default function HRPage() {
   })).filter(s => s.value > 0)
 
   const summaryCards = [
-    { label: 'Employees', value: analyticsEmps.length, color: '#25D366' },
-    { label: 'Basic Salary', value: `${totalBasic.toLocaleString()} SAR`, color: '#6366f1' },
-    { label: 'OT Hours', value: totalOTHrs.toFixed(1), color: '#f59e0b' },
-    { label: 'OT Cost', value: `${totalOTPay.toFixed(0)} SAR`, color: '#ef4444' },
-    { label: 'Net Pay', value: `${totalNet.toFixed(0)} SAR`, color: '#10b981' },
-    { label: 'Salary Paid', value: `${paidCount} / ${analyticsEmps.length}`, color: '#0891b2' },
-    { label: 'On Vacation', value: vacationCount, color: '#d97706' },
+    { label: t('Employees', 'الموظفون'), value: analyticsEmps.length, color: '#25D366' },
+    { label: t('Basic Salary', 'الراتب الأساسي'), value: `${totalBasic.toLocaleString()} SAR`, color: '#6366f1' },
+    { label: t('OT Hours', 'ساعات إضافية'), value: totalOTHrs.toFixed(1), color: '#f59e0b' },
+    { label: t('OT Cost', 'تكلفة الإضافي'), value: `${totalOTPay.toFixed(0)} SAR`, color: '#ef4444' },
+    { label: t('Net Pay', 'صافي الراتب'), value: `${totalNet.toFixed(0)} SAR`, color: '#10b981' },
+    { label: t('Salary Paid', 'الراتب المدفوع'), value: `${paidCount} / ${analyticsEmps.length}`, color: '#0891b2' },
+    { label: t('On Vacation', 'في إجازة'), value: vacationCount, color: '#d97706' },
   ]
 
   const TH = ({ label, sortKey }: { label: string; sortKey?: SortKey }) => (
@@ -484,8 +485,8 @@ export default function HRPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>HR & Payroll</h1>
-          <p style={{ fontSize: 13, color: '#64748b' }}>{analyticsEmps.length} employees · {filterBranch === 'all' ? 'All branches' : filterBranch}</p>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>{t('HR & Payroll', 'الرواتب والموارد البشرية')}</h1>
+          <p style={{ fontSize: 13, color: '#64748b' }}>{analyticsEmps.length} {t('employees', 'موظف')} · {filterBranch === 'all' ? t('All branches', 'جميع الفروع') : filterBranch}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Tab switcher */}
@@ -497,12 +498,12 @@ export default function HRPage() {
                 color: activeTab === tab ? '#0f172a' : '#64748b',
                 boxShadow: activeTab === tab ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                 transition: 'all 0.15s',
-              }}>{tab === 'current' ? 'Current' : 'History'}</button>
+              }}>{tab === 'current' ? t('Current', 'الشهر الحالي') : t('History', 'السجل')}</button>
             ))}
           </div>
           {/* OT Multiplier */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--admin-card)', border: '1.5px solid var(--admin-border)', borderRadius: 10, padding: '6px 10px' }}>
-            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginRight: 4 }}>OT:</span>
+            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginRight: 4 }}>{t('OT:', 'إضافي:')}</span>
             {[1.0, 1.25, 1.5].map(v => (
               <button key={v} onClick={() => handleMultiplierChange(v)} style={{
                 padding: '4px 10px', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer',
@@ -513,11 +514,11 @@ export default function HRPage() {
           </div>
           <button onClick={openNewMonth} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'var(--admin-card)', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            New Month
+            {t('New Month', 'شهر جديد')}
           </button>
           <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#25D366', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,211,102,0.35)' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Employee
+            {t('Add Employee', 'إضافة موظف')}
           </button>
         </div>
       </div>
@@ -526,10 +527,10 @@ export default function HRPage() {
       {activeTab === 'current' && currentMonthLabel && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, fontSize: 13 }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span style={{ color: '#1d4ed8', fontWeight: 600 }}>Showing: {currentMonthLabel}</span>
-          <span style={{ color: '#64748b' }}>— custom month data</span>
-          <button onClick={resetToLiveData} style={{ marginLeft: 'auto', padding: '5px 12px', borderRadius: 8, border: '1.5px solid #bfdbfe', background: 'white', fontSize: 12, fontWeight: 600, color: '#2563eb', cursor: 'pointer' }}>
-            Reset to live data
+          <span style={{ color: '#1d4ed8', fontWeight: 600 }}>{t('Showing:', 'يعرض:')} {currentMonthLabel}</span>
+          <span style={{ color: '#64748b' }}>— {t('custom month data', 'بيانات شهر مخصص')}</span>
+          <button onClick={resetToLiveData} style={{ marginInlineStart: 'auto', padding: '5px 12px', borderRadius: 8, border: '1.5px solid #bfdbfe', background: 'white', fontSize: 12, fontWeight: 600, color: '#2563eb', cursor: 'pointer' }}>
+            {t('Reset to live data', 'إعادة البيانات الحية')}
           </button>
         </div>
       )}
@@ -558,7 +559,7 @@ export default function HRPage() {
           {topOT.length > 0 && (
             <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
               <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>
-                Top OT Hours{filterBranch !== 'all' ? ` · ${filterBranch}` : ''}
+                {t('Top OT Hours', 'أعلى ساعات الإضافي')}{filterBranch !== 'all' ? ` · ${filterBranch}` : ''}
               </h3>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={topOT} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -573,7 +574,7 @@ export default function HRPage() {
           {filterBranch === 'all' ? (
             branchSalary.length > 0 && (
               <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-                <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>Net Pay by Branch</h3>
+                <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>{t('Net Pay by Branch', 'صافي الراتب حسب الفرع')}</h3>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie data={branchSalary} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
@@ -588,7 +589,7 @@ export default function HRPage() {
           ) : (
             shiftSalary.length > 0 && (
               <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-                <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>Net Pay by Shift · {filterBranch}</h3>
+                <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>{t('Net Pay by Shift', 'صافي الراتب حسب الوردية')} · {filterBranch}</h3>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie data={shiftSalary} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
@@ -608,7 +609,7 @@ export default function HRPage() {
       {activeTab === 'current' && (
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {[
-            { key: 'all', label: 'All Branches', color: '#25D366', bg: '#f0fdf4', count: employees.length },
+            { key: 'all', label: t('All Branches', 'جميع الفروع'), color: '#25D366', bg: '#f0fdf4', count: employees.length },
             ...BRANCHES.filter(b => b).map(b => ({
               key: b, label: b,
               color: BRANCH_COLORS[b]?.text ?? '#374151',
@@ -638,7 +639,7 @@ export default function HRPage() {
       {activeTab === 'current' && (
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {[
-            { key: 'all', label: 'All Shifts', color: '#64748b', bg: '#f8fafc' },
+            { key: 'all', label: t('All Shifts', 'جميع الورديات'), color: '#64748b', bg: '#f8fafc' },
             ...SHIFTS.filter(s => s).map(s => ({
               key: s, label: s,
               color: SHIFT_COLORS[s]?.text ?? '#374151',
@@ -659,7 +660,7 @@ export default function HRPage() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: active ? shift.color : 'var(--admin-text)' }}>{shift.label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: active ? shift.color : '#94a3b8', borderRadius: 20, padding: '1px 7px', marginLeft: 'auto' }}>{shiftEmps.length}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: active ? shift.color : '#94a3b8', borderRadius: 20, padding: '1px 7px', marginInlineStart: 'auto' }}>{shiftEmps.length}</span>
                 </div>
                 {shift.key !== 'all' && (
                   <span style={{ fontSize: 11, color: active ? shift.color : '#94a3b8', fontWeight: 600 }}>
@@ -678,11 +679,11 @@ export default function HRPage() {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }}>
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input type="text" placeholder="Search employees..." value={search} onChange={e => setSearch(e.target.value)} className="admin-input" style={{ paddingLeft: 34 }} />
+          <input type="text" placeholder={t('Search employees...', 'بحث عن موظف...')} value={search} onChange={e => setSearch(e.target.value)} className="admin-input" style={{ paddingLeft: 34 }} />
         </div>
         <button onClick={exportExcel} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid var(--admin-border)', borderRadius: 10, background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export
+          {t('Export', 'تصدير')}
         </button>
       </div>}
 
@@ -693,24 +694,24 @@ export default function HRPage() {
             <thead>
               <tr style={{ background: 'var(--admin-thead)', borderBottom: '1.5px solid #f1f5f9' }}>
                 <TH label="#" sortKey="id" />
-                <TH label="Name" sortKey="name" />
-                <TH label="Position" sortKey="position" />
-                <TH label="Branch" sortKey="branch" />
-                <TH label="Shift" sortKey="shift" />
+                <TH label={t('Name', 'الاسم')} sortKey="name" />
+                <TH label={t('Position', 'المنصب')} sortKey="position" />
+                <TH label={t('Branch', 'الفرع')} sortKey="branch" />
+                <TH label={t('Shift', 'الوردية')} sortKey="shift" />
                 <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }} onClick={() => sortBy('basic_salary')}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>Basic <SortArrow active={sort.key === 'basic_salary'} dir={sort.dir} /></span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{t('Basic', 'الأساسي')} <SortArrow active={sort.key === 'basic_salary'} dir={sort.dir} /></span>
                 </th>
                 <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }} onClick={() => sortBy('ot_hours')}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>OT Hrs <SortArrow active={sort.key === 'ot_hours'} dir={sort.dir} /></span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{t('OT Hrs', 'س.إضافي')} <SortArrow active={sort.key === 'ot_hours'} dir={sort.dir} /></span>
                 </th>
-                <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OT Rate</th>
-                <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OT Pay</th>
+                <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('OT Rate', 'معدل الإضافي')}</th>
+                <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('OT Pay', 'أجر الإضافي')}</th>
                 <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }} onClick={() => sortBy('net_pay')}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>Net Pay <SortArrow active={sort.key === 'net_pay'} dir={sort.dir} /></span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{t('Net Pay', 'صافي الراتب')} <SortArrow active={sort.key === 'net_pay'} dir={sort.dir} /></span>
                 </th>
-                <th style={{ padding: '11px 12px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paid</th>
-                <th style={{ padding: '11px 12px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vacation</th>
-                <th style={{ padding: '11px 12px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
+                <th style={{ padding: '11px 12px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Paid', 'مدفوع')}</th>
+                <th style={{ padding: '11px 12px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Vacation', 'إجازة')}</th>
+                <th style={{ padding: '11px 12px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Actions', 'إجراءات')}</th>
               </tr>
             </thead>
             <tbody>
@@ -754,7 +755,7 @@ export default function HRPage() {
                           style={{ width: 64, border: '1.5px solid #25D366', borderRadius: 7, padding: '3px 8px', fontSize: 12, textAlign: 'right', outline: 'none', background: 'var(--admin-card)' }} />
                       ) : (
                         <span onClick={() => { setEditingOT(emp.id); setOtDraft(String(emp.ot_hours)) }}
-                          title="Click to edit"
+                          title={t('Click to edit', 'انقر للتعديل')}
                           style={{ cursor: 'pointer', fontWeight: 600, color: emp.ot_hours > 0 ? '#25D366' : '#94a3b8', borderBottom: '1px dashed', borderColor: emp.ot_hours > 0 ? '#25D366' : '#cbd5e1' }}>
                           {emp.ot_hours || '0'}
                         </span>
@@ -764,7 +765,7 @@ export default function HRPage() {
                     <td style={{ padding: '11px 12px', textAlign: 'right', color: '#475569' }}>{emp.ot_pay.toFixed(2)}</td>
                     <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 800, color: '#25D366' }}>{emp.net_pay.toFixed(2)}</td>
                     <td style={{ padding: '11px 12px', textAlign: 'center' }}>
-                      <button onClick={() => toggleSalaryPaid(emp)} title={emp.salary_paid ? 'Mark unpaid' : 'Mark paid'}
+                      <button onClick={() => toggleSalaryPaid(emp)} title={emp.salary_paid ? t('Mark unpaid', 'تعيين غير مدفوع') : t('Mark paid', 'تعيين مدفوع')}
                         style={{ width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                           background: emp.salary_paid ? '#dcfce7' : '#fef2f2', color: emp.salary_paid ? '#16a34a' : '#ef4444', transition: 'all 0.15s' }}>
                         {emp.salary_paid ? (
@@ -778,20 +779,20 @@ export default function HRPage() {
                       <button onClick={() => cycleVacation(emp)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.15s',
                         background: emp.vacation_status === 'on_vacation' ? '#fef3c7' : emp.vacation_status === 'taken' ? '#dbeafe' : '#f1f5f9',
                         color: emp.vacation_status === 'on_vacation' ? '#d97706' : emp.vacation_status === 'taken' ? '#2563eb' : '#94a3b8' }}>
-                        {emp.vacation_status === 'on_vacation' ? 'On Leave' : emp.vacation_status === 'taken' ? 'Taken' : 'None'}
+                        {emp.vacation_status === 'on_vacation' ? t('On Leave', 'في إجازة') : emp.vacation_status === 'taken' ? t('Taken', 'منتهية') : t('None', 'لا شيء')}
                       </button>
                     </td>
                     <td style={{ padding: '11px 12px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                        <button className="ibtn ibtn-edit" onClick={() => setModal({ open: true, emp: { ...emp } })} title="Edit"><PencilIcon /></button>
-                        <button className="ibtn ibtn-del" onClick={() => setDelConfirm({ id: emp.id, name: emp.name })} title="Delete"><TrashIcon /></button>
+                        <button className="ibtn ibtn-edit" onClick={() => setModal({ open: true, emp: { ...emp } })} title={t('Edit', 'تعديل')}><PencilIcon /></button>
+                        <button className="ibtn ibtn-del" onClick={() => setDelConfirm({ id: emp.id, name: emp.name })} title={t('Delete', 'حذف')}><TrashIcon /></button>
                       </div>
                     </td>
                   </tr>
                 )
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={13} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No employees found</td></tr>
+                <tr><td colSpan={13} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>{t('No employees found', 'لا يوجد موظفون')}</td></tr>
               )}
             </tbody>
           </table>
@@ -805,7 +806,7 @@ export default function HRPage() {
           {/* Custom months manager */}
           {customMonths.length > 0 && (
             <div style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', padding: '14px 16px' }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Your Custom Months</p>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>{t('Your Custom Months', 'أشهرك المخصصة')}</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {customMonths.map(m => (
                   <div key={m.id} style={{
@@ -819,10 +820,10 @@ export default function HRPage() {
                       style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: selectedMonth === m.month ? '#16a34a' : 'var(--admin-text)', padding: 0 }}>
                       {m.month}
                     </button>
-                    <span style={{ fontSize: 11, color: '#94a3b8' }}>{m.records.length} emp</span>
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>{m.records.length} {t('emp', 'موظف')}</span>
                     <button
                       onClick={() => deleteCustomMonth(m.id)}
-                      title="Delete this month"
+                      title={t('Delete this month', 'حذف هذا الشهر')}
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 8, border: 'none', background: '#fef2f2', color: '#ef4444', cursor: 'pointer', flexShrink: 0, transition: 'background 0.15s' }}
                       onMouseOver={e => (e.currentTarget.style.background = '#fee2e2')}
                       onMouseOut={e => (e.currentTarget.style.background = '#fef2f2')}
@@ -839,38 +840,38 @@ export default function HRPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}
               className="admin-select" style={{ width: 'auto', minWidth: 180, fontWeight: 600 }}>
-              <optgroup label="Imported">
+              <optgroup label={t('Imported', 'مستورد')}>
                 {PAYROLL_HISTORY.map(p => <option key={p.month} value={p.month}>{p.month}</option>)}
               </optgroup>
               {customMonths.length > 0 && (
-                <optgroup label="Custom">
+                <optgroup label={t('Custom', 'مخصص')}>
                   {customMonths.map(m => <option key={m.id} value={m.month}>{m.month}</option>)}
                 </optgroup>
               )}
             </select>
-            <span style={{ fontSize: 13, color: '#64748b' }}>{historyMonthData.length} employees</span>
-            <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+            <span style={{ fontSize: 13, color: '#64748b' }}>{historyMonthData.length} {t('employees', 'موظف')}</span>
+            <div style={{ display: 'flex', gap: 8, marginInlineStart: 'auto' }}>
               {selectedCustomMonth && (
                 <>
                   <button onClick={() => setMonthModal({ open: true, draft: { ...selectedCustomMonth, records: selectedCustomMonth.records.map(r => ({ ...r })) }, setAsCurrent: false })}
                     style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    Edit
+                    {t('Edit', 'تعديل')}
                   </button>
                   <button onClick={() => deleteCustomMonth(selectedCustomMonth.id)}
                     style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', border: '1.5px solid #fecaca', borderRadius: 10, background: '#fef2f2', fontSize: 13, fontWeight: 600, color: '#ef4444', cursor: 'pointer' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                    Delete
+                    {t('Delete', 'حذف')}
                   </button>
                 </>
               )}
               <button onClick={exportHistoryExcel} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export
+                {t('Export', 'تصدير')}
               </button>
               <button onClick={openNewMonth} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', background: '#25D366', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,211,102,0.3)' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                New Month
+                {t('New Month', 'شهر جديد')}
               </button>
             </div>
           </div>
@@ -878,10 +879,10 @@ export default function HRPage() {
           {/* Summary cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
             {[
-              { label: 'Employees', value: historyMonthData.length, color: '#25D366' },
-              { label: 'Total Basic', value: `${historyTotalBasic.toLocaleString()} SAR`, color: '#6366f1' },
-              { label: 'Total OT Pay', value: `${historyTotalOT.toFixed(0)} SAR`, color: '#f59e0b' },
-              { label: 'Total Net Pay', value: `${historyTotalNet.toFixed(0)} SAR`, color: '#10b981' },
+              { label: t('Employees', 'الموظفون'), value: historyMonthData.length, color: '#25D366' },
+              { label: t('Total Basic', 'إجمالي الأساسي'), value: `${historyTotalBasic.toLocaleString()} SAR`, color: '#6366f1' },
+              { label: t('Total OT Pay', 'إجمالي الإضافي'), value: `${historyTotalOT.toFixed(0)} SAR`, color: '#f59e0b' },
+              { label: t('Total Net Pay', 'إجمالي صافي الراتب'), value: `${historyTotalNet.toFixed(0)} SAR`, color: '#10b981' },
             ].map((card, i) => (
               <div key={i} style={{ background: 'white', borderRadius: 14, padding: '14px 16px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', borderTop: `3px solid ${card.color}` }}>
                 <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', lineHeight: 1.1, marginTop: 4 }}>{card.value}</div>
@@ -896,8 +897,8 @@ export default function HRPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #f1f5f9' }}>
-                    {['#', 'Name', 'Nationality', 'IBAN', 'Bank', 'Basic SAR', 'OT Pay', 'Net Pay'].map(h => (
-                      <th key={h} style={{ padding: '11px 12px', textAlign: h === '#' || h === 'Name' || h === 'Nationality' || h === 'IBAN' || h === 'Bank' ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                    {['#', t('Name', 'الاسم'), t('Nationality', 'الجنسية'), 'IBAN', t('Bank', 'البنك'), t('Basic SAR', 'الأساسي'), t('OT Pay', 'أجر الإضافي'), t('Net Pay', 'صافي الراتب')].map((h, i) => (
+                      <th key={i} style={{ padding: '11px 12px', textAlign: i <= 4 ? 'left' : 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -912,7 +913,7 @@ export default function HRPage() {
                         <p style={{ fontSize: 11, color: '#94a3b8' }}>{emp.iqama ?? '–'}</p>
                       </td>
                       <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 12 }}>{emp.nationality || '–'}</td>
-                      <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 11, fontFamily: 'monospace' }}>{emp.iban === 'BY CASH' ? <span style={{ color: '#d97706', fontFamily: 'inherit', fontWeight: 600 }}>Cash</span> : emp.iban}</td>
+                      <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 11, fontFamily: 'monospace' }}>{emp.iban === 'BY CASH' ? <span style={{ color: '#d97706', fontFamily: 'inherit', fontWeight: 600 }}>{t('Cash', 'نقدي')}</span> : emp.iban}</td>
                       <td style={{ padding: '11px 12px', color: '#64748b', fontSize: 12 }}>{emp.bank || '–'}</td>
                       <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>{emp.basic_salary.toLocaleString()}</td>
                       <td style={{ padding: '11px 12px', textAlign: 'right', color: emp.ot_pay > 0 ? '#25D366' : '#94a3b8', fontWeight: emp.ot_pay > 0 ? 600 : 400 }}>{emp.ot_pay.toFixed(2)}</td>
@@ -920,7 +921,7 @@ export default function HRPage() {
                     </tr>
                   ))}
                   {historyMonthData.length === 0 && (
-                    <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No data</td></tr>
+                    <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>{t('No data', 'لا توجد بيانات')}</td></tr>
                   )}
                 </tbody>
               </table>
@@ -937,10 +938,10 @@ export default function HRPage() {
             {/* Header */}
             <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 24px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Month Name</label>
+                <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Month Name', 'اسم الشهر')}</label>
                 <input
                   type="text"
-                  placeholder="e.g. April 2026"
+                  placeholder={t('e.g. April 2026', 'مثال: أبريل 2026')}
                   value={monthModal.draft.month}
                   onChange={e => setMonthModal({ ...monthModal, draft: { ...monthModal.draft, month: e.target.value } })}
                   className="admin-input"
@@ -950,7 +951,7 @@ export default function HRPage() {
               <button onClick={copyCurrentEmployees}
                 style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'var(--admin-card)', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                Copy Current Employees
+                {t('Copy Current Employees', 'نسخ الموظفين الحاليين')}
               </button>
               <button onClick={() => setMonthModal(null)} className="ibtn ibtn-edit"><CloseIcon /></button>
             </div>
@@ -964,7 +965,7 @@ export default function HRPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                 <thead>
                   <tr style={{ background: 'var(--admin-thead)', borderBottom: '1.5px solid var(--admin-border2)' }}>
-                    {['#', 'Name', 'Branch', 'Shift', 'Basic SAR', 'OT Hours', 'OT Pay', 'Net Pay', 'Iqama', 'IBAN', ''].map((h, i) => (
+                    {['#', t('Name', 'الاسم'), t('Branch', 'الفرع'), t('Shift', 'الوردية'), t('Basic SAR', 'الأساسي'), t('OT Hours', 'س.إضافي'), t('OT Pay', 'أجر الإضافي'), t('Net Pay', 'صافي الراتب'), t('Iqama', 'الإقامة'), 'IBAN', ''].map((h, i) => (
                       <th key={i} style={{ padding: '10px 10px', textAlign: i >= 4 && i <= 7 ? 'right' : 'left', fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
@@ -978,7 +979,7 @@ export default function HRPage() {
                           list="known-employees-list"
                           value={row.name}
                           onChange={e => selectEmployee(row.rowId, e.target.value)}
-                          placeholder="Type or pick name…"
+                          placeholder={t('Type or pick name…', 'اكتب أو اختر اسماً...')}
                           className="admin-input"
                           style={{ fontSize: 12, padding: '6px 10px' }}
                         />
@@ -1007,14 +1008,14 @@ export default function HRPage() {
                       <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 800, color: '#25D366', minWidth: 90 }}>{row.net_pay.toFixed(2)}</td>
                       <td style={{ padding: '4px 6px', minWidth: 110 }}>
                         <input value={row.iqama} onChange={e => updateRow(row.rowId, 'iqama', e.target.value)}
-                          placeholder="Iqama/ID" className="admin-input" style={{ fontSize: 12, padding: '6px 10px' }} />
+                          placeholder={t('Iqama/ID', 'الإقامة/الهوية')} className="admin-input" style={{ fontSize: 12, padding: '6px 10px' }} />
                       </td>
                       <td style={{ padding: '4px 6px', minWidth: 140 }}>
                         <input value={row.iban} onChange={e => updateRow(row.rowId, 'iban', e.target.value)}
                           placeholder="IBAN / BY CASH" className="admin-input" style={{ fontSize: 12, padding: '6px 10px' }} />
                       </td>
                       <td style={{ padding: '4px 8px' }}>
-                        <button onClick={() => removeRow(row.rowId)} className="ibtn ibtn-del" title="Remove"><TrashIcon size={13} /></button>
+                        <button onClick={() => removeRow(row.rowId)} className="ibtn ibtn-del" title={t('Remove', 'حذف')}><TrashIcon size={13} /></button>
                       </td>
                     </tr>
                   ))}
@@ -1026,19 +1027,19 @@ export default function HRPage() {
             <div style={{ padding: '14px 24px', borderTop: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <button onClick={addRow} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: '1.5px dashed #e2e8f0', borderRadius: 10, background: 'transparent', fontSize: 12, fontWeight: 600, color: '#64748b', cursor: 'pointer' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add Row
+                {t('Add Row', 'إضافة صف')}
               </button>
-              <span style={{ fontSize: 12, color: '#94a3b8' }}>{monthModal.draft.records.length} employees · {monthModal.draft.records.reduce((s, r) => s + r.net_pay, 0).toLocaleString()} SAR</span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#2563eb', cursor: 'pointer', marginLeft: 8, padding: '6px 12px', background: monthModal.setAsCurrent ? '#eff6ff' : 'transparent', borderRadius: 8, border: monthModal.setAsCurrent ? '1.5px solid #bfdbfe' : '1.5px solid transparent', transition: 'all 0.15s' }}>
+              <span style={{ fontSize: 12, color: '#94a3b8' }}>{monthModal.draft.records.length} {t('employees', 'موظف')} · {monthModal.draft.records.reduce((s, r) => s + r.net_pay, 0).toLocaleString()} SAR</span>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#2563eb', cursor: 'pointer', marginInlineStart: 8, padding: '6px 12px', background: monthModal.setAsCurrent ? '#eff6ff' : 'transparent', borderRadius: 8, border: monthModal.setAsCurrent ? '1.5px solid #bfdbfe' : '1.5px solid transparent', transition: 'all 0.15s' }}>
                 <input type="checkbox" checked={monthModal.setAsCurrent}
                   onChange={e => setMonthModal({ ...monthModal, setAsCurrent: e.target.checked })}
                   style={{ accentColor: '#2563eb' }} />
-                Set as Current Month
+                {t('Set as Current Month', 'تعيين كشهر حالي')}
               </label>
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-                <button onClick={() => setMonthModal(null)} style={{ padding: '10px 20px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
+              <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 10 }}>
+                <button onClick={() => setMonthModal(null)} style={{ padding: '10px 20px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>{t('Cancel', 'إلغاء')}</button>
                 <button onClick={saveMonth} disabled={!monthModal.draft.month.trim()} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: monthModal.draft.month.trim() ? '#25D366' : '#94a3b8', fontSize: 13, fontWeight: 700, color: 'white', cursor: monthModal.draft.month.trim() ? 'pointer' : 'not-allowed', boxShadow: monthModal.draft.month.trim() ? '0 2px 8px rgba(37,211,102,0.3)' : 'none' }}>
-                  Save Month
+                  {t('Save Month', 'حفظ الشهر')}
                 </button>
               </div>
             </div>
@@ -1051,18 +1052,18 @@ export default function HRPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
           <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 520, boxShadow: '0 25px 60px rgba(0,0,0,0.18)', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--admin-text)' }}>{modal.emp.id ? 'Edit Employee' : 'Add Employee'}</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--admin-text)' }}>{modal.emp.id ? t('Edit Employee', 'تعديل موظف') : t('Add Employee', 'إضافة موظف')}</h2>
               <button className="ibtn ibtn-edit" onClick={() => setModal({ open: false, emp: null })}><CloseIcon /></button>
             </div>
             <div style={{ padding: 20, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Full Name</label>
+                <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>{t('Full Name', 'الاسم الكامل')}</label>
                 <input type="text" value={modal.emp.name || ''} className="admin-input"
                   onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, name: e.target.value } }))} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Iqama No.</label>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>{t('Iqama No.', 'رقم الإقامة')}</label>
                   <input type="text" value={modal.emp.iqama || ''} className="admin-input"
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, iqama: e.target.value } }))} />
                 </div>
@@ -1072,50 +1073,50 @@ export default function HRPage() {
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, iban: e.target.value } }))} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Basic Salary (SAR)</label>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>{t('Basic Salary (SAR)', 'الراتب الأساسي (ريال)')}</label>
                   <input type="number" value={modal.emp.basic_salary || ''} className="admin-input"
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, basic_salary: Number(e.target.value) } }))} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>OT Hours</label>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>{t('OT Hours', 'ساعات إضافية')}</label>
                   <input type="number" value={modal.emp.ot_hours ?? ''} className="admin-input"
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, ot_hours: Number(e.target.value) } }))} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Position</label>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>{t('Position', 'المنصب')}</label>
                   <input list="positions" type="text" value={modal.emp.position || ''} className="admin-input"
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, position: e.target.value } }))} />
                   <datalist id="positions">{POSITIONS.filter(p => p).map(p => <option key={p} value={p} />)}</datalist>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Branch</label>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>{t('Branch', 'الفرع')}</label>
                   <select value={modal.emp.branch || ''} className="admin-select"
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, branch: e.target.value } }))}>
-                    <option value="">Select...</option>
+                    <option value="">{t('Select...', 'اختر...')}</option>
                     {BRANCHES.filter(b => b).map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Shift</label>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>{t('Shift', 'الوردية')}</label>
                   <select value={modal.emp.shift || ''} className="admin-select"
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, shift: e.target.value } }))}>
-                    <option value="">Select...</option>
+                    <option value="">{t('Select...', 'اختر...')}</option>
                     {SHIFTS.filter(s => s).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Restaurant</label>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>{t('Restaurant', 'المطعم')}</label>
                   <input list="restaurants" type="text" value={modal.emp.restaurant || ''} className="admin-input"
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, restaurant: e.target.value } }))} />
                   <datalist id="restaurants"><option value="Appetie" /><option value="Ghabashi" /><option value="Piece Bakery" /><option value="Manager Supervised" /></datalist>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>Vacation Status</label>
+                  <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>{t('Vacation Status', 'حالة الإجازة')}</label>
                   <select value={modal.emp.vacation_status || 'none'} className="admin-select"
                     onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, vacation_status: e.target.value as VacationStatus } }))}>
-                    <option value="none">None</option>
-                    <option value="on_vacation">On Vacation</option>
-                    <option value="taken">Taken</option>
+                    <option value="none">{t('None', 'لا شيء')}</option>
+                    <option value="on_vacation">{t('On Vacation', 'في إجازة')}</option>
+                    <option value="taken">{t('Taken', 'منتهية')}</option>
                   </select>
                 </div>
               </div>
@@ -1124,9 +1125,9 @@ export default function HRPage() {
               {(modal.emp.basic_salary || 0) > 0 && (
                 <div style={{ background: 'var(--admin-thead)', borderRadius: 12, padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                   {[
-                    { label: 'OT Rate', value: `${(((modal.emp.basic_salary || 0) / 30 / 8) * multiplier).toFixed(3)} SAR/hr` },
-                    { label: 'OT Pay', value: `${((((modal.emp.basic_salary || 0) / 30 / 8) * multiplier) * (modal.emp.ot_hours || 0)).toFixed(2)} SAR` },
-                    { label: 'Net Pay', value: `${((modal.emp.basic_salary || 0) + (((modal.emp.basic_salary || 0) / 30 / 8) * multiplier) * (modal.emp.ot_hours || 0)).toFixed(2)} SAR`, green: true },
+                    { label: t('OT Rate', 'معدل الإضافي'), value: `${(((modal.emp.basic_salary || 0) / 30 / 8) * multiplier).toFixed(3)} SAR/hr` },
+                    { label: t('OT Pay', 'أجر الإضافي'), value: `${((((modal.emp.basic_salary || 0) / 30 / 8) * multiplier) * (modal.emp.ot_hours || 0)).toFixed(2)} SAR` },
+                    { label: t('Net Pay', 'صافي الراتب'), value: `${((modal.emp.basic_salary || 0) + (((modal.emp.basic_salary || 0) / 30 / 8) * multiplier) * (modal.emp.ot_hours || 0)).toFixed(2)} SAR`, green: true },
                   ].map(r => (
                     <div key={r.label} style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>{r.label}</div>
@@ -1139,13 +1140,13 @@ export default function HRPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--admin-thead)', borderRadius: 10 }}>
                 <input type="checkbox" id="spaid" checked={modal.emp.salary_paid ?? false}
                   onChange={e => setModal(m => ({ ...m, emp: { ...m.emp!, salary_paid: e.target.checked } }))} />
-                <label htmlFor="spaid" style={{ fontSize: 13, fontWeight: 500, color: '#374151', cursor: 'pointer' }}>Salary Paid</label>
+                <label htmlFor="spaid" style={{ fontSize: 13, fontWeight: 500, color: '#374151', cursor: 'pointer' }}>{t('Salary Paid', 'الراتب مدفوع')}</label>
               </div>
             </div>
             <div style={{ padding: '16px 20px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10 }}>
-              <button onClick={() => setModal({ open: false, emp: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setModal({ open: false, emp: null })} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1.5px solid var(--admin-border)', background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>{t('Cancel', 'إلغاء')}</button>
               <button onClick={saveEmp} disabled={saving} style={{ flex: 2, padding: '11px', borderRadius: 12, border: 'none', background: '#25D366', fontSize: 13, fontWeight: 700, color: 'white', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
-                {saving ? 'Saving...' : 'Save Employee'}
+                {saving ? t('Saving...', 'جارٍ الحفظ...') : t('Save Employee', 'حفظ الموظف')}
               </button>
             </div>
           </div>

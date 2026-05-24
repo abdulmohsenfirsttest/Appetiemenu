@@ -390,6 +390,44 @@ export default function HRPage() {
         </div>
       )}
 
+      {/* Shift Cards */}
+      {activeTab === 'current' && (
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {[
+            { key: 'all', label: 'All Shifts', color: '#64748b', bg: '#f8fafc' },
+            ...SHIFTS.filter(s => s).map(s => ({
+              key: s, label: s,
+              color: SHIFT_COLORS[s]?.text ?? '#374151',
+              bg: SHIFT_COLORS[s]?.bg ?? '#f3f4f6',
+            })),
+          ].map(shift => {
+            const shiftEmps = shift.key === 'all' ? employees : employees.filter(e => e.shift === shift.key)
+            const totalNet = shiftEmps.reduce((sum, e) => sum + e.net_pay, 0)
+            const active = filterShift === shift.key
+            return (
+              <button key={shift.key} onClick={() => setFilterShift(shift.key)} style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4,
+                padding: '12px 16px', borderRadius: 14, cursor: 'pointer', transition: 'all 0.15s',
+                border: active ? `2px solid ${shift.color}` : '2px solid transparent',
+                background: active ? shift.bg : 'var(--admin-card)',
+                boxShadow: active ? `0 0 0 3px ${shift.color}22` : '0 1px 3px rgba(0,0,0,0.06)',
+                minWidth: 130,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: active ? shift.color : 'var(--admin-text)' }}>{shift.label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'white', background: active ? shift.color : '#94a3b8', borderRadius: 20, padding: '1px 7px', marginLeft: 'auto' }}>{shiftEmps.length}</span>
+                </div>
+                {shift.key !== 'all' && (
+                  <span style={{ fontSize: 11, color: active ? shift.color : '#94a3b8', fontWeight: 600 }}>
+                    {totalNet.toFixed(0)} SAR
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {/* Toolbar */}
       {activeTab === 'current' && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
@@ -398,10 +436,6 @@ export default function HRPage() {
           </svg>
           <input type="text" placeholder="Search employees..." value={search} onChange={e => setSearch(e.target.value)} className="admin-input" style={{ paddingLeft: 34 }} />
         </div>
-        <select value={filterShift} onChange={e => setFilterShift(e.target.value)} className="admin-select" style={{ width: 'auto', minWidth: 120 }}>
-          <option value="all">All Shifts</option>
-          {SHIFTS.filter(s => s).map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
         <button onClick={exportExcel} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', border: '1.5px solid var(--admin-border)', borderRadius: 10, background: 'var(--admin-card)', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export

@@ -205,7 +205,7 @@ export default function HRPage() {
   }
 
   function calcRow(basic: number, otHrs: number) {
-    const otPay = (basic / 30 / 8) * 1.25 * otHrs
+    const otPay = (basic / 30 / 8) * otHrs
     return { ot_pay: Math.round(otPay * 100) / 100, net_pay: Math.round((basic + otPay) * 100) / 100 }
   }
 

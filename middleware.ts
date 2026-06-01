@@ -24,22 +24,35 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isLoginPage = request.nextUrl.pathname === '/admin/login'
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
+  const { pathname } = request.nextUrl
 
-  // Not logged in → redirect to login
-  if (isAdminRoute && !isLoginPage && !user) {
+  const isAdminLogin = pathname === '/admin/login'
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isManagerLogin = pathname === '/manager/login'
+  const isManagerRoute = pathname.startsWith('/manager')
+
+  // Admin routes
+  if (isAdminRoute && !isAdminLogin && !user) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
-
-  // Already logged in → skip login page
-  if (isLoginPage && user) {
+  if (isAdminLogin && user) {
     return NextResponse.redirect(new URL('/admin', request.url))
+  }
+
+  // Manager routes — only asjad@appetie.com may enter
+  if (isManagerRoute && !isManagerLogin && !user) {
+    return NextResponse.redirect(new URL('/manager/login', request.url))
+  }
+  if (isManagerRoute && !isManagerLogin && user && user.email !== 'asjad@appetie.com') {
+    return NextResponse.redirect(new URL('/manager/login', request.url))
+  }
+  if (isManagerLogin && user && user.email === 'asjad@appetie.com') {
+    return NextResponse.redirect(new URL('/manager', request.url))
   }
 
   return response
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/:path*', '/manager/:path*'],
 }

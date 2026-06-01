@@ -32,7 +32,8 @@ const NAV_GROUPS: NavGroup[] = [
     labelAr: 'الإدارة',
     items: [
       { href: '/admin/branches', labelEn: 'Branches',           labelAr: 'الفروع',                       icon: '◉' },
-      { href: '/admin/hr',       labelEn: 'HR & Payroll',       labelAr: 'الرواتب والموارد البشرية',      icon: '👤' },
+      { href: '/admin/hr',         labelEn: 'HR & Payroll',       labelAr: 'الرواتب والموارد البشرية',      icon: '👤' },
+      { href: '/admin/hr/manager', labelEn: 'Asjad — Manager',    labelAr: 'أسجد — المدير',                 icon: '👑' },
       { href: '/admin/bakery',   labelEn: 'Manager Supervised', labelAr: 'إشراف المدير',                  icon: '🥐' },
     ],
   },

@@ -142,7 +142,7 @@ export default function HRPage() {
   const [otDraft, setOtDraft] = useState('')
   const [status, setStatus] = useState('')
   const [delConfirm, setDelConfirm] = useState<{ id: number; name: string } | null>(null)
-  const [activeTab, setActiveTab] = useState<'current' | 'history'>('current')
+  const [activeTab, setActiveTab] = useState<'current' | 'history' | 'structure'>('current')
   const [selectedMonth, setSelectedMonth] = useState(PAYROLL_HISTORY[PAYROLL_HISTORY.length - 1].month)
   const [customMonths, setCustomMonths] = useState<CustomPayrollMonth[]>([])
   const [monthModal, setMonthModal] = useState<{ open: boolean; draft: CustomPayrollMonth; setAsCurrent: boolean } | null>(null)
@@ -599,14 +599,18 @@ export default function HRPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Tab switcher */}
           <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 10, padding: 3, gap: 2 }}>
-            {(['current', 'history'] as const).map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{
+            {([
+              { key: 'current' as const, label: t('Current', 'الشهر الحالي') },
+              { key: 'history' as const, label: t('History', 'السجل') },
+              { key: 'structure' as const, label: t('Structure', 'الهيكل') },
+            ]).map(tab => (
+              <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
                 padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                background: activeTab === tab ? 'white' : 'transparent',
-                color: activeTab === tab ? '#0f172a' : '#64748b',
-                boxShadow: activeTab === tab ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                background: activeTab === tab.key ? 'white' : 'transparent',
+                color: activeTab === tab.key ? '#0f172a' : '#64748b',
+                boxShadow: activeTab === tab.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                 transition: 'all 0.15s',
-              }}>{tab === 'current' ? t('Current', 'الشهر الحالي') : t('History', 'السجل')}</button>
+              }}>{tab.label}</button>
             ))}
           </div>
           {/* OT Multiplier */}
@@ -1160,6 +1164,160 @@ export default function HRPage() {
           </div>
         </div>
       )}
+
+      {/* Structure Tab */}
+      {activeTab === 'structure' && (() => {
+        const LEADER_POSITIONS = ['Manager', 'Operation Manager', 'Supervisor', 'Head Chef', 'Bakery Chef']
+        const isLeader = (e: Employee) => LEADER_POSITIONS.some(lp => e.position.includes(lp))
+        const BRANCH_ORDER = ['Ar Rayyan', 'Hittin', 'Malqa', '']
+        const SHIFT_ORDER = ['Morning', 'Evening', 'Night', 'Double Shift', '']
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+
+            {/* OT by Restaurant */}
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>
+                {t('Overtime by Restaurant', 'الوقت الإضافي حسب المطعم')}
+              </h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                {RESTAURANTS.map(rest => {
+                  const restEmps = [...employees.filter(e => e.restaurant === rest)]
+                    .sort((a, b) => b.ot_hours - a.ot_hours)
+                  const maxOT = Math.max(...restEmps.map(e => e.ot_hours), 1)
+                  const totalOT = restEmps.reduce((s, e) => s + e.ot_hours, 0)
+                  const rc = RESTAURANT_COLORS[rest]
+                  return (
+                    <div key={rest} style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+                      <div style={{ padding: '14px 18px', background: rc.bg, borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: rc.text }}>{rest}</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: rc.text, opacity: 0.8 }}>{totalOT.toFixed(0)}h {t('total', 'إجمالي')}</span>
+                      </div>
+                      <div>
+                        {restEmps.map((e, i) => (
+                          <div key={e.id} style={{ padding: '10px 18px', borderBottom: i < restEmps.length - 1 ? '1px solid #f8fafc' : 'none' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                              <div>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--admin-text)' }}>{e.name.split(' ')[0]}</span>
+                                {e.position && <span style={{ fontSize: 11, color: '#94a3b8', marginInlineStart: 6 }}>{e.position}</span>}
+                              </div>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: e.ot_hours > 0 ? rc.text : '#cbd5e1', minWidth: 36, textAlign: 'right' }}>
+                                {e.ot_hours > 0 ? `${e.ot_hours}h` : '—'}
+                              </span>
+                            </div>
+                            <div style={{ height: 3, background: '#f1f5f9', borderRadius: 2 }}>
+                              <div style={{ width: `${(e.ot_hours / maxOT) * 100}%`, height: '100%', background: rc.text, borderRadius: 2 }} />
+                            </div>
+                          </div>
+                        ))}
+                        {restEmps.length === 0 && (
+                          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>{t('No employees', 'لا يوجد موظفون')}</div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Management Tree */}
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>
+                {t('Management Structure', 'الهيكل الإداري')}
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {RESTAURANTS.map(rest => {
+                  const restEmps = employees.filter(e => e.restaurant === rest)
+                  if (restEmps.length === 0) return null
+                  const rc = RESTAURANT_COLORS[rest]
+                  const branches = BRANCH_ORDER.filter(b => restEmps.some(e => e.branch === b))
+                  return (
+                    <div key={rest} style={{ background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+                      <div style={{ padding: '14px 20px', background: rc.bg, display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: rc.text }} />
+                        <span style={{ fontSize: 15, fontWeight: 800, color: rc.text }}>{rest}</span>
+                        <span style={{ fontSize: 12, color: rc.text, opacity: 0.7 }}>{restEmps.length} {t('employees', 'موظف')}</span>
+                      </div>
+                      <div style={{ padding: '12px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {branches.map(branch => {
+                          const branchEmps = restEmps.filter(e => e.branch === branch)
+                          const bc = BRANCH_COLORS[branch]
+                          const shifts = SHIFT_ORDER.filter(s => branchEmps.some(e => e.shift === s))
+                          return (
+                            <div key={branch || 'unassigned'} style={{ border: '1px solid var(--admin-border2)', borderRadius: 12, overflow: 'hidden' }}>
+                              <div style={{ padding: '9px 14px', background: 'var(--admin-bg)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20,
+                                  color: bc?.text ?? '#374151', background: bc?.bg ?? '#f3f4f6' }}>
+                                  {branch || t('Unassigned', 'غير محدد')}
+                                </span>
+                                <span style={{ fontSize: 11, color: '#94a3b8' }}>{branchEmps.length} {t('staff', 'موظف')}</span>
+                              </div>
+                              <div style={{ padding: '8px 14px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                {shifts.map(shift => {
+                                  const shiftEmps = branchEmps.filter(e => e.shift === shift)
+                                  const leaders = shiftEmps.filter(isLeader)
+                                  const staff = shiftEmps.filter(e => !isLeader(e))
+                                  const sc = SHIFT_COLORS[shift]
+                                  return (
+                                    <div key={shift || 'no-shift'}>
+                                      {shift && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, paddingTop: 4 }}>
+                                          <div style={{ height: 1, width: 16, background: '#e2e8f0' }} />
+                                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                                            color: sc?.text ?? '#64748b', background: sc?.bg ?? '#f3f4f6',
+                                            textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                            {shift}
+                                          </span>
+                                          <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+                                        </div>
+                                      )}
+                                      {leaders.map(leader => (
+                                        <div key={leader.id} style={{ display: 'flex', alignItems: 'center', gap: 10,
+                                          padding: '8px 12px', borderRadius: 10, background: rc.bg, marginBottom: 4 }}>
+                                          <span style={{ fontSize: 15, flexShrink: 0 }}>👑</span>
+                                          <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: 13, fontWeight: 700, color: rc.text }}>{leader.name.split(' ')[0]}</div>
+                                            <div style={{ fontSize: 11, color: rc.text, opacity: 0.75 }}>{leader.position || '–'}</div>
+                                          </div>
+                                          {leader.ot_hours > 0 && (
+                                            <span style={{ fontSize: 11, fontWeight: 700, color: rc.text,
+                                              background: 'rgba(255,255,255,0.5)', padding: '2px 8px', borderRadius: 20 }}>
+                                              {leader.ot_hours}h OT
+                                            </span>
+                                          )}
+                                        </div>
+                                      ))}
+                                      {staff.map(s => (
+                                        <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8,
+                                          padding: '6px 12px 6px 32px', borderRadius: 8, marginBottom: 2 }}
+                                          onMouseOver={e => (e.currentTarget.style.background = 'var(--admin-bg)')}
+                                          onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
+                                          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#cbd5e1', flexShrink: 0 }} />
+                                          <span style={{ fontSize: 13, color: 'var(--admin-text)', flex: 1 }}>
+                                            {s.name.split(' ')[0]}
+                                            {s.position && <span style={{ fontSize: 11, color: '#94a3b8', marginInlineStart: 6 }}>{s.position}</span>}
+                                          </span>
+                                          {s.ot_hours > 0 && (
+                                            <span style={{ fontSize: 11, fontWeight: 600, color: '#25D366' }}>{s.ot_hours}h</span>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+          </div>
+        )
+      })()}
 
       {/* New / Edit Month Modal */}
       {monthModal?.open && (

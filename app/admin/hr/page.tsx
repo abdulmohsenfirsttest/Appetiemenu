@@ -47,6 +47,15 @@ function parseMonthLabel(label: string): { monthIdx: number; year: number } {
   const year = parseInt(parts[1]) || CURRENT_YEAR
   return { monthIdx: monthIdx >= 0 ? monthIdx : new Date().getMonth(), year }
 }
+function monthToTimestamp(label: string) {
+  const { monthIdx, year } = parseMonthLabel(label)
+  return year * 12 + monthIdx
+}
+function getLatestMonth(seedMonths: typeof PAYROLL_HISTORY, customMonths: { month: string }[]) {
+  const all = [...seedMonths.map(m => m.month), ...customMonths.map(m => m.month)]
+  if (!all.length) return PAYROLL_HISTORY[PAYROLL_HISTORY.length - 1].month
+  return all.reduce((a, b) => monthToTimestamp(a) >= monthToTimestamp(b) ? a : b)
+}
 
 const BRANCHES = ['Ar Rayyan', 'Hittin', 'Malqa', '']
 const SHIFTS = ['Morning', 'Night', 'Double Shift', 'Evening', '']
@@ -143,7 +152,7 @@ export default function HRPage() {
   const [status, setStatus] = useState('')
   const [delConfirm, setDelConfirm] = useState<{ id: number; name: string } | null>(null)
   const [activeTab, setActiveTab] = useState<'current' | 'history' | 'structure'>('current')
-  const [selectedMonth, setSelectedMonth] = useState(PAYROLL_HISTORY[PAYROLL_HISTORY.length - 1].month)
+  const [selectedMonth, setSelectedMonth] = useState(() => getLatestMonth(PAYROLL_HISTORY, []))
   const [customMonths, setCustomMonths] = useState<CustomPayrollMonth[]>([])
   const [monthModal, setMonthModal] = useState<{ open: boolean; draft: CustomPayrollMonth; setAsCurrent: boolean } | null>(null)
   const [currentMonthLabel, setCurrentMonthLabel] = useState<string | null>(null)
@@ -154,7 +163,11 @@ export default function HRPage() {
   function loadCustomMonths() {
     try {
       const raw = localStorage.getItem('hr_custom_months')
-      if (raw) setCustomMonths(JSON.parse(raw))
+      const parsed: CustomPayrollMonth[] = raw ? JSON.parse(raw) : []
+      if (parsed.length) {
+        setCustomMonths(parsed)
+        setSelectedMonth(getLatestMonth(PAYROLL_HISTORY, parsed))
+      }
       const label = localStorage.getItem('hr_current_month_label')
       if (label) setCurrentMonthLabel(label)
     } catch {}
@@ -988,11 +1001,11 @@ export default function HRPage() {
             <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}
               className="admin-select" style={{ width: 'auto', minWidth: 180, fontWeight: 600 }}>
               <optgroup label={t('Imported', 'مستورد')}>
-                {PAYROLL_HISTORY.map(p => <option key={p.month} value={p.month}>{p.month}</option>)}
+                {[...PAYROLL_HISTORY].reverse().map(p => <option key={p.month} value={p.month}>{p.month}</option>)}
               </optgroup>
               {customMonths.length > 0 && (
                 <optgroup label={t('Custom', 'مخصص')}>
-                  {customMonths.map(m => <option key={m.id} value={m.month}>{m.month}</option>)}
+                  {[...customMonths].sort((a, b) => monthToTimestamp(b.month) - monthToTimestamp(a.month)).map(m => <option key={m.id} value={m.month}>{m.month}</option>)}
                 </optgroup>
               )}
             </select>

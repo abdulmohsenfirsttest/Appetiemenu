@@ -1025,6 +1025,22 @@ export default function HRPage() {
                   </button>
                 </>
               )}
+              <button
+                onClick={() => {
+                  const rows: CustomPayrollRow[] = historyMonthData.map((r, i) => ({
+                    rowId: `imported-${i}`,
+                    name: r.name, iqama: r.iqama || '', iban: r.iban, bank: r.bank || '',
+                    nationality: r.nationality || '', basic_salary: r.basic_salary,
+                    ot_hours: 0, ot_pay: r.ot_pay, net_pay: r.net_pay,
+                    branch: '', shift: '',
+                  }))
+                  setAsCurrentMonth(rows, selectedMonth)
+                  setActiveTab('current')
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', border: 'none', borderRadius: 10, background: '#6366f1', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(99,102,241,0.3)' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                {t('Set as Current', 'تعيين كحالي')}
+              </button>
               <button onClick={exportHistoryExcel} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {t('Export', 'تصدير')}

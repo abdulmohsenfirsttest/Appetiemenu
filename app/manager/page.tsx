@@ -156,7 +156,7 @@ export default function ManagerDashboard() {
     <div style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0f172a' }}>Operations Dashboard</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>Ghabashi Group · All Branches</p>
@@ -184,7 +184,7 @@ export default function ManagerDashboard() {
       )}
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 24 }}>
+      <div className="dash-stats" style={{ marginBottom: 20 }}>
         {[
           { label: 'Total Staff', value: SEED_EMPLOYEES.length, color: '#3b82f6', icon: '👥' },
           { label: 'Pending Approval', value: pendingApprovals.length, color: '#f59e0b', icon: '⏳' },
@@ -202,7 +202,7 @@ export default function ManagerDashboard() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid #e2e8f0' }}>
+      <div className="dash-tabs">
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: '9px 16px', borderRadius: '8px 8px 0 0', border: 'none',
@@ -332,7 +332,7 @@ export default function ManagerDashboard() {
                   <span style={{ fontSize: 12, color: '#64748b' }}>{emps.length} staff · {totalOT.toFixed(0)}h OT</span>
                   {unpaid > 0 && <span style={{ marginInlineStart: 'auto', fontSize: 11, padding: '2px 8px', borderRadius: 99, background: '#fef2f2', color: '#ef4444', fontWeight: 600 }}>{unpaid} unpaid</span>}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                <div className="team-grid" style={{ padding: '0 4px 4px' }}>
                   {Object.entries(byBranch).map(([branch, members]) => (
                     <div key={branch} style={{ padding: '12px 16px', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
                       <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{branch}</div>
@@ -359,8 +359,8 @@ export default function ManagerDashboard() {
 
       {/* ── Review Modal ── */}
       {reviewTask && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 20 }}>
-          <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 30px 80px rgba(0,0,0,0.3)' }}>
+        <div className="mobile-modal" style={{ zIndex: 200 }}>
+          <div className="mobile-modal-sheet" style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.3)' }}>
             <div style={{ padding: '20px 22px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Review Work</h2>
@@ -395,7 +395,7 @@ export default function ManagerDashboard() {
               {reviewTask.photo_urls && reviewTask.photo_urls.length > 0 && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Work Photos ({reviewTask.photo_urls.length})</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  <div className="photo-grid" style={{ gap: 8 }}>
                     {reviewTask.photo_urls.map((url, i) => (
                       <div key={i} onClick={() => { setLightboxPhotos(reviewTask.photo_urls!); setLightboxIdx(i) }}
                         style={{ aspectRatio: '1', borderRadius: 10, overflow: 'hidden', cursor: 'zoom-in', border: '1.5px solid #e2e8f0' }}>
@@ -433,8 +433,8 @@ export default function ManagerDashboard() {
 
       {/* ── Assign Task Modal ── */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 24 }}>
-          <div style={{ background: 'white', borderRadius: 18, padding: 26, width: '100%', maxWidth: 440, boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
+        <div className="mobile-modal" style={{ zIndex: 100 }}>
+          <div className="mobile-modal-sheet" style={{ padding: 22, boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>Assign Task</h2>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#64748b' }}>×</button>

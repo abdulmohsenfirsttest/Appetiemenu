@@ -48,24 +48,21 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
     <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
 
       {/* Top bar */}
-      <header style={{ background: '#0f172a', borderBottom: '1px solid #1e293b', height: 56, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 14, position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 9, background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-          </div>
-        <div>
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>Operation Manager</span>
-          <span style={{ fontSize: 12, color: '#475569', marginInlineStart: 8 }}>Ghabashi Group</span>
+      <header style={{ background: '#0f172a', borderBottom: '1px solid #1e293b', minHeight: 52, display: 'flex', alignItems: 'center', padding: '8px 14px', gap: 10, position: 'sticky', top: 0, zIndex: 50, flexWrap: 'wrap' }}>
+        <div style={{ width: 28, height: 28, borderRadius: 8, background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
         </div>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'white', flexShrink: 0 }}>Operations</span>
 
-        {/* Nav tabs */}
-        <nav style={{ display: 'flex', gap: 4, marginInlineStart: 16 }}>
+        {/* Nav tabs - scrollable on mobile */}
+        <nav className="manager-nav" style={{ flex: 1 }}>
           {NAV.map(item => {
             const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
             return (
               <Link key={item.href} href={item.href} style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '6px 14px', borderRadius: 8, textDecoration: 'none',
-                fontSize: 13, fontWeight: 600,
+                display: 'flex', alignItems: 'center',
+                padding: '6px 12px', borderRadius: 8, textDecoration: 'none',
+                fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
                 background: active ? '#1e293b' : 'transparent',
                 color: active ? '#f59e0b' : '#94a3b8',
                 transition: 'all 0.15s',
@@ -76,17 +73,14 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
           })}
         </nav>
 
-        <div style={{ flex: 1 }} />
-        <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 9, border: '1px solid #334155', background: 'transparent', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s' }}
-          onMouseOver={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
-          onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Sign Out
+        <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: '1px solid #334155', background: 'transparent', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Out
         </button>
       </header>
 
       {/* Page content */}
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 24px' }}>
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '16px 14px' }}>
         {children}
       </main>
 

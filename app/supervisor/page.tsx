@@ -200,7 +200,7 @@ export default function SupervisorPage() {
       {/* Header card */}
       <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
         <div style={{ height: 4, background: 'linear-gradient(90deg, #6366f1, #8b5cf6)' }} />
-        <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <div style={{ width: 46, height: 46, borderRadius: 13, background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🔑</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{me.name.split(' ')[0]}</div>
@@ -218,7 +218,7 @@ export default function SupervisorPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+      <div className="dash-stats-4" style={{ gap: 10 }}>
         {[
           { label: 'Awaiting Asjad', value: pendingCount, color: '#d97706' },
           { label: 'In Progress', value: activeCount, color: '#2563eb' },
@@ -333,8 +333,8 @@ export default function SupervisorPage() {
 
       {/* ── Completion Modal ── */}
       {completionTaskId && completionTask && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-          <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
+        <div className="mobile-modal" style={{ zIndex: 200 }}>
+          <div className="mobile-modal-sheet" style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
             <div style={{ borderTop: '4px solid #22c55e', borderRadius: '20px 20px 0 0', padding: '18px 22px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>Submit Completion</h2>
@@ -387,8 +387,8 @@ export default function SupervisorPage() {
 
       {/* ── New Task Modal ── */}
       {modal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-          <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 460, boxShadow: '0 25px 60px rgba(0,0,0,0.25)' }}>
+        <div className="mobile-modal" style={{ zIndex: 200 }}>
+          <div className="mobile-modal-sheet" style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.25)' }}>
             <div style={{ borderTop: '4px solid #6366f1', borderRadius: '20px 20px 0 0', padding: '18px 22px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>Assign Task</h2>

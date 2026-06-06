@@ -6,8 +6,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
 const NAV = [
-  { href: '/manager', label: 'Operations', icon: '⊞', exact: true },
-  { href: '/admin/hr', label: 'HR & Payroll', icon: '👤', exact: false },
+  { href: '/manager', label: 'Operations', exact: true },
+  { href: '/admin/hr', label: 'HR & Payroll', exact: false },
 ]
 
 export default function ManagerLayout({ children }: { children: React.ReactNode }) {
@@ -49,7 +49,9 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
 
       {/* Top bar */}
       <header style={{ background: '#0f172a', borderBottom: '1px solid #1e293b', height: 56, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 14, position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 9, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>👑</div>
+        <div style={{ width: 32, height: 32, borderRadius: 9, background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </div>
         <div>
           <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>Operation Manager</span>
           <span style={{ fontSize: 12, color: '#475569', marginInlineStart: 8 }}>Ghabashi Group</span>
@@ -68,7 +70,6 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
                 color: active ? '#f59e0b' : '#94a3b8',
                 transition: 'all 0.15s',
               }}>
-                <span style={{ fontSize: 14 }}>{item.icon}</span>
                 {item.label}
               </Link>
             )

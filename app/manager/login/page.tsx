@@ -51,8 +51,8 @@ export default function ManagerLogin() {
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 64, height: 64, borderRadius: 20, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28, boxShadow: '0 8px 24px rgba(245,158,11,0.3)' }}>
-            👑
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(245,158,11,0.2)' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: 'white', marginBottom: 4 }}>Operation Manager</h1>
           <p style={{ fontSize: 13, color: '#64748b' }}>Ghabashi Operations · أسجد</p>

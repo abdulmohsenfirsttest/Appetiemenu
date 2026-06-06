@@ -31,7 +31,7 @@ export default function ManagerLogin() {
 
     if (data.user.email !== 'asjad@appetie.com') {
       await supabase.auth.signOut()
-      setError('Access denied. This portal is for Asjad only.')
+      setError('Access denied. This portal is for Operation Manager only.')
       setLoading(false)
       return
     }
@@ -54,7 +54,7 @@ export default function ManagerLogin() {
           <div style={{ width: 64, height: 64, borderRadius: 20, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28, boxShadow: '0 8px 24px rgba(245,158,11,0.3)' }}>
             👑
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'white', marginBottom: 4 }}>Manager Portal</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'white', marginBottom: 4 }}>Operation Manager</h1>
           <p style={{ fontSize: 13, color: '#64748b' }}>Ghabashi Operations · أسجد</p>
         </div>
 

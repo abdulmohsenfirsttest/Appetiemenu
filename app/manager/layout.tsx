@@ -51,8 +51,8 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
       <header style={{ background: '#0f172a', borderBottom: '1px solid #1e293b', height: 56, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 14, position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ width: 32, height: 32, borderRadius: 9, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>👑</div>
         <div>
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>Asjad</span>
-          <span style={{ fontSize: 12, color: '#475569', marginInlineStart: 8 }}>Operation Manager</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>Operation Manager</span>
+          <span style={{ fontSize: 12, color: '#475569', marginInlineStart: 8 }}>Ghabashi Group</span>
         </div>
 
         {/* Nav tabs */}

@@ -19,6 +19,7 @@ interface Task {
   approved: boolean; approved_at?: string; started_at?: string
   completion_submitted?: boolean; photo_urls?: string[]; supervisor_note?: string
   asjad_comment?: string; done_at?: string
+  redo_requested?: boolean; redo_reason?: string
 }
 
 const PRIORITY_COLORS: Record<Priority, { text: string; bg: string; label: string }> = {
@@ -139,6 +140,7 @@ export default function SupervisorPage() {
       photo_urls: urls.length > 0 ? urls : t.photo_urls,
       supervisor_note: completionNote,
       status: 'in_progress' as TaskStatus,
+      redo_requested: false, redo_reason: undefined,
     } : t)
     saveAllTasks(updated)
     setTasks(updated)
@@ -245,7 +247,8 @@ export default function SupervisorPage() {
               const isOverdue = task.due_date && task.due_date < today && !task.done_at
               const isDone = !!task.done_at
               const isSubmitted = task.completion_submitted && !isDone
-              const isActive = task.approved && !task.completion_submitted && !isDone
+              const isRedo = task.redo_requested && !task.completion_submitted && !isDone
+              const isActive = task.approved && !task.completion_submitted && !isDone && !isRedo
 
               return (
                 <div key={task.id} style={{
@@ -262,6 +265,7 @@ export default function SupervisorPage() {
                       {!task.approved && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, color: '#d97706', background: '#fef3c7' }}>⏳ Awaiting Asjad</span>}
                       {isActive && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#2563eb', background: '#dbeafe' }}>▶ In Progress</span>}
                       {isSubmitted && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#7c3aed', background: '#ede9fe' }}>📸 Awaiting Review</span>}
+                      {isRedo && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#dc2626', background: '#fee2e2' }}>↩ Redo Requested</span>}
                       {isDone && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#15803d', background: '#dcfce7' }}>✓ Done</span>}
                     </div>
 
@@ -280,10 +284,17 @@ export default function SupervisorPage() {
                       )}
                     </div>
 
-                    {/* Asjad's comment */}
+                    {/* Redo reason from Asjad */}
+                    {isRedo && task.redo_reason && (
+                      <div style={{ marginTop: 8, padding: '8px 12px', background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca', fontSize: 12, color: '#dc2626' }}>
+                        <strong>Redo reason:</strong> {task.redo_reason}
+                      </div>
+                    )}
+
+                    {/* Asjad's comment on done */}
                     {isDone && task.asjad_comment && (
                       <div style={{ marginTop: 8, padding: '7px 10px', background: '#fef3c7', borderRadius: 7, fontSize: 12, color: '#92400e' }}>
-                        <strong>👑 Asjad:</strong> {task.asjad_comment}
+                        <strong>Manager:</strong> {task.asjad_comment}
                       </div>
                     )}
 
@@ -301,10 +312,10 @@ export default function SupervisorPage() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-                    {isActive && (
+                    {(isActive || isRedo) && (
                       <button onClick={() => { setCompletionTaskId(task.id); setCompletionNote(''); setCompletionFiles([]) }}
-                        style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: '#22c55e', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        Submit Done 📸
+                        style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: isRedo ? '#ef4444' : '#22c55e', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        {isRedo ? 'Resubmit' : 'Submit Done'}
                       </button>
                     )}
                     {!isDone && !isSubmitted && (

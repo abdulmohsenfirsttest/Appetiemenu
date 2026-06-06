@@ -14,6 +14,7 @@ interface Task {
   approved: boolean; approved_at?: string; started_at?: string
   completion_submitted?: boolean; photo_urls?: string[]; supervisor_note?: string
   asjad_comment?: string; done_at?: string
+  redo_requested?: boolean; redo_reason?: string
 }
 
 const PRIORITY_COLOR: Record<Priority, string> = {
@@ -100,6 +101,16 @@ export default function ManagerDashboard() {
   function markDone(task: Task, comment: string) {
     saveTasks(tasks.map(t => t.id === task.id ? {
       ...t, done_at: new Date().toISOString(), asjad_comment: comment, status: 'done',
+      redo_requested: false, redo_reason: undefined,
+    } : t))
+    setReviewTask(null)
+    setReviewComment('')
+  }
+
+  function requestRedo(task: Task, reason: string) {
+    saveTasks(tasks.map(t => t.id === task.id ? {
+      ...t, completion_submitted: false, redo_requested: true, redo_reason: reason,
+      photo_urls: [], supervisor_note: undefined,
     } : t))
     setReviewTask(null)
     setReviewComment('')
@@ -397,17 +408,22 @@ export default function ManagerDashboard() {
 
               {/* Comment */}
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Your Comment</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Comment / Redo Reason</label>
                 <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} rows={3}
-                  placeholder="Great job! / Needs improvement on... / ..."
+                  placeholder="Great job! · or explain what needs to be redone..."
                   style={{ width: '100%', padding: '10px 13px', borderRadius: 9, border: '1.5px solid #e2e8f0', fontSize: 13, outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
                   onFocus={e => (e.target.style.borderColor = '#f59e0b')} onBlur={e => (e.target.style.borderColor = '#e2e8f0')} />
               </div>
 
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setReviewTask(null)} style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
-                <button onClick={() => markDone(reviewTask, reviewComment)} style={{ flex: 2, padding: '11px', borderRadius: 10, border: 'none', background: '#22c55e', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(34,197,94,0.3)' }}>
-                  Mark Done ✓
+                <button onClick={() => setReviewTask(null)} style={{ padding: '11px 16px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => requestRedo(reviewTask, reviewComment)}
+                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: '#ef4444', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                  Request Redo
+                </button>
+                <button onClick={() => markDone(reviewTask, reviewComment)}
+                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: '#22c55e', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(34,197,94,0.3)' }}>
+                  Approve Work ✓
                 </button>
               </div>
             </div>

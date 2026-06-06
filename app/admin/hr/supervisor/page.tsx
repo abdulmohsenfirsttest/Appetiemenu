@@ -21,6 +21,7 @@ interface Task {
   approved: boolean; approved_at?: string; started_at?: string
   completion_submitted?: boolean; photo_urls?: string[]; supervisor_note?: string
   asjad_comment?: string; done_at?: string
+  redo_requested?: boolean; redo_reason?: string
 }
 
 const PRIORITY_COLORS: Record<Priority, { text: string; bg: string; label: string; labelAr: string }> = {
@@ -161,6 +162,7 @@ export default function SupervisorPanel() {
       photo_urls: urls.length > 0 ? urls : t.photo_urls,
       supervisor_note: completionNote,
       status: 'in_progress' as TaskStatus,
+      redo_requested: false, redo_reason: undefined,
     } : t)
     saveAllTasks(updated)
     setTasks(updated)
@@ -269,7 +271,8 @@ export default function SupervisorPanel() {
               const isOverdue = task.due_date && task.due_date < today && !task.done_at
               const isDone = !!task.done_at
               const isSubmitted = task.completion_submitted && !isDone
-              const isActive = task.approved && !task.completion_submitted && !isDone
+              const isRedo = task.redo_requested && !task.completion_submitted && !isDone
+              const isActive = task.approved && !task.completion_submitted && !isDone && !isRedo
               return (
                 <div key={task.id} style={{ background: 'var(--admin-card)', borderRadius: 13, border: `1px solid ${isDone ? '#bbf7d0' : isSubmitted ? '#bfdbfe' : 'var(--admin-border2)'}`, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 12, opacity: isDone ? 0.8 : 1 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -279,6 +282,7 @@ export default function SupervisorPanel() {
                       {!task.approved && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, color: '#d97706', background: '#fef3c7' }}>⏳ {t('Awaiting Asjad', 'بانتظار أسجد')}</span>}
                       {isActive && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, color: '#2563eb', background: '#dbeafe' }}>▶ {t('In Progress', 'جارٍ')}</span>}
                       {isSubmitted && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#1d4ed8', background: '#dbeafe' }}>📸 {t('Submitted for Review', 'بانتظار مراجعة أسجد')}</span>}
+                      {isRedo && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#dc2626', background: '#fee2e2' }}>↩ {t('Redo Requested', 'طلب إعادة')}</span>}
                       {isDone && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#15803d', background: '#dcfce7' }}>✓ {t('Done', 'مكتمل')}</span>}
                     </div>
                     {task.description && <p style={{ fontSize: 12, color: '#64748b', marginBottom: 5 }}>{task.description}</p>}
@@ -294,10 +298,16 @@ export default function SupervisorPanel() {
                         <span style={{ fontSize: 11, color: '#16a34a', fontWeight: 600 }}>⏱ {formatDuration(task.started_at, task.done_at)}</span>
                       )}
                     </div>
-                    {/* Asjad comment */}
+                    {/* Redo reason */}
+                    {isRedo && task.redo_reason && (
+                      <div style={{ marginTop: 8, padding: '8px 12px', background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca', fontSize: 12, color: '#dc2626' }}>
+                        <strong>{t('Redo reason', 'سبب الإعادة')}:</strong> {task.redo_reason}
+                      </div>
+                    )}
+                    {/* Manager comment on done */}
                     {isDone && task.asjad_comment && (
                       <div style={{ marginTop: 8, padding: '7px 10px', background: '#fef3c7', borderRadius: 7, fontSize: 12, color: '#92400e' }}>
-                        <strong>👑 Asjad:</strong> {task.asjad_comment}
+                        <strong>{t('Manager', 'المدير')}:</strong> {task.asjad_comment}
                       </div>
                     )}
                     {/* Photos thumbnail row */}
@@ -315,11 +325,11 @@ export default function SupervisorPanel() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-                    {/* Submit completion button */}
-                    {isActive && (
+                    {/* Submit / Resubmit button */}
+                    {(isActive || isRedo) && (
                       <button onClick={() => { setCompletionTaskId(task.id); setCompletionNote(''); setCompletionFiles([]) }}
-                        style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: '#22c55e', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        {t('Submit Done', 'إرسال للمراجعة')} 📸
+                        style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: isRedo ? '#ef4444' : '#22c55e', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        {isRedo ? t('Resubmit', 'إعادة الإرسال') : t('Submit Done', 'إرسال للمراجعة')}
                       </button>
                     )}
                     {!isDone && !isSubmitted && (

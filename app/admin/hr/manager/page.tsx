@@ -13,8 +13,8 @@ interface Employee {
   restaurant?: string; vacation_start?: string; vacation_end?: string
 }
 
-type Priority = 'low' | 'medium' | 'high'
-type TaskStatus = 'pending' | 'in_progress' | 'done'
+type Priority = 'low' | 'medium' | 'high' | 'urgent'
+type TaskStatus = 'pending' | 'in_progress' | 'done' | 'blocked'
 
 interface Task {
   id: string; title: string; description: string
@@ -35,16 +35,20 @@ const SHIFT_COLORS: Record<string, { text: string; bg: string }> = {
   'Double Shift': { text: '#ea580c', bg: '#fff7ed' },
   'Evening':      { text: '#db2777', bg: '#fce7f3' },
 }
-const PRIORITY_COLORS: Record<Priority, { text: string; bg: string; label: string; labelAr: string }> = {
+const PRIORITY_COLORS: Record<string, { text: string; bg: string; label: string; labelAr: string }> = {
   low:    { text: '#16a34a', bg: '#dcfce7', label: 'Low',    labelAr: 'منخفض' },
   medium: { text: '#d97706', bg: '#fef3c7', label: 'Medium', labelAr: 'متوسط' },
   high:   { text: '#ef4444', bg: '#fef2f2', label: 'High',   labelAr: 'عالي'  },
+  urgent: { text: '#dc2626', bg: '#fee2e2', label: 'Urgent', labelAr: 'عاجل'  },
 }
-const STATUS_COLORS: Record<TaskStatus, { text: string; bg: string; label: string; labelAr: string }> = {
-  pending:     { text: '#94a3b8', bg: '#f8fafc', label: 'Pending',     labelAr: 'معلق'  },
-  in_progress: { text: '#2563eb', bg: '#dbeafe', label: 'In Progress', labelAr: 'جارٍ'  },
-  done:        { text: '#16a34a', bg: '#dcfce7', label: 'Done',        labelAr: 'مكتمل' },
+const STATUS_COLORS: Record<string, { text: string; bg: string; label: string; labelAr: string }> = {
+  pending:     { text: '#94a3b8', bg: '#f8fafc', label: 'Pending',     labelAr: 'معلق'    },
+  in_progress: { text: '#2563eb', bg: '#dbeafe', label: 'In Progress', labelAr: 'جارٍ'    },
+  done:        { text: '#16a34a', bg: '#dcfce7', label: 'Done',        labelAr: 'مكتمل'   },
+  blocked:     { text: '#dc2626', bg: '#fee2e2', label: 'Blocked',     labelAr: 'محظور'   },
 }
+const FALLBACK_PRIORITY = { text: '#64748b', bg: '#f1f5f9', label: 'Unknown', labelAr: 'غير معروف' }
+const FALLBACK_STATUS   = { text: '#64748b', bg: '#f1f5f9', label: 'Unknown', labelAr: 'غير معروف' }
 const LEADER_POSITIONS = ['Supervisor', 'Manager', 'Head Chef', 'Bakery Chef']
 
 function calcOT(basic: number, otHrs: number) {
@@ -263,7 +267,7 @@ export default function ManagerDashboard() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {pendingApprovals.map(task => {
-                const pc = PRIORITY_COLORS[task.priority]
+                const pc = PRIORITY_COLORS[task.priority] ?? FALLBACK_PRIORITY
                 const bc = BRANCH_COLORS[task.branch]
                 const isOverdue = task.due_date && task.due_date < today
                 return (
@@ -308,8 +312,8 @@ export default function ManagerDashboard() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {tabTasks.map(task => {
-                const pc = PRIORITY_COLORS[task.priority]
-                const sc = STATUS_COLORS[task.status]
+                const pc = PRIORITY_COLORS[task.priority] ?? FALLBACK_PRIORITY
+                const sc = STATUS_COLORS[task.status] ?? FALLBACK_STATUS
                 const bc = BRANCH_COLORS[task.branch]
                 const isOverdue = task.due_date && task.due_date < today && task.status !== 'done'
                 return (
@@ -334,6 +338,7 @@ export default function ManagerDashboard() {
                         <option value="pending">{t('Pending', 'معلق')}</option>
                         <option value="in_progress">{t('In Progress', 'جارٍ')}</option>
                         <option value="done">{t('Done', 'مكتمل')}</option>
+                        <option value="blocked">{t('Blocked', 'محظور')}</option>
                       </select>
                       <button onClick={() => deleteTask(task.id)} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: '#fef2f2', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>

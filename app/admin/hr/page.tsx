@@ -157,6 +157,8 @@ export default function HRPage() {
   const [monthModal, setMonthModal] = useState<{ open: boolean; draft: CustomPayrollMonth; setAsCurrent: boolean } | null>(null)
   const [currentMonthLabel, setCurrentMonthLabel] = useState<string | null>(null)
   const [vacationModal, setVacationModal] = useState<{ type: 'employee' | 'custom'; empId?: number; monthId?: string; rowId?: string; name: string; start: string; end: string } | null>(null)
+  const [hiddenMonths, setHiddenMonths] = useState<string[]>([])
+  const [showHidden, setShowHidden] = useState(false)
 
   useEffect(() => { loadData(); loadCustomMonths() }, [])
 
@@ -170,7 +172,22 @@ export default function HRPage() {
       }
       const label = localStorage.getItem('hr_current_month_label')
       if (label) setCurrentMonthLabel(label)
+      const hidden = localStorage.getItem('hr_hidden_months')
+      if (hidden) setHiddenMonths(JSON.parse(hidden))
     } catch {}
+  }
+
+  function toggleHideMonth(month: string) {
+    setHiddenMonths(prev => {
+      const next = prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]
+      localStorage.setItem('hr_hidden_months', JSON.stringify(next))
+      if (next.includes(month) && selectedMonth === month) {
+        const allMonths = [...PAYROLL_HISTORY.map(p => p.month), ...customMonths.map(m => m.month)]
+        const visible = allMonths.filter(m => !next.includes(m))
+        if (visible.length) setSelectedMonth(visible[visible.length - 1])
+      }
+      return next
+    })
   }
 
   function customToEmployees(records: CustomPayrollRow[]): Employee[] {
@@ -1001,11 +1018,15 @@ export default function HRPage() {
             <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}
               className="admin-select" style={{ width: 'auto', minWidth: 180, fontWeight: 600 }}>
               <optgroup label={t('Imported', 'مستورد')}>
-                {[...PAYROLL_HISTORY].reverse().map(p => <option key={p.month} value={p.month}>{p.month}</option>)}
+                {[...PAYROLL_HISTORY].reverse().filter(p => showHidden || !hiddenMonths.includes(p.month)).map(p => (
+                  <option key={p.month} value={p.month}>{hiddenMonths.includes(p.month) ? `👁 ${p.month}` : p.month}</option>
+                ))}
               </optgroup>
               {customMonths.length > 0 && (
                 <optgroup label={t('Custom', 'مخصص')}>
-                  {[...customMonths].sort((a, b) => monthToTimestamp(b.month) - monthToTimestamp(a.month)).map(m => <option key={m.id} value={m.month}>{m.month}</option>)}
+                  {[...customMonths].sort((a, b) => monthToTimestamp(b.month) - monthToTimestamp(a.month)).filter(m => showHidden || !hiddenMonths.includes(m.month)).map(m => (
+                    <option key={m.id} value={m.month}>{hiddenMonths.includes(m.month) ? `👁 ${m.month}` : m.month}</option>
+                  ))}
                 </optgroup>
               )}
             </select>
@@ -1025,6 +1046,18 @@ export default function HRPage() {
                   </button>
                 </>
               )}
+              {hiddenMonths.length > 0 && (
+                <button onClick={() => setShowHidden(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', border: `1.5px solid ${showHidden ? '#f59e0b' : '#e2e8f0'}`, borderRadius: 10, background: showHidden ? '#fffbeb' : 'white', fontSize: 13, fontWeight: 600, color: showHidden ? '#b45309' : '#64748b', cursor: 'pointer' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  {showHidden ? t('Hide hidden', 'إخفاء المخفية') : `${t('Show hidden', 'عرض المخفية')} (${hiddenMonths.length})`}
+                </button>
+              )}
+              <button onClick={() => toggleHideMonth(selectedMonth)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', border: `1.5px solid ${hiddenMonths.includes(selectedMonth) ? '#fde68a' : '#e2e8f0'}`, borderRadius: 10, background: hiddenMonths.includes(selectedMonth) ? '#fffbeb' : 'white', fontSize: 13, fontWeight: 600, color: hiddenMonths.includes(selectedMonth) ? '#b45309' : '#64748b', cursor: 'pointer' }}>
+                {hiddenMonths.includes(selectedMonth)
+                  ? <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>{t('Unhide', 'إظهار')}</>
+                  : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>{t('Hide month', 'إخفاء الشهر')}</>
+                }
+              </button>
               <button
                 onClick={() => {
                   const rows: CustomPayrollRow[] = historyMonthData.map((r, i) => ({

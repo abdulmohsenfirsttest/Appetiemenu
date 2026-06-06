@@ -10,6 +10,7 @@ export default function BakeryLayout({ children }: { children: React.ReactNode }
   const router = useRouter()
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   useEffect(() => {
     if (pathname === '/bakery') return
@@ -33,7 +34,15 @@ export default function BakeryLayout({ children }: { children: React.ReactNode }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#faf8f5' }}>
-      <aside style={{ width: 200, background: '#2d1f14', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed' }}>
+
+      {/* Mobile overlay */}
+      {mobileNavOpen && (
+        <div onClick={() => setMobileNavOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99 }} />
+      )}
+
+      <aside className={`bakery-sidebar ${mobileNavOpen ? 'open' : ''}`}
+        style={{ width: 200, background: '#2d1f14', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', zIndex: 100 }}>
         <div style={{ padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,.1)' }}>
           <div style={{ fontSize: 22, marginBottom: 4 }}>🥐</div>
           <div style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>Manager Supervised</div>
@@ -43,7 +52,7 @@ export default function BakeryLayout({ children }: { children: React.ReactNode }
           {NAV.map(({ href, label }) => {
             const active = pathname.startsWith(href)
             return (
-              <Link key={href} href={href} style={{
+              <Link key={href} href={href} onClick={() => setMobileNavOpen(false)} style={{
                 display: 'block', padding: '9px 12px', borderRadius: 8, marginBottom: 2,
                 color: active ? 'white' : 'rgba(255,255,255,.5)',
                 background: active ? 'rgba(200,115,58,.35)' : 'transparent',
@@ -64,7 +73,16 @@ export default function BakeryLayout({ children }: { children: React.ReactNode }
           </div>
         )}
       </aside>
-      <main style={{ marginLeft: 200, flex: 1, padding: 24 }}>
+
+      <main className="bakery-main" style={{ marginLeft: 200, flex: 1, padding: 24 }}>
+        {/* Mobile top bar */}
+        <div className="bakery-topbar">
+          <button onClick={() => setMobileNavOpen(o => !o)}
+            style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: 'rgba(255,255,255,.15)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>Manager Supervised</span>
+        </div>
         {children}
       </main>
     </div>

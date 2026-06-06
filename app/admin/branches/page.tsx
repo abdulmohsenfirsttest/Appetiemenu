@@ -79,7 +79,7 @@ export default function BranchesPage() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+      <div className="admin-grid-3" style={{ gap: 16 }}>
         {branches.map(branch => {
           const cfg = BRANCH_CONFIG[branch.name] ?? { color: '#374151', bg: '#f3f4f6', lightBg: '#f9fafb' }
           return (
@@ -117,8 +117,8 @@ export default function BranchesPage() {
 
       {/* Modal */}
       {modal.open && modal.branch && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
-          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 420, boxShadow: '0 25px 60px rgba(0,0,0,0.18)' }}>
+        <div className="mobile-modal" style={{ zIndex: 100 }}>
+          <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', boxShadow: '0 25px 60px rgba(0,0,0,0.18)' }}>
             <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--admin-text)' }}>{modal.branch.id ? 'Edit Branch' : 'Add Branch'}</h2>
               <button className="ibtn ibtn-edit" onClick={() => setModal({ open: false, branch: null })}><CloseIcon /></button>

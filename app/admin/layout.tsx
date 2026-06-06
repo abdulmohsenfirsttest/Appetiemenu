@@ -46,6 +46,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const { dark, toggle: toggleTheme } = useAdminTheme()
   const { lang, toggle: toggleLang, t, isAr } = useLanguage()
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href)
@@ -67,8 +68,11 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   return (
     <div dir={isAr ? 'rtl' : 'ltr'} style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--admin-bg)', fontFamily: isAr ? 'Tajawal, var(--font-dm-sans), sans-serif' : 'var(--font-dm-sans), sans-serif' }}>
 
+      {/* Mobile overlay */}
+      <div className={`admin-sidebar-overlay ${mobileNavOpen ? 'open' : ''}`} onClick={() => setMobileNavOpen(false)} />
+
       {/* ── Sidebar ─────────────────────────────────── */}
-      <aside style={{
+      <aside className={`admin-sidebar ${mobileNavOpen ? 'open' : ''}`} style={{
         width: collapsed ? 60 : 220, flexShrink: 0,
         background: '#0f172a', display: 'flex', flexDirection: 'column',
         height: '100vh', transition: 'width 0.2s ease', overflow: 'hidden',
@@ -105,7 +109,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
               {group.items.map(item => {
                 const active = isActive(item.href, item.exact)
                 return (
-                  <Link key={item.href} href={item.href} style={{
+                  <Link key={item.href} href={item.href} onClick={() => setMobileNavOpen(false)} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: collapsed ? '10px 0' : '9px 12px',
                     justifyContent: collapsed ? 'center' : 'flex-start',
@@ -182,10 +186,16 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         {/* Top bar */}
         <header style={{
           height: 56, background: 'var(--admin-header)', borderBottom: '1px solid var(--admin-border)',
-          display: 'flex', alignItems: 'center', padding: '0 24px', flexShrink: 0, gap: 12,
+          display: 'flex', alignItems: 'center', padding: '0 16px', flexShrink: 0, gap: 10,
         }}>
-          <div style={{ flex: 1 }}>
-            <span style={{ fontSize: 13, color: '#64748b' }}>{activeLabel}</span>
+          {/* Hamburger — mobile only */}
+          <button className="admin-hamburger" onClick={() => setMobileNavOpen(o => !o)}
+            style={{ color: 'var(--admin-text)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 13, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{activeLabel}</span>
           </div>
 
           {/* Language toggle */}
@@ -209,11 +219,11 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
             {dark ? '☀️' : '🌙'}
           </button>
 
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>Appetie · اباتاي</div>
+          <div style={{ fontSize: 12, color: '#94a3b8', flexShrink: 0, display: 'none' }} className="admin-brand">Appetie</div>
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: 24, background: 'var(--admin-bg)' }}>
+        <main className="admin-content-pad" style={{ flex: 1, overflowY: 'auto', padding: 24, background: 'var(--admin-bg)' }}>
           {children}
         </main>
       </div>

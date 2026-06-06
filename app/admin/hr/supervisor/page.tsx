@@ -224,7 +224,7 @@ export default function SupervisorPanel() {
       {/* Header */}
       <div style={{ background: 'var(--admin-card)', borderRadius: 18, border: '1px solid var(--admin-border2)', overflow: 'hidden' }}>
         <div style={{ height: 4, background: 'linear-gradient(90deg, #6366f1, #8b5cf6)' }} />
-        <div style={{ padding: '16px 22px', display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ padding: '16px 22px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ width: 46, height: 46, borderRadius: 14, background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🔑</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--admin-text)' }}>{me.name.split(' ')[0]}</div>
@@ -242,7 +242,7 @@ export default function SupervisorPanel() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+      <div style={{ display: 'grid', gap: 12 }} className="admin-grid-4">
         {[
           { label: t('My Team', 'فريقي'), value: myTeam.length, color: '#6366f1' },
           { label: t('Awaiting Asjad', 'بانتظار أسجد'), value: pending, color: '#d97706' },
@@ -347,8 +347,8 @@ export default function SupervisorPanel() {
 
       {/* ── Completion Submission Modal ── */}
       {completionTaskId && completionTask && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 460, boxShadow: '0 25px 60px rgba(0,0,0,0.3)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div className="mobile-modal" style={{ zIndex: 200 }}>
+          <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', boxShadow: '0 25px 60px rgba(0,0,0,0.3)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ borderTop: '4px solid #22c55e', borderRadius: '20px 20px 0 0', padding: '18px 22px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--admin-text)', margin: 0 }}>{t('Submit Completion', 'إرسال إتمام المهمة')}</h2>
@@ -417,8 +417,8 @@ export default function SupervisorPanel() {
 
       {/* ── New Task Modal ── */}
       {modal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 460, boxShadow: '0 25px 60px rgba(0,0,0,0.22)' }}>
+        <div className="mobile-modal" style={{ zIndex: 200 }}>
+          <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', boxShadow: '0 25px 60px rgba(0,0,0,0.22)' }}>
             <div style={{ borderTop: '4px solid #6366f1', borderRadius: '20px 20px 0 0', padding: '18px 22px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--admin-text)' }}>{t('Assign Task', 'تعيين مهمة')}</h2>

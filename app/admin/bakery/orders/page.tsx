@@ -115,8 +115,8 @@ export default function BakeryOrders() {
 
       {/* Order Detail Modal */}
       {modal && (
-        <div onClick={() => setModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--admin-card)', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        <div className="mobile-modal" onClick={() => setModal(null)} style={{ zIndex: 1000 }}>
+          <div className="mobile-modal-sheet" onClick={e => e.stopPropagation()} style={{ background: 'var(--admin-card)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
             {/* Header */}
             <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--admin-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>

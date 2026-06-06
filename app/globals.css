@@ -231,3 +231,91 @@ body {
 @media (max-width: 480px) {
   .row-mobile-col { flex-direction: column; align-items: stretch; }
 }
+
+/* ── Admin responsive grid utilities ──────────────── */
+
+/* 4-col stat grid: 2×2 on mobile */
+.admin-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 640px) {
+  .admin-grid-4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* 3-col card grid: 1 col on mobile → 2 → 3 */
+.admin-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 480px) {
+  .admin-grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 860px) {
+  .admin-grid-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Admin sidebar mobile drawer */
+.admin-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99;
+}
+@media (max-width: 767px) {
+  .admin-sidebar-overlay.open { display: block; }
+
+  .admin-sidebar {
+    position: fixed !important;
+    top: 0; bottom: 0; left: 0; right: auto;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease, width 0.2s ease !important;
+  }
+  [dir="rtl"] .admin-sidebar {
+    left: auto; right: 0;
+    transform: translateX(100%);
+  }
+  .admin-sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  /* Hamburger: only visible on mobile */
+  .admin-hamburger { display: flex !important; }
+
+  /* Reduce content padding on mobile */
+  .admin-content-pad { padding: 14px !important; }
+}
+
+/* Hamburger: hidden by default (desktop) */
+.admin-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid var(--admin-border);
+  background: var(--admin-card);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Bakery layout mobile ──────────────────────────── */
+.bakery-topbar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: #2d1f14;
+  margin: -14px -14px 16px;
+  padding: 12px 14px;
+}
+@media (max-width: 767px) {
+  .bakery-topbar { display: flex; }
+  .bakery-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+  .bakery-sidebar.open { transform: translateX(0); }
+  .bakery-main { margin-left: 0 !important; padding: 14px !important; }
+}

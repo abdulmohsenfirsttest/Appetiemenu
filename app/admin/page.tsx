@@ -116,13 +116,13 @@ export default function AdminDashboard() {
       </div>
 
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+        <div style={{ display: 'grid', gap: 16 }} className="admin-grid-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} style={{ height: 110, background: 'var(--admin-card)', borderRadius: 16, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }} className="shimmer" />
           ))}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+        <div style={{ display: 'grid', gap: 16 }} className="admin-grid-4">
           {cards.map((card, i) => (
             <div key={i} style={{ background: 'var(--admin-card)', borderRadius: 16, padding: '20px 20px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', border: '1px solid var(--admin-border2)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: card.color, borderRadius: '16px 16px 0 0' }} />
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
 
       <div>
         <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 12 }}>{t('Quick Actions', 'الإجراءات السريعة')}</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gap: 14 }} className="admin-grid-3">
           {actions.map((a, i) => (
             <Link key={i} href={a.href} style={{ textDecoration: 'none' }}>
               <div style={{ background: 'var(--admin-card)', borderRadius: 14, padding: '18px 20px', border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'box-shadow 0.15s' }}
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
 
       <div>
         <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 12 }}>{t('Branches', 'الفروع')}</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gap: 14 }} className="admin-grid-3">
           {branches.map(b => (
             <div key={b.name} style={{ background: 'var(--admin-card)', borderRadius: 14, padding: '16px 20px', border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: b.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, color: b.color, flexShrink: 0 }}>

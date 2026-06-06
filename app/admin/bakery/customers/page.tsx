@@ -77,8 +77,8 @@ export default function BakeryCustomers() {
       </div>
 
       {modal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
-          <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 28, width: '100%', maxWidth: 440 }}>
+        <div className="mobile-modal" style={{ zIndex: 50 }}>
+          <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', padding: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 20, color: 'var(--admin-text)' }}>{modal.id ? 'Edit Customer' : 'New Customer'}</div>
             <div style={{ display: 'grid', gap: 14 }}>
               {[['Full Name','name'],['Email','email'],['Phone','phone'],['Notes','notes']].map(([label, key]) => (

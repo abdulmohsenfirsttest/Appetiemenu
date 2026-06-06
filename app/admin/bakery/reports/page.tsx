@@ -29,7 +29,7 @@ export default function BakeryReports() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 24 }}>
+      <div className="admin-grid-3" style={{ gap: 16, marginBottom: 24 }}>
         {[['Revenue', `$${totalRevenue.toFixed(2)}`, '#16a34a'], ['Orders', totalOrders, '#1d4ed8'], ['Avg Order', `$${totalOrders ? (totalRevenue/totalOrders).toFixed(2) : '0.00'}`, '#c8733a']].map(([label, value, color]) => (
           <div key={label as string} style={{ background: 'var(--admin-card)', border: '1px solid var(--admin-border)', borderRadius: 12, padding: '20px 24px' }}>
             <div style={{ fontSize: 24, fontWeight: 800, color: color as string }}>{value}</div>
@@ -38,7 +38,7 @@ export default function BakeryReports() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+      <div className="admin-grid-3" style={{ gap: 20, marginBottom: 20 }}>
         <div style={{ background: 'var(--admin-card)', border: '1px solid var(--admin-border)', borderRadius: 12, padding: 20 }}>
           <div style={{ fontWeight: 700, marginBottom: 16, color: 'var(--admin-text)' }}>Revenue Trend</div>
           <ResponsiveContainer width="100%" height={200}>

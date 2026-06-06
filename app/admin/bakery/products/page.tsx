@@ -79,8 +79,8 @@ export default function BakeryProducts() {
       </div>
 
       {modal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
-          <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 28, width: '100%', maxWidth: 480 }}>
+        <div className="mobile-modal" style={{ zIndex: 50 }}>
+          <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', padding: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 20, color: 'var(--admin-text)' }}>{modal.id ? 'Edit Product' : 'New Product'}</div>
             <div style={{ display: 'grid', gap: 14 }}>
               {[['Name','name','text'],['Price ($)','price','number'],['Cost ($)','cost','number'],['Stock','stock','number']].map(([label, key, type]) => (

@@ -179,7 +179,7 @@ export default function ManagerDashboard() {
       {/* Profile header */}
       <div style={{ background: 'var(--admin-card)', borderRadius: 18, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <div style={{ height: 5, background: 'linear-gradient(90deg, #b45309, #f59e0b)' }} />
-        <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 18 }}>
+        <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>👑</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--admin-text)' }}>{asjad?.name ?? 'Asjad Puthuparambil Ayoob'}</div>
@@ -215,7 +215,7 @@ export default function ManagerDashboard() {
       )}
 
       {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+      <div style={{ display: 'grid', gap: 14 }} className="admin-grid-4">
         {[
           { label: t('Team Size', 'حجم الفريق'), value: team.length, sub: t('Ghabashi staff', 'موظفو الغباشي'), color: '#b45309' },
           { label: t('Monthly Net Pay', 'صافي الراتب'), value: `${Math.round(totalNet).toLocaleString()} SAR`, sub: t('total for team', 'إجمالي الفريق'), color: '#10b981' },
@@ -232,7 +232,7 @@ export default function ManagerDashboard() {
 
       {/* Tasks section with tabs */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
           <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)' }}>{t('Tasks', 'المهام')}</h2>
           <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 10, padding: 3, gap: 2 }}>
             {([
@@ -355,7 +355,7 @@ export default function ManagerDashboard() {
       {/* Branch breakdown */}
       <div>
         <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 12 }}>{t('Branch Breakdown', 'تفاصيل الفروع')}</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gap: 14 }} className="admin-grid-3">
           {BRANCHES.map(branch => {
             const branchEmps = team.filter(e => e.branch === branch)
             const branchNet = branchEmps.reduce((s, e) => s + e.net_pay, 0)
@@ -440,8 +440,8 @@ export default function ManagerDashboard() {
 
       {/* Assign Task Modal */}
       {taskModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 480, boxShadow: '0 25px 60px rgba(0,0,0,0.22)' }}>
+        <div className="mobile-modal" style={{ zIndex: 200 }}>
+          <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', boxShadow: '0 25px 60px rgba(0,0,0,0.22)' }}>
             <div style={{ borderTop: '4px solid #0f172a', borderRadius: '20px 20px 0 0', padding: '18px 22px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--admin-text)' }}>{t('Assign Task', 'تعيين مهمة')}</h2>

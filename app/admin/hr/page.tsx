@@ -109,8 +109,8 @@ const CloseIcon = () => (
 function ConfirmDialog({ name, onConfirm, onCancel }: { name: string; onConfirm: () => void; onCancel: () => void }) {
   const { t } = useLanguage()
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-      <div style={{ background: 'var(--admin-card)', borderRadius: 20, padding: '32px 28px', maxWidth: 360, width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
+    <div className="mobile-modal" style={{ zIndex: 200 }}>
+      <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', maxWidth: 360, textAlign: 'center', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', padding: '32px 28px' }}>
         <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#ef4444' }}>
           <TrashIcon size={22} />
         </div>
@@ -621,12 +621,12 @@ export default function HRPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--admin-text)', marginBottom: 2 }}>{t('HR & Payroll', 'الرواتب والموارد البشرية')}</h1>
           <p style={{ fontSize: 13, color: '#64748b' }}>{analyticsEmps.length} {t('employees', 'موظف')} · {filterBranch === 'all' ? t('All branches', 'جميع الفروع') : filterBranch}</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           {/* Tab switcher */}
           <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 10, padding: 3, gap: 2 }}>
             {([
@@ -681,23 +681,27 @@ export default function HRPage() {
 
       {/* Summary Cards */}
       {activeTab === 'current' && loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
-          {Array.from({ length: 7 }).map((_, i) => <div key={i} style={{ height: 80, background: 'var(--admin-card)', borderRadius: 14, border: '1px solid var(--admin-border2)' }} className="shimmer" />)}
+        <div style={{ overflowX: 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12, minWidth: 560 }}>
+            {Array.from({ length: 7 }).map((_, i) => <div key={i} style={{ height: 80, background: 'var(--admin-card)', borderRadius: 14, border: '1px solid var(--admin-border2)' }} className="shimmer" />)}
+          </div>
         </div>
       ) : activeTab === 'current' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
-          {summaryCards.map((card, i) => (
-            <div key={i} style={{ background: 'var(--admin-card)', borderRadius: 14, padding: '14px 16px', border: '1px solid var(--admin-border2)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', borderTop: `3px solid ${card.color}` }}>
-              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--admin-text)', lineHeight: 1.1, marginTop: 4 }}>{card.value}</div>
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{card.label}</div>
-            </div>
-          ))}
+        <div style={{ overflowX: 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12, minWidth: 560 }}>
+            {summaryCards.map((card, i) => (
+              <div key={i} style={{ background: 'var(--admin-card)', borderRadius: 14, padding: '14px 16px', border: '1px solid var(--admin-border2)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', borderTop: `3px solid ${card.color}` }}>
+                <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--admin-text)', lineHeight: 1.1, marginTop: 4 }}>{card.value}</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{card.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : null}
 
       {/* Charts */}
       {activeTab === 'current' && !loading && (topOT.length > 0 || branchSalary.length > 0 || shiftSalary.length > 0) && (
-        <div key={filterBranch} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div key={filterBranch} className="admin-grid-3" style={{ gap: 16 }}>
           {topOT.length > 0 && (
             <div style={{ background: 'var(--admin-card)', borderRadius: 16, padding: 20, border: '1px solid var(--admin-border2)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
               <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>
@@ -1086,7 +1090,7 @@ export default function HRPage() {
           </div>
 
           {/* Summary cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          <div className="admin-grid-4" style={{ gap: 12 }}>
             {[
               { label: t('Employees', 'الموظفون'), value: historyMonthData.length, color: '#25D366' },
               { label: t('Total Basic', 'إجمالي الأساسي'), value: `${historyTotalBasic.toLocaleString()} SAR`, color: '#6366f1' },
@@ -1241,7 +1245,7 @@ export default function HRPage() {
               <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 14 }}>
                 {t('Overtime by Restaurant', 'الوقت الإضافي حسب المطعم')}
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              <div className="admin-grid-3" style={{ gap: 16 }}>
                 {RESTAURANTS.map(rest => {
                   const restEmps = [...employees.filter(e => e.restaurant === rest)]
                     .sort((a, b) => b.ot_hours - a.ot_hours)
@@ -1525,8 +1529,8 @@ export default function HRPage() {
 
       {/* Vacation Date Picker Modal */}
       {vacationModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 380, boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }}>
+        <div className="mobile-modal" style={{ zIndex: 200 }}>
+          <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', maxWidth: 380, boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }}>
             {/* Header */}
             <div style={{ borderTop: '4px solid #f59e0b', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
@@ -1586,8 +1590,8 @@ export default function HRPage() {
 
       {/* Employee Modal */}
       {modal.open && modal.emp && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
-          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 520, boxShadow: '0 25px 60px rgba(0,0,0,0.18)', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div className="mobile-modal" style={{ zIndex: 100 }}>
+          <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column' }}>
             <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--admin-text)' }}>{modal.emp.id ? t('Edit Employee', 'تعديل موظف') : t('Add Employee', 'إضافة موظف')}</h2>
               <button className="ibtn ibtn-edit" onClick={() => setModal({ open: false, emp: null })}><CloseIcon /></button>

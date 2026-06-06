@@ -14,8 +14,8 @@ function PhotoModal({ title, onClose, onConfirm, saving, children }: {
   const fileRef = useRef<HTMLInputElement>(null)
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
-      <div style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
+    <div className="mobile-modal" style={{ zIndex: 100 }}>
+      <div className="mobile-modal-sheet" style={{ background: 'white' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px 0' }}>
           <span style={{ fontWeight: 700, fontSize: 16 }}>{title}</span>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94a3b8' }}>×</button>

@@ -61,8 +61,8 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 function ConfirmDialog({ name, onConfirm, onCancel }: { name: string; onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-      <div style={{ background: 'var(--admin-card)', borderRadius: 20, padding: '32px 28px', maxWidth: 360, width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
+    <div className="mobile-modal" style={{ zIndex: 200 }}>
+      <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', maxWidth: 360, textAlign: 'center', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', padding: '32px 28px' }}>
         <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#ef4444' }}>
           <TrashIcon size={22} />
         </div>
@@ -344,8 +344,8 @@ export default function GhabashiMenuPage() {
 
       {/* Add / Edit Modal */}
       {modal.open && modal.item && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
-          <div style={{ background: 'var(--admin-card)', borderRadius: 20, width: '100%', maxWidth: 560, boxShadow: '0 25px 60px rgba(0,0,0,0.18)', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div className="mobile-modal" style={{ zIndex: 100 }}>
+          <div className="mobile-modal-sheet" style={{ background: 'var(--admin-card)', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column' }}>
 
             <div style={{ borderTop: '4px solid #25D366', borderRadius: '20px 20px 0 0', padding: '18px 20px', borderBottom: '1px solid var(--admin-border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--admin-text)' }}>{modal.item.id ? 'Edit Item' : 'Add New Item'}</h2>

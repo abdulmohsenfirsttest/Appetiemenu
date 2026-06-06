@@ -129,6 +129,15 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
 
         {/* Bottom links */}
         <div style={{ padding: '12px 8px', borderTop: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <Link href="/manager" style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: collapsed ? '8px 0' : '8px 12px',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            borderRadius: 8, textDecoration: 'none', color: '#f59e0b', fontSize: 12, fontWeight: 600,
+          }}>
+            <span>👑</span>
+            {!collapsed && <span>Manager Portal</span>}
+          </Link>
           <Link href="/" target="_blank" style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: collapsed ? '8px 0' : '8px 12px',

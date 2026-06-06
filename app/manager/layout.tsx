@@ -1,14 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
+
+const NAV = [
+  { href: '/manager', label: 'Operations', icon: '⊞', exact: true },
+  { href: '/admin/hr', label: 'HR & Payroll', icon: '👤', exact: false },
+]
 
 export default function ManagerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const [checked, setChecked] = useState(false)
-  const [userName, setUserName] = useState('')
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,7 +26,6 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
       if (!data.user || data.user.email !== 'asjad@appetie.com') {
         router.replace('/manager/login')
       } else {
-        setUserName(data.user.email)
         setChecked(true)
       }
     })
@@ -44,12 +48,34 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
     <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
 
       {/* Top bar */}
-      <header style={{ background: '#0f172a', borderBottom: '1px solid #1e293b', height: 56, display: 'flex', alignItems: 'center', padding: '0 24px', gap: 14, position: 'sticky', top: 0, zIndex: 50 }}>
+      <header style={{ background: '#0f172a', borderBottom: '1px solid #1e293b', height: 56, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 14, position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ width: 32, height: 32, borderRadius: 9, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>👑</div>
-        <div style={{ flex: 1 }}>
+        <div>
           <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>Asjad</span>
-          <span style={{ fontSize: 12, color: '#475569', marginInlineStart: 8 }}>Operation Manager · Ghabashi</span>
+          <span style={{ fontSize: 12, color: '#475569', marginInlineStart: 8 }}>Operation Manager</span>
         </div>
+
+        {/* Nav tabs */}
+        <nav style={{ display: 'flex', gap: 4, marginInlineStart: 16 }}>
+          {NAV.map(item => {
+            const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+            return (
+              <Link key={item.href} href={item.href} style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 14px', borderRadius: 8, textDecoration: 'none',
+                fontSize: 13, fontWeight: 600,
+                background: active ? '#1e293b' : 'transparent',
+                color: active ? '#f59e0b' : '#94a3b8',
+                transition: 'all 0.15s',
+              }}>
+                <span style={{ fontSize: 14 }}>{item.icon}</span>
+                {item.label}
+              </Link>
+            )
+          })}
+        </nav>
+
+        <div style={{ flex: 1 }} />
         <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 9, border: '1px solid #334155', background: 'transparent', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s' }}
           onMouseOver={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
           onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>

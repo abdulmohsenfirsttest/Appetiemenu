@@ -33,6 +33,9 @@ interface MenuItem {
   name_ar: string
   price: number
   calories: number | null
+  protein?: number | null
+  carbs?: number | null
+  fat?: number | null
   category: string
   image_url: string | null
   is_available: boolean
@@ -420,7 +423,10 @@ function ItemModal({ item, lang, showCalories, t, onClose }: {
   const [imgError, setImgError] = useState(false)
   const imgSrc = item.image_url && !imgError ? getImageUrl(item.image_url) : null
   const details = ITEM_DETAILS[item.id]
-  const n = details?.nutrition
+  // DB nutrition values (editable from admin) take precedence over hardcoded seed details
+  const n = (item.protein != null || item.carbs != null || item.fat != null)
+    ? { fat: item.fat ?? 0, carbs: item.carbs ?? 0, protein: item.protein ?? 0 }
+    : details?.nutrition
   const dir = lang === 'ar' ? 'rtl' : 'ltr'
 
   const allergenHTML = details?.allergens?.length

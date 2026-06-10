@@ -11,6 +11,9 @@ export interface MenuItem {
   name_ar: string
   price: number
   calories: number | null
+  protein: number | null
+  carbs: number | null
+  fat: number | null
   category_id: number
   category?: string
   image_url: string | null

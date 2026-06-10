@@ -7,14 +7,15 @@ import Image from 'next/image'
 
 interface Item {
   id: number; name_en: string; name_ar: string; price: number
-  calories: number | null; category_id: number | null; category?: string
+  calories: number | null; protein: number | null; carbs: number | null; fat: number | null
+  category_id: number | null; category?: string
   image_url: string | null; is_available: boolean; sort_order: number
 }
 interface Cat { id: number; name_en: string; name_ar: string }
 
 const EMPTY: Omit<Item, 'id'> = {
-  name_en: '', name_ar: '', price: 0, calories: null, category_id: null,
-  image_url: null, is_available: true, sort_order: 0,
+  name_en: '', name_ar: '', price: 0, calories: null, protein: null, carbs: null, fat: null,
+  category_id: null, image_url: null, is_available: true, sort_order: 0,
 }
 
 /* ── Icons ────────────────────────── */
@@ -92,6 +93,8 @@ export default function MenuManagement() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [status, setStatus] = useState('')
   const [delConfirm, setDelConfirm] = useState<{ id: number; name: string } | null>(null)
+  // false until the protein/carbs/fat columns exist in the DB (scripts/add-nutrition-columns.sql)
+  const [nutritionReady, setNutritionReady] = useState(true)
 
   // ── Categories state ──
   const [catModal, setCatModal] = useState<{ open: boolean; cat: Partial<Cat & { sort_order: number }> | null }>({ open: false, cat: null })
@@ -102,15 +105,17 @@ export default function MenuManagement() {
   useEffect(() => { loadData() }, [])
 
   async function loadData() {
-    const [{ data: cats }, { data: menuItems }] = await Promise.all([
+    const [{ data: cats }, { data: menuItems }, { error: nutritionErr }] = await Promise.all([
       supabase.from('categories').select('*').order('sort_order'),
       supabase.from('menu_items').select('*, categories(name_en)').order('sort_order'),
+      supabase.from('menu_items').select('protein').limit(1),
     ])
+    setNutritionReady(!nutritionErr)
     setCategories(cats && cats.length > 0 ? cats : SEED_CATEGORIES)
     if (menuItems && menuItems.length > 0) {
       setItems(menuItems.map((i: any) => ({ ...i, category: i.categories?.name_en || '' })))
     } else {
-      setItems(SEED_MENU_ITEMS.map(i => ({ ...i, category_id: null, image_url: null })))
+      setItems(SEED_MENU_ITEMS.map(i => ({ ...i, category_id: null, image_url: null, protein: null, carbs: null, fat: null })))
     }
   }
 
@@ -152,6 +157,7 @@ export default function MenuManagement() {
         const { error } = await supabase.from('menu_items').update({
           name_en: modal.item.name_en, name_ar: modal.item.name_ar,
           price: modal.item.price, calories: modal.item.calories,
+          ...(nutritionReady ? { protein: modal.item.protein, carbs: modal.item.carbs, fat: modal.item.fat } : {}),
           category_id: modal.item.category_id, is_available: modal.item.is_available,
           image_url: imageUrl, updated_at: new Date().toISOString(),
         }).eq('id', modal.item.id)
@@ -162,6 +168,7 @@ export default function MenuManagement() {
         const { error } = await supabase.from('menu_items').insert({
           id: newId, name_en: modal.item.name_en, name_ar: modal.item.name_ar,
           price: modal.item.price, calories: modal.item.calories,
+          ...(nutritionReady ? { protein: modal.item.protein, carbs: modal.item.carbs, fat: modal.item.fat } : {}),
           category_id: modal.item.category_id, is_available: modal.item.is_available,
           image_url: imageUrl, sort_order: items.length + 1,
         })
@@ -265,6 +272,14 @@ export default function MenuManagement() {
       {/* ── Items tab ── */}
       {tab === 'items' && <>
 
+      {!nutritionReady && (
+        <div style={{ padding: '12px 16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, fontSize: 13, color: '#92400e', lineHeight: 1.6 }}>
+          ⚠️ <strong>Nutrition editing (protein / carbs / fat) is not active yet.</strong> Run the file{' '}
+          <code style={{ background: '#fef3c7', padding: '1px 6px', borderRadius: 6 }}>scripts/add-nutrition-columns.sql</code>{' '}
+          once in the Supabase SQL Editor, then refresh this page.
+        </div>
+      )}
+
       {/* Search */}
       <div style={{ position: 'relative', maxWidth: 320 }}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }}>
@@ -338,7 +353,7 @@ export default function MenuManagement() {
                       {item.image_url ? (
                         <Image src={getImageUrl(item.image_url)} alt={item.name_en} fill style={{ objectFit: 'cover' }} sizes="44px" />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🥗</div>
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>IMG</div>
                       )}
                     </div>
                   </td>
@@ -354,7 +369,14 @@ export default function MenuManagement() {
                     ) : <span style={{ color: '#cbd5e1' }}>–</span>}
                   </td>
                   <td style={{ padding: '12px 16px', fontWeight: 700, color: '#25D366' }}>{item.price} SAR</td>
-                  <td style={{ padding: '12px 16px', color: '#64748b' }}>{item.calories ?? '–'} kcal</td>
+                  <td style={{ padding: '12px 16px', color: '#64748b' }}>
+                    <p style={{ whiteSpace: 'nowrap' }}>{item.calories ?? '–'} kcal</p>
+                    {(item.protein != null || item.carbs != null || item.fat != null) && (
+                      <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, whiteSpace: 'nowrap' }}>
+                        P {item.protein ?? '–'} · C {item.carbs ?? '–'} · F {item.fat ?? '–'}
+                      </p>
+                    )}
+                  </td>
                   <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                     <Toggle on={item.is_available} onToggle={() => toggleAvailable(item)} />
                   </td>
@@ -395,7 +417,7 @@ export default function MenuManagement() {
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Image</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 72, height: 72, borderRadius: 12, overflow: 'hidden', background: '#f8fafc', position: 'relative', border: '1.5px solid var(--admin-border)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
-                    {imagePreview ? <Image src={imagePreview} alt="preview" fill style={{ objectFit: 'cover' }} sizes="72px" /> : '🥗'}
+                    {imagePreview ? <Image src={imagePreview} alt="preview" fill style={{ objectFit: 'cover' }} sizes="72px" /> : <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>IMG</span>}
                   </div>
                   <div>
                     <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
@@ -442,6 +464,30 @@ export default function MenuManagement() {
                   </select>
                 </div>
               </div>
+
+              {/* Nutrition */}
+              {nutritionReady ? (
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Nutrition (per serving)</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                    {([
+                      { key: 'protein', label: 'Protein (g)' },
+                      { key: 'carbs', label: 'Carbs (g)' },
+                      { key: 'fat', label: 'Fat (g)' },
+                    ] as const).map(({ key, label }) => (
+                      <div key={key}>
+                        <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 }}>{label}</label>
+                        <input type="number" min="0" step="0.1" value={modal.item![key] ?? ''} className="admin-input"
+                          onChange={e => setModal(m => ({ ...m, item: { ...m.item!, [key]: e.target.value ? Number(e.target.value) : null } }))} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding: '10px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, fontSize: 12, color: '#92400e' }}>
+                  Protein / carbs / fat editing unlocks after running <strong>scripts/add-nutrition-columns.sql</strong> in the Supabase SQL Editor.
+                </div>
+              )}
 
               {/* Available toggle */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: '#f8fafc', borderRadius: 10 }}>

@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { SEED_EMPLOYEES } from '@/lib/seed-data'
 
 const RESTAURANTS = [
-  { name: 'Ghabashi', slug: 'ghabashi', key: 'Ghabashi', color: '#7c3aed', bg: '#ede9fe', emoji: '🏪' },
-  { name: 'Appetie', slug: 'appetie', key: 'Appetie', color: '#16a34a', bg: '#dcfce7', emoji: '🥗' },
-  { name: 'Piece Bakery', slug: 'piece-bakery', key: 'Piece Bakery', color: '#c8733a', bg: '#fff7ed', emoji: '🥐' },
+  { name: 'Ghabashi', slug: 'ghabashi', key: 'Ghabashi', color: '#7c3aed', bg: '#ede9fe' },
+  { name: 'Appetie', slug: 'appetie', key: 'Appetie', color: '#16a34a', bg: '#dcfce7' },
+  { name: 'Piece Bakery', slug: 'piece-bakery', key: 'Piece Bakery', color: '#c8733a', bg: '#fff7ed' },
 ]
 
 export default function ManagerSupervisedDashboard() {
@@ -23,7 +23,6 @@ export default function ManagerSupervisedDashboard() {
               <div style={{ background: 'var(--admin-card)', border: `2px solid ${r.color}25`, borderRadius: 16, padding: 28, cursor: 'pointer', transition: 'box-shadow .15s', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}
                 onMouseOver={e => (e.currentTarget.style.boxShadow = `0 6px 20px ${r.color}30`)}
                 onMouseOut={e => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,.06)')}>
-                <div style={{ fontSize: 40, marginBottom: 14 }}>{r.emoji}</div>
                 <div style={{ fontWeight: 800, fontSize: 20, color: 'var(--admin-text)', marginBottom: 12 }}>{r.name}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>

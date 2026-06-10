@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { SEED_EMPLOYEES } from '@/lib/seed-data'
+import { fetchTasks, upsertTask, updateTask, deleteTask } from '@/lib/tasks-db'
 
 type Priority = 'low' | 'medium' | 'high' | 'urgent'
 type TaskStatus = 'pending' | 'in_progress' | 'done' | 'blocked'
@@ -62,17 +63,12 @@ export default function ManagerDashboard() {
   })
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('all_tasks')
-      if (raw) setTasks(JSON.parse(raw))
-    } catch { /**/ }
-    const iv = setInterval(() => {
-      setNow(Date.now())
-      try {
-        const raw = localStorage.getItem('all_tasks')
-        if (raw) setTasks(JSON.parse(raw))
-      } catch { /**/ }
-    }, 3000)
+    async function load() {
+      const data = await fetchTasks()
+      setTasks(data as Task[])
+    }
+    load()
+    const iv = setInterval(load, 3000)
     return () => clearInterval(iv)
   }, [])
 
@@ -82,45 +78,40 @@ export default function ManagerDashboard() {
     return () => clearInterval(iv)
   }, [])
 
-  function saveTasks(next: Task[]) {
-    setTasks(next)
-    localStorage.setItem('all_tasks', JSON.stringify(next))
+  async function loadTasks() {
+    const data = await fetchTasks()
+    setTasks(data as Task[])
   }
 
-  function approveTask(id: string) {
-    saveTasks(tasks.map(t => t.id === id
-      ? { ...t, approved: true, approved_at: new Date().toISOString(), started_at: new Date().toISOString(), status: 'in_progress' }
-      : t
-    ))
+  async function approveTask(id: string) {
+    await updateTask(id, { approved: true, approved_at: new Date().toISOString(), started_at: new Date().toISOString(), status: 'in_progress' })
+    await loadTasks()
   }
 
-  function rejectTask(id: string) {
-    saveTasks(tasks.filter(t => t.id !== id))
+  async function rejectTask(id: string) {
+    await deleteTask(id)
+    await loadTasks()
   }
 
-  function markDone(task: Task, comment: string) {
-    saveTasks(tasks.map(t => t.id === task.id ? {
-      ...t, done_at: new Date().toISOString(), asjad_comment: comment, status: 'done',
-      redo_requested: false, redo_reason: undefined,
-    } : t))
+  async function markDone(task: Task, comment: string) {
+    await updateTask(task.id, { done_at: new Date().toISOString(), asjad_comment: comment, status: 'done', redo_requested: false, redo_reason: null })
     setReviewTask(null)
     setReviewComment('')
+    await loadTasks()
   }
 
-  function requestRedo(task: Task, reason: string) {
-    saveTasks(tasks.map(t => t.id === task.id ? {
-      ...t, completion_submitted: false, redo_requested: true, redo_reason: reason,
-      photo_urls: [], supervisor_note: undefined,
-    } : t))
+  async function requestRedo(task: Task, reason: string) {
+    await updateTask(task.id, { completion_submitted: false, redo_requested: true, redo_reason: reason, photo_urls: [], supervisor_note: null })
     setReviewTask(null)
     setReviewComment('')
+    await loadTasks()
   }
 
-  function submitTask() {
+  async function submitTask() {
     if (!draft.title || !draft.assigned_id) return
     const emp = SEED_EMPLOYEES.find(e => e.id === draft.assigned_id)
     if (!emp) return
-    const newTask: Task = {
+    const newTask = {
       id: `task_${Date.now()}`,
       title: draft.title, description: draft.description,
       assigned_to: emp.name, assigned_id: emp.id,
@@ -131,9 +122,10 @@ export default function ManagerDashboard() {
       approved: true, approved_at: new Date().toISOString(),
       started_at: new Date().toISOString(),
     }
-    saveTasks([...tasks, newTask])
+    await upsertTask(newTask)
     setDraft({ title: '', description: '', assigned_id: 0, branch: '', priority: 'medium', due_date: '' })
     setShowModal(false)
+    await loadTasks()
   }
 
   const pendingApprovals = tasks.filter(t => !t.approved)
@@ -170,14 +162,12 @@ export default function ManagerDashboard() {
       {/* Alert banners */}
       {forReview.length > 0 && (
         <div style={{ padding: '12px 16px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 10, marginBottom: 10, fontSize: 13, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>📸</span>
           <strong>{forReview.length} task{forReview.length > 1 ? 's' : ''} submitted for your review</strong>
           <button onClick={() => setTab('review')} style={{ marginInlineStart: 8, background: 'none', border: 'none', color: '#3b82f6', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Review →</button>
         </div>
       )}
       {pendingApprovals.length > 0 && (
         <div style={{ padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 10, marginBottom: 16, fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>⚠️</span>
           <strong>{pendingApprovals.length} task{pendingApprovals.length > 1 ? 's' : ''} waiting for your approval</strong>
           <button onClick={() => setTab('approvals')} style={{ marginInlineStart: 8, background: 'none', border: 'none', color: '#f59e0b', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Approve →</button>
         </div>
@@ -186,15 +176,14 @@ export default function ManagerDashboard() {
       {/* Stat cards */}
       <div className="dash-stats" style={{ marginBottom: 20 }}>
         {[
-          { label: 'Total Staff', value: SEED_EMPLOYEES.length, color: '#3b82f6', icon: '👥' },
-          { label: 'Pending Approval', value: pendingApprovals.length, color: '#f59e0b', icon: '⏳' },
-          { label: 'For Review', value: forReview.length, color: '#3b82f6', icon: '📸' },
-          { label: 'Active Tasks', value: activeTasks.length, color: '#10b981', icon: '▶' },
-          { label: 'Completed', value: doneTasks.length, color: '#22c55e', icon: '✓' },
-          { label: 'Unpaid Salaries', value: unpaidCount, color: '#ef4444', icon: '💸' },
+          { label: 'Total Staff', value: SEED_EMPLOYEES.length, color: '#3b82f6' },
+          { label: 'Pending Approval', value: pendingApprovals.length, color: '#f59e0b' },
+          { label: 'For Review', value: forReview.length, color: '#3b82f6' },
+          { label: 'Active Tasks', value: activeTasks.length, color: '#10b981' },
+          { label: 'Completed', value: doneTasks.length, color: '#22c55e' },
+          { label: 'Unpaid Salaries', value: unpaidCount, color: '#ef4444' },
         ].map(card => (
           <div key={card.label} style={{ background: 'white', borderRadius: 12, padding: '14px 16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-            <div style={{ fontSize: 18, marginBottom: 6 }}>{card.icon}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: card.color }}>{card.value}</div>
             <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{card.label}</div>
           </div>
@@ -249,15 +238,15 @@ export default function ManagerDashboard() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
                     <span style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>{task.title}</span>
-                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: '#dbeafe', color: '#1d4ed8', fontWeight: 700 }}>📸 Completion Submitted</span>
+                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: '#dbeafe', color: '#1d4ed8', fontWeight: 700 }}>Completion Submitted</span>
                   </div>
                   <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
-                    👤 {task.assigned_to} · 📍 {task.branch}
-                    {task.started_at && <span style={{ marginInlineStart: 8 }}>⏱ {formatDuration(task.started_at, undefined, now)} elapsed</span>}
+                    {task.assigned_to} · {task.branch}
+                    {task.started_at && <span style={{ marginInlineStart: 8 }}>{formatDuration(task.started_at, undefined, now)} elapsed</span>}
                   </div>
                   {task.supervisor_note && (
                     <div style={{ fontSize: 12, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', color: '#475569', marginBottom: 10 }}>
-                      💬 Supervisor note: {task.supervisor_note}
+                      Note: {task.supervisor_note}
                     </div>
                   )}
                   {/* Photos */}
@@ -297,10 +286,10 @@ export default function ManagerDashboard() {
                     <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', flex: 1 }}>{task.title}</span>
                     <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 99, background: '#dcfce7', color: '#15803d', fontWeight: 700 }}>✓ Done</span>
                     {task.started_at && task.done_at && (
-                      <span style={{ fontSize: 12, color: '#64748b' }}>⏱ {formatDuration(task.started_at, task.done_at)}</span>
+                      <span style={{ fontSize: 12, color: '#64748b' }}>{formatDuration(task.started_at, task.done_at)}</span>
                     )}
                   </div>
-                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>👤 {task.assigned_to} · By {task.created_by}</div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{task.assigned_to} · By {task.created_by}</div>
                   {task.asjad_comment && (
                     <div style={{ fontSize: 12, color: '#475569', marginTop: 6, padding: '6px 10px', background: '#fef3c7', borderRadius: 7 }}>
                       👑 {task.asjad_comment}
@@ -373,7 +362,6 @@ export default function ManagerDashboard() {
               {/* Timer */}
               {reviewTask.started_at && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
-                  <span style={{ fontSize: 18 }}>⏱</span>
                   <div>
                     <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>TIME TO COMPLETE</div>
                     <div style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
@@ -503,13 +491,13 @@ function TaskCard({ task, now, showTimer, children }: { task: Task; now: number;
         </div>
         {task.description && <p style={{ margin: '2px 0 4px', fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>{task.description}</p>}
         <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#94a3b8', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span>👤 {task.assigned_to}</span>
-          {task.branch && <span>📍 {task.branch}</span>}
-          {task.due_date && <span>📅 {task.due_date}</span>}
+          <span>{task.assigned_to}</span>
+          {task.branch && <span>{task.branch}</span>}
+          {task.due_date && <span>{task.due_date}</span>}
           <span>By {task.created_by}</span>
           {showTimer && task.started_at && (
             <span style={{ fontWeight: 700, color: '#f59e0b', background: '#fef3c7', padding: '2px 8px', borderRadius: 99, fontVariantNumeric: 'tabular-nums' }}>
-              ⏱ {formatDuration(task.started_at, undefined, now)}
+              {formatDuration(task.started_at, undefined, now)}
             </span>
           )}
         </div>

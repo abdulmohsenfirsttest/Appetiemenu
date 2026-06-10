@@ -50,7 +50,7 @@ export default function BakeryOrders() {
 
       {/* Date filter */}
       <div style={{ background: 'var(--admin-card)', border: '1px solid var(--admin-border)', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>📅 Date range:</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>Date range:</span>
         <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} style={{ padding: '6px 10px', border: '1px solid var(--admin-border)', borderRadius: 8, fontSize: 13, background: 'var(--admin-input)', color: 'var(--admin-text)' }} />
         <span style={{ color: '#94a3b8' }}>to</span>
         <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} style={{ padding: '6px 10px', border: '1px solid var(--admin-border)', borderRadius: 8, fontSize: 13, background: 'var(--admin-input)', color: 'var(--admin-text)' }} />
@@ -87,7 +87,7 @@ export default function BakeryOrders() {
                     <button onClick={() => setModal(o)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 700, fontSize: 14, color: '#c8733a', textDecoration: 'underline', textDecorationColor: '#c8733a50' }}>
                       {o.customer_name}
                     </button>
-                    {o.photo_url && <span style={{ marginLeft: 6, fontSize: 11 }}>📷</span>}
+                    {o.photo_url && <span style={{ marginLeft: 6, fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>Photo</span>}
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ fontSize: 12 }}>
@@ -130,7 +130,7 @@ export default function BakeryOrders() {
               {/* Photo */}
               {modal.photo_url && (
                 <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>📷 Photo</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Photo</div>
                   <img src={modal.photo_url} alt="Order photo" style={{ width: '100%', borderRadius: 12, objectFit: 'cover', maxHeight: 260, border: '1px solid #e2e8f0' }} />
                 </div>
               )}

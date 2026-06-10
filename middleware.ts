@@ -31,12 +31,18 @@ export async function middleware(request: NextRequest) {
   const isManagerLogin = pathname === '/manager/login'
   const isManagerRoute = pathname.startsWith('/manager')
 
-  // Admin routes
+  // Admin routes — operation manager (asjad@appetie.com) may NOT enter
   if (isAdminRoute && !isAdminLogin && !user) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
-  if (isAdminLogin && user) {
+  if (isAdminRoute && !isAdminLogin && user && user.email === 'asjad@appetie.com') {
+    return NextResponse.redirect(new URL('/manager', request.url))
+  }
+  if (isAdminLogin && user && user.email !== 'asjad@appetie.com') {
     return NextResponse.redirect(new URL('/admin', request.url))
+  }
+  if (isAdminLogin && user && user.email === 'asjad@appetie.com') {
+    return NextResponse.redirect(new URL('/manager', request.url))
   }
 
   // Manager routes — only asjad@appetie.com may enter

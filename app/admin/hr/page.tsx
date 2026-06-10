@@ -10,6 +10,7 @@ import {
 } from 'recharts'
 import * as XLSX from 'xlsx'
 import { useLanguage } from '@/lib/language-context'
+import { getHrSetting, setHrSetting, deleteHrSetting } from '@/lib/tasks-db'
 
 type VacationStatus = 'none' | 'on_vacation' | 'taken'
 
@@ -162,25 +163,24 @@ export default function HRPage() {
 
   useEffect(() => { loadData(); loadCustomMonths() }, [])
 
-  function loadCustomMonths() {
+  async function loadCustomMonths() {
     try {
-      const raw = localStorage.getItem('hr_custom_months')
-      const parsed: CustomPayrollMonth[] = raw ? JSON.parse(raw) : []
+      const parsed: CustomPayrollMonth[] = await getHrSetting('hr_custom_months') || []
       if (parsed.length) {
         setCustomMonths(parsed)
         setSelectedMonth(getLatestMonth(PAYROLL_HISTORY, parsed))
       }
-      const label = localStorage.getItem('hr_current_month_label')
+      const label: string | null = await getHrSetting('hr_current_month_label')
       if (label) setCurrentMonthLabel(label)
-      const hidden = localStorage.getItem('hr_hidden_months')
-      if (hidden) setHiddenMonths(JSON.parse(hidden))
+      const hidden: string[] = await getHrSetting('hr_hidden_months') || []
+      if (hidden.length) setHiddenMonths(hidden)
     } catch {}
   }
 
   function toggleHideMonth(month: string) {
     setHiddenMonths(prev => {
       const next = prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]
-      localStorage.setItem('hr_hidden_months', JSON.stringify(next))
+      setHrSetting('hr_hidden_months', next)
       if (next.includes(month) && selectedMonth === month) {
         const allMonths = [...PAYROLL_HISTORY.map(p => p.month), ...customMonths.map(m => m.month)]
         const visible = allMonths.filter(m => !next.includes(m))
@@ -207,18 +207,18 @@ export default function HRPage() {
   function setAsCurrentMonth(records: CustomPayrollRow[], label: string) {
     setEmployees(customToEmployees(records))
     setCurrentMonthLabel(label)
-    localStorage.setItem('hr_current_month_label', label)
+    setHrSetting('hr_current_month_label', label)
   }
 
   function resetToLiveData() {
     setCurrentMonthLabel(null)
-    localStorage.removeItem('hr_current_month_label')
+    deleteHrSetting('hr_current_month_label')
     loadData()
   }
 
   function persistCustomMonths(months: CustomPayrollMonth[]) {
     setCustomMonths(months)
-    localStorage.setItem('hr_custom_months', JSON.stringify(months))
+    setHrSetting('hr_custom_months', months)
   }
 
   function openNewMonth() {

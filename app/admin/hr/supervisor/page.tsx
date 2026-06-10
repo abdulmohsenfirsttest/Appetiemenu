@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { SEED_EMPLOYEES } from '@/lib/seed-data'
 import { useLanguage } from '@/lib/language-context'
+import { fetchTasks, upsertTask, updateTask, deleteTask as dbDeleteTask } from '@/lib/tasks-db'
 
 interface Employee {
   id: number; name: string; position: string; branch: string; shift: string
@@ -31,12 +32,6 @@ const PRIORITY_COLORS: Record<Priority, { text: string; bg: string; label: strin
 }
 const LEADER_POSITIONS = ['Supervisor', 'Manager', 'Head Chef', 'Bakery Chef', 'Operation Manager']
 
-function loadAllTasks(): Task[] {
-  try { return JSON.parse(localStorage.getItem('all_tasks') || '[]') } catch { return [] }
-}
-function saveAllTasks(tasks: Task[]) {
-  localStorage.setItem('all_tasks', JSON.stringify(tasks))
-}
 
 function formatDuration(startIso: string, endIso?: string): string {
   const diff = (endIso ? new Date(endIso).getTime() : Date.now()) - new Date(startIso).getTime()
@@ -80,7 +75,9 @@ export default function SupervisorPanel() {
     const saved = localStorage.getItem('supervisor_identity')
     if (saved) setSupervisorId(Number(saved))
     loadData()
-    setTasks(loadAllTasks())
+    loadTasks()
+    const iv = setInterval(loadTasks, 3000)
+    return () => clearInterval(iv)
   }, [])
 
   async function loadData() {
@@ -91,15 +88,14 @@ export default function SupervisorPanel() {
     setLoading(false)
   }
 
+  async function loadTasks() {
+    const data = await fetchTasks()
+    setTasks(data as Task[])
+  }
+
   function selectSupervisor(id: number) {
     setSupervisorId(id)
     localStorage.setItem('supervisor_identity', String(id))
-  }
-
-  function refreshTasks() {
-    const latest = loadAllTasks()
-    setTasks(latest)
-    return latest
   }
 
   const supervisors = employees.filter(e => LEADER_POSITIONS.some(lp => e.position.includes(lp)) && e.id !== 1)
@@ -110,11 +106,11 @@ export default function SupervisorPanel() {
   const myTasks = tasks.filter(t => t.created_by_id === supervisorId)
   const today = new Date().toISOString().slice(0, 10)
 
-  function submitTask() {
+  async function submitTask() {
     if (!draft.title.trim() || !draft.assigned_id || !me || !supervisorId) return
     const assigned = employees.find(e => e.id === draft.assigned_id)
     if (!assigned) return
-    const newTask: Task = {
+    const newTask = {
       id: `task_${Date.now()}`,
       title: draft.title, description: draft.description,
       assigned_to: assigned.name, assigned_id: draft.assigned_id,
@@ -124,17 +120,15 @@ export default function SupervisorPanel() {
       created_by: me.name, created_by_id: supervisorId,
       created_by_role: 'supervisor', approved: false,
     }
-    const updated = [newTask, ...loadAllTasks()]
-    saveAllTasks(updated)
-    setTasks(updated)
+    await upsertTask(newTask)
     setDraft({ title: '', description: '', assigned_id: 0, priority: 'medium', due_date: '' })
     setModal(false)
+    await loadTasks()
   }
 
-  function deleteTask(id: string) {
-    const updated = loadAllTasks().filter(t => t.id !== id)
-    saveAllTasks(updated)
-    setTasks(updated)
+  async function deleteTask(id: string) {
+    await dbDeleteTask(id)
+    await loadTasks()
   }
 
   async function submitCompletion() {
@@ -155,21 +149,19 @@ export default function SupervisorPanel() {
       }
     }
 
-    const latest = loadAllTasks()
-    const updated = latest.map(t => t.id === completionTaskId ? {
-      ...t,
+    const currentTask = tasks.find(t => t.id === completionTaskId)
+    await updateTask(completionTaskId, {
       completion_submitted: true,
-      photo_urls: urls.length > 0 ? urls : t.photo_urls,
+      photo_urls: urls.length > 0 ? urls : (currentTask?.photo_urls || []),
       supervisor_note: completionNote,
-      status: 'in_progress' as TaskStatus,
-      redo_requested: false, redo_reason: undefined,
-    } : t)
-    saveAllTasks(updated)
-    setTasks(updated)
+      status: 'in_progress',
+      redo_requested: false, redo_reason: null,
+    })
     setCompletionTaskId(null)
     setCompletionFiles([])
     setCompletionNote('')
     setUploading(false)
+    await loadTasks()
   }
 
   if (loading) return (
@@ -261,7 +253,6 @@ export default function SupervisorPanel() {
         <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)', marginBottom: 12 }}>{t('Tasks I Assigned', 'المهام التي عيّنتها')}</h2>
         {myTasks.length === 0 ? (
           <div style={{ background: 'var(--admin-card)', borderRadius: 14, border: '1px solid var(--admin-border2)', padding: '36px 24px', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>📋</div>
             <div style={{ fontSize: 13, color: '#94a3b8' }}>{t('No tasks yet', 'لا توجد مهام بعد')}</div>
           </div>
         ) : (
@@ -279,23 +270,23 @@ export default function SupervisorPanel() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
                       <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--admin-text)' }}>{task.title}</span>
                       <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: pc.text, background: pc.bg }}>{isAr ? pc.labelAr : pc.label}</span>
-                      {!task.approved && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, color: '#d97706', background: '#fef3c7' }}>⏳ {t('Awaiting Asjad', 'بانتظار أسجد')}</span>}
-                      {isActive && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, color: '#2563eb', background: '#dbeafe' }}>▶ {t('In Progress', 'جارٍ')}</span>}
-                      {isSubmitted && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#1d4ed8', background: '#dbeafe' }}>📸 {t('Submitted for Review', 'بانتظار مراجعة أسجد')}</span>}
-                      {isRedo && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#dc2626', background: '#fee2e2' }}>↩ {t('Redo Requested', 'طلب إعادة')}</span>}
-                      {isDone && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#15803d', background: '#dcfce7' }}>✓ {t('Done', 'مكتمل')}</span>}
+                      {!task.approved && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, color: '#d97706', background: '#fef3c7' }}>{t('Awaiting Asjad', 'بانتظار أسجد')}</span>}
+                      {isActive && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, color: '#2563eb', background: '#dbeafe' }}>{t('In Progress', 'جارٍ')}</span>}
+                      {isSubmitted && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#1d4ed8', background: '#dbeafe' }}>{t('Submitted for Review', 'بانتظار مراجعة أسجد')}</span>}
+                      {isRedo && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#dc2626', background: '#fee2e2' }}>{t('Redo Requested', 'طلب إعادة')}</span>}
+                      {isDone && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#15803d', background: '#dcfce7' }}>{t('Done', 'مكتمل')}</span>}
                     </div>
                     {task.description && <p style={{ fontSize: 12, color: '#64748b', marginBottom: 5 }}>{task.description}</p>}
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 12, color: '#475569', fontWeight: 600 }}>→ {task.assigned_to.split(' ')[0]}</span>
-                      {task.due_date && <span style={{ fontSize: 11, color: isOverdue ? '#ef4444' : '#94a3b8', fontWeight: 600 }}>{isOverdue ? '⚠ ' : ''}{task.due_date}</span>}
+                      {task.due_date && <span style={{ fontSize: 11, color: isOverdue ? '#ef4444' : '#94a3b8', fontWeight: 600 }}>{task.due_date}</span>}
                       {isActive && task.started_at && (
                         <span style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', background: '#fef3c7', padding: '1px 8px', borderRadius: 99, fontVariantNumeric: 'tabular-nums' }}>
-                          ⏱ {formatDuration(task.started_at)}
+                          {formatDuration(task.started_at)}
                         </span>
                       )}
                       {isDone && task.started_at && task.done_at && (
-                        <span style={{ fontSize: 11, color: '#16a34a', fontWeight: 600 }}>⏱ {formatDuration(task.started_at, task.done_at)}</span>
+                        <span style={{ fontSize: 11, color: '#16a34a', fontWeight: 600 }}>{formatDuration(task.started_at, task.done_at)}</span>
                       )}
                     </div>
                     {/* Redo reason */}
@@ -374,8 +365,8 @@ export default function SupervisorPanel() {
                   fontWeight: 600, transition: 'all 0.15s',
                 }}>
                   {completionFiles.length > 0
-                    ? `📸 ${completionFiles.length} photo${completionFiles.length > 1 ? 's' : ''} selected`
-                    : `📷 ${t('Tap to add photos', 'اضغط لإضافة صور')}`}
+                    ? `${completionFiles.length} photo${completionFiles.length > 1 ? 's' : ''} selected`
+                    : t('Tap to add photos', 'اضغط لإضافة صور')}
                 </button>
                 {/* Preview thumbnails */}
                 {completionFiles.length > 0 && (
@@ -408,7 +399,7 @@ export default function SupervisorPanel() {
               </button>
               <button onClick={submitCompletion} disabled={uploading}
                 style={{ flex: 2, padding: '11px', borderRadius: 11, border: 'none', fontSize: 13, fontWeight: 700, color: 'white', cursor: uploading ? 'not-allowed' : 'pointer', background: uploading ? '#86efac' : '#22c55e', boxShadow: uploading ? 'none' : '0 2px 8px rgba(34,197,94,0.3)' }}>
-                {uploading ? t('Uploading…', 'جارٍ الرفع…') : t('Submit to Asjad', 'إرسال لأسجد ✓')}
+                {uploading ? t('Uploading…', 'جارٍ الرفع…') : t('Submit to Asjad', 'إرسال لأسجد')}
               </button>
             </div>
           </div>

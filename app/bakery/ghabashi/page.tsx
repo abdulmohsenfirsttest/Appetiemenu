@@ -27,7 +27,6 @@ export default function GhabashiShiftSelect() {
   return (
     <div style={{ maxWidth: 480, margin: '0 auto', paddingTop: 40 }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>🏪</div>
         <div style={{ fontSize: 22, fontWeight: 800, color: '#2d1f14' }}>Ghabashi Checklist</div>
         <div style={{ fontSize: 13, color: '#7a6355', marginTop: 6 }}>{today}</div>
       </div>
@@ -38,9 +37,9 @@ export default function GhabashiShiftSelect() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {([
-          { type: 'morning' as const, emoji: '🌅', label: 'Morning Shift', time: 'Opens the restaurant', bg: '#fffbeb', border: '#fde68a', color: '#92400e' },
-          { type: 'closing' as const, emoji: '🌙', label: 'Closing Shift', time: 'Closes the restaurant', bg: '#eff6ff', border: '#bfdbfe', color: '#1e40af' },
-        ]).map(({ type, emoji, label, time, bg, border, color }) => (
+          { type: 'morning' as const, label: 'Morning Shift', time: 'Opens the restaurant', bg: '#fffbeb', border: '#fde68a', color: '#92400e' },
+          { type: 'closing' as const, label: 'Closing Shift', time: 'Closes the restaurant', bg: '#eff6ff', border: '#bfdbfe', color: '#1e40af' },
+        ]).map(({ type, label, time, bg, border, color }) => (
           <button
             key={type}
             onClick={() => startShift(type)}
@@ -53,9 +52,8 @@ export default function GhabashiShiftSelect() {
               transition: 'transform .1s',
             }}
           >
-            <span style={{ fontSize: 40 }}>{loading === type ? '⏳' : emoji}</span>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 18, color }}>{label}</div>
+              <div style={{ fontWeight: 800, fontSize: 18, color }}>{loading === type ? 'Starting…' : label}</div>
               <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{time}</div>
             </div>
           </button>

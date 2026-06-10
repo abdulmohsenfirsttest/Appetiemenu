@@ -23,7 +23,7 @@ function PhotoModal({ title, onClose, onConfirm, saving, children }: {
         <div style={{ padding: '16px 24px' }}>
           <div style={{ marginBottom: 16 }}>{children}</div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', display: 'block', marginBottom: 6 }}>📷 Photo required</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', display: 'block', marginBottom: 6 }}>Photo required</label>
             <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={e => {
               const f = e.target.files?.[0]; if (!f) return
               setPhoto(f); setPreview(URL.createObjectURL(f))
@@ -35,7 +35,7 @@ function PhotoModal({ title, onClose, onConfirm, saving, children }: {
               </div>
             ) : (
               <button onClick={() => fileRef.current?.click()} style={{ width: '100%', padding: '24px 0', border: '2px dashed #e8ddd0', borderRadius: 10, background: '#faf8f5', cursor: 'pointer', color: '#7a6355', fontSize: 13 }}>
-                📷 Tap to take or upload photo
+                Tap to take or upload photo
               </button>
             )}
           </div>
@@ -143,7 +143,7 @@ export default function StaffOrders() {
                   {o.status}
                 </span>
                 <button onClick={() => { setStatusModal(o); setNewStatus(o.status) }} style={{ padding: '6px 12px', background: '#c8733a', color: 'white', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                  📷 Update
+                  Update
                 </button>
                 <button onClick={() => setExpanded(expanded === o.id ? null : o.id)} style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 8, padding: '5px 8px', cursor: 'pointer', fontSize: 12 }}>
                   {expanded === o.id ? '▲' : '▼'}

@@ -8,7 +8,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { AdminThemeProvider, useAdminTheme } from './theme'
 import { LanguageProvider, useLanguage } from '@/lib/language-context'
 
-type NavItem = { href: string; labelEn: string; labelAr: string; icon: string; exact?: boolean }
+type NavItem = { href: string; labelEn: string; labelAr: string; exact?: boolean }
 type NavGroup = { labelEn: string; labelAr: string; items: NavItem[] }
 
 const NAV_GROUPS: NavGroup[] = [
@@ -16,26 +16,42 @@ const NAV_GROUPS: NavGroup[] = [
     labelEn: '',
     labelAr: '',
     items: [
-      { href: '/admin', labelEn: 'Dashboard', labelAr: 'لوحة التحكم', icon: '⊞', exact: true },
+      { href: '/admin', labelEn: 'Dashboard', labelAr: 'لوحة التحكم', exact: true },
     ],
   },
   {
     labelEn: 'Menus',
     labelAr: 'القوائم',
     items: [
-      { href: '/admin/menu',          labelEn: 'Appetie Menu',  labelAr: 'قائمة أباتاي',  icon: '🍽' },
-      { href: '/admin/ghabashi-menu', labelEn: 'Ghabashi Menu', labelAr: 'قائمة الغباشي', icon: '🏪' },
+      { href: '/admin/menu',          labelEn: 'Appetie Menu',  labelAr: 'قائمة أباتاي'  },
+      { href: '/admin/ghabashi-menu', labelEn: 'Ghabashi Menu', labelAr: 'قائمة الغباشي' },
     ],
   },
   {
     labelEn: 'Management',
     labelAr: 'الإدارة',
     items: [
-      { href: '/admin/branches', labelEn: 'Branches',           labelAr: 'الفروع',                       icon: '◉' },
-      { href: '/admin/hr',         labelEn: 'HR & Payroll',       labelAr: 'الرواتب والموارد البشرية',      icon: '👤' },
-      { href: '/admin/hr/manager',    labelEn: 'Operation Manager',    labelAr: 'مدير العمليات',    icon: '👑' },
-      { href: '/admin/hr/supervisor', labelEn: 'Supervisor Panel',  labelAr: 'لوحة المشرف',      icon: '🔑' },
-      { href: '/admin/bakery',   labelEn: 'Manager Supervised', labelAr: 'إشراف المدير',                  icon: '🥐' },
+      { href: '/admin/branches',      labelEn: 'Branches',          labelAr: 'الفروع'                  },
+      { href: '/admin/hr',            labelEn: 'HR & Payroll',      labelAr: 'الرواتب والموارد البشرية' },
+      { href: '/admin/hr/manager',    labelEn: 'Operation Manager', labelAr: 'مدير العمليات'            },
+      { href: '/admin/hr/supervisor', labelEn: 'Supervisor Panel',  labelAr: 'لوحة المشرف'             },
+      { href: '/admin/bakery',        labelEn: 'Manager Supervised',labelAr: 'إشراف المدير'            },
+    ],
+  },
+  {
+    labelEn: 'Operations',
+    labelAr: 'العمليات',
+    items: [
+      { href: '/admin/operations',    labelEn: 'Operations Monitor', labelAr: 'مراقبة العمليات' },
+      { href: '/admin/cost-centre',   labelEn: 'Cost Centre',        labelAr: 'مركز التكلفة'    },
+      { href: '/admin/reports',       labelEn: 'Sales Reports',      labelAr: 'تقارير المبيعات'  },
+    ],
+  },
+  {
+    labelEn: 'Settings',
+    labelAr: 'الإعدادات',
+    items: [
+      { href: '/admin/credentials', labelEn: 'Supervisor Credentials', labelAr: 'بيانات المشرفين' },
     ],
   },
 ]
@@ -111,8 +127,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setMobileNavOpen(false)} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
-                    padding: collapsed ? '10px 0' : '9px 12px',
-                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    padding: '9px 12px',
                     borderRadius: 8, marginBottom: 2, textDecoration: 'none',
                     background: active ? '#1e293b' : 'transparent',
                     color: active ? '#25D366' : '#94a3b8',
@@ -121,9 +136,8 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
                   }}
                     onMouseOver={e => { if (!active) e.currentTarget.style.background = '#1e293b' }}
                     onMouseOut={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
-                    <span style={{ fontSize: 15, flexShrink: 0 }}>{item.icon}</span>
-                    {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{isAr ? item.labelAr : item.labelEn}</span>}
-                    {!collapsed && active && <span style={{ marginInlineStart: 'auto', width: 6, height: 6, borderRadius: '50%', background: '#25D366', flexShrink: 0 }} />}
+                    {active && <span style={{ width: 3, height: 16, borderRadius: 99, background: '#25D366', flexShrink: 0 }} />}
+                    <span style={{ whiteSpace: 'nowrap' }}>{isAr ? item.labelAr : item.labelEn}</span>
                   </Link>
                 )
               })}
@@ -134,49 +148,37 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         {/* Bottom links */}
         <div style={{ padding: '12px 8px', borderTop: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <Link href="/manager" style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: collapsed ? '8px 0' : '8px 12px',
-            justifyContent: collapsed ? 'center' : 'flex-start',
+            display: 'flex', alignItems: 'center',
+            padding: '8px 12px',
             borderRadius: 8, textDecoration: 'none', color: '#f59e0b', fontSize: 12, fontWeight: 600,
           }}>
-            <span>👑</span>
-            {!collapsed && <span>Manager Portal</span>}
+            Manager Portal
           </Link>
           <Link href="/" target="_blank" style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: collapsed ? '8px 0' : '8px 12px',
-            justifyContent: collapsed ? 'center' : 'flex-start',
+            display: 'flex', alignItems: 'center',
+            padding: '8px 12px',
             borderRadius: 8, textDecoration: 'none', color: '#475569', fontSize: 12,
           }}>
-            <span>↗</span>
-            {!collapsed && <span>{t('Appetie Menu', 'قائمة أباتاي')}</span>}
+            {t('Appetie Menu', 'قائمة أباتاي')}
           </Link>
           <Link href="/ghabashi" target="_blank" style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: collapsed ? '8px 0' : '8px 12px',
-            justifyContent: collapsed ? 'center' : 'flex-start',
+            display: 'flex', alignItems: 'center',
+            padding: '8px 12px',
             borderRadius: 8, textDecoration: 'none', color: '#475569', fontSize: 12,
           }}>
-            <span>↗</span>
-            {!collapsed && <span>{t('Ghabashi Menu', 'قائمة الغباشي')}</span>}
+            {t('Ghabashi Menu', 'قائمة الغباشي')}
           </Link>
 
           <button onClick={handleSignOut} style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: collapsed ? '8px 0' : '8px 12px',
-            justifyContent: collapsed ? 'center' : 'flex-start',
+            display: 'flex', alignItems: 'center',
+            padding: '8px 12px',
             borderRadius: 8, background: 'none', border: 'none',
             color: '#ef4444', fontSize: 12, cursor: 'pointer', width: '100%',
             transition: 'background 0.15s',
           }}
             onMouseOver={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
             onMouseOut={e => (e.currentTarget.style.background = 'none')}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            {!collapsed && <span>{t('Sign Out', 'تسجيل الخروج')}</span>}
+            {t('Sign Out', 'تسجيل الخروج')}
           </button>
         </div>
       </aside>
@@ -216,7 +218,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.15s', flexShrink: 0,
           }}>
-            {dark ? '☀️' : '🌙'}
+            {dark ? 'Light' : 'Dark'}
           </button>
 
           <div style={{ fontSize: 12, color: '#94a3b8', flexShrink: 0, display: 'none' }} className="admin-brand">Appetie</div>

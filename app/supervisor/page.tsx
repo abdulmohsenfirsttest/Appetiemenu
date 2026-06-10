@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { SEED_EMPLOYEES } from '@/lib/seed-data'
+import { fetchTasks, upsertTask, updateTask, deleteTask as dbDeleteTask } from '@/lib/tasks-db'
 
 interface Employee {
   id: number; name: string; position: string; branch: string; shift: string; restaurant?: string
@@ -29,12 +30,6 @@ const PRIORITY_COLORS: Record<Priority, { text: string; bg: string; label: strin
 }
 const LEADER_POSITIONS = ['Supervisor', 'Manager', 'Head Chef', 'Bakery Chef', 'Operation Manager']
 
-function loadAllTasks(): Task[] {
-  try { return JSON.parse(localStorage.getItem('all_tasks') || '[]') } catch { return [] }
-}
-function saveAllTasks(tasks: Task[]) {
-  localStorage.setItem('all_tasks', JSON.stringify(tasks))
-}
 function formatDuration(startIso: string, endIso?: string): string {
   const diff = (endIso ? new Date(endIso).getTime() : Date.now()) - new Date(startIso).getTime()
   if (diff < 0) return '0s'
@@ -73,7 +68,9 @@ export default function SupervisorPage() {
     const saved = localStorage.getItem('supervisor_identity')
     if (saved) setSupervisorId(Number(saved))
     loadData()
-    setTasks(loadAllTasks())
+    loadTasks()
+    const iv = setInterval(loadTasks, 3000)
+    return () => clearInterval(iv)
   }, [])
 
   async function loadData() {
@@ -81,6 +78,11 @@ export default function SupervisorPage() {
     const { data } = await supabase.from('employees').select('*').order('id')
     setEmployees(data && data.length > 0 ? data : SEED_EMPLOYEES)
     setLoading(false)
+  }
+
+  async function loadTasks() {
+    const data = await fetchTasks()
+    setTasks(data as Task[])
   }
 
   function selectSupervisor(id: number) {
@@ -94,11 +96,11 @@ export default function SupervisorPage() {
   const myTasks = tasks.filter(t => t.created_by_id === supervisorId)
   const today = new Date().toISOString().slice(0, 10)
 
-  function submitTask() {
+  async function submitTask() {
     if (!draft.title.trim() || !draft.assigned_id || !me || !supervisorId) return
     const assigned = employees.find(e => e.id === draft.assigned_id)
     if (!assigned) return
-    const newTask: Task = {
+    const newTask = {
       id: `task_${Date.now()}`,
       title: draft.title, description: draft.description,
       assigned_to: assigned.name, assigned_id: draft.assigned_id,
@@ -108,17 +110,15 @@ export default function SupervisorPage() {
       created_by: me.name, created_by_id: supervisorId,
       created_by_role: 'supervisor', approved: false,
     }
-    const updated = [newTask, ...loadAllTasks()]
-    saveAllTasks(updated)
-    setTasks(updated)
+    await upsertTask(newTask)
     setDraft({ title: '', description: '', assigned_id: 0, priority: 'medium', due_date: '' })
     setModal(false)
+    await loadTasks()
   }
 
-  function deleteTask(id: string) {
-    const updated = loadAllTasks().filter(t => t.id !== id)
-    saveAllTasks(updated)
-    setTasks(updated)
+  async function deleteTask(id: string) {
+    await dbDeleteTask(id)
+    await loadTasks()
   }
 
   async function submitCompletion() {
@@ -134,20 +134,19 @@ export default function SupervisorPage() {
         urls.push(publicUrl)
       }
     }
-    const latest = loadAllTasks()
-    const updated = latest.map(t => t.id === completionTaskId ? {
-      ...t, completion_submitted: true,
-      photo_urls: urls.length > 0 ? urls : t.photo_urls,
+    const currentTask = tasks.find(t => t.id === completionTaskId)
+    await updateTask(completionTaskId, {
+      completion_submitted: true,
+      photo_urls: urls.length > 0 ? urls : (currentTask?.photo_urls || []),
       supervisor_note: completionNote,
-      status: 'in_progress' as TaskStatus,
-      redo_requested: false, redo_reason: undefined,
-    } : t)
-    saveAllTasks(updated)
-    setTasks(updated)
+      status: 'in_progress',
+      redo_requested: false, redo_reason: null,
+    })
     setCompletionTaskId(null)
     setCompletionFiles([])
     setCompletionNote('')
     setUploading(false)
+    await loadTasks()
   }
 
   const completionTask = completionTaskId ? myTasks.find(t => t.id === completionTaskId) : null
@@ -237,7 +236,6 @@ export default function SupervisorPage() {
         <h2 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>My Tasks</h2>
         {myTasks.length === 0 ? (
           <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e2e8f0', padding: '40px 24px', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
             <div style={{ fontSize: 13, color: '#94a3b8' }}>No tasks yet — assign your first task</div>
           </div>
         ) : (
@@ -262,9 +260,9 @@ export default function SupervisorPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
                       <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{task.title}</span>
                       <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: pc.text, background: pc.bg }}>{pc.label}</span>
-                      {!task.approved && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, color: '#d97706', background: '#fef3c7' }}>⏳ Awaiting Asjad</span>}
+                      {!task.approved && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, color: '#d97706', background: '#fef3c7' }}>Awaiting Asjad</span>}
                       {isActive && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#2563eb', background: '#dbeafe' }}>▶ In Progress</span>}
-                      {isSubmitted && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#7c3aed', background: '#ede9fe' }}>📸 Awaiting Review</span>}
+                      {isSubmitted && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#7c3aed', background: '#ede9fe' }}>Awaiting Review</span>}
                       {isRedo && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#dc2626', background: '#fee2e2' }}>↩ Redo Requested</span>}
                       {isDone && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, color: '#15803d', background: '#dcfce7' }}>✓ Done</span>}
                     </div>
@@ -273,14 +271,14 @@ export default function SupervisorPage() {
 
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', fontSize: 12, color: '#94a3b8' }}>
                       <span>→ {task.assigned_to.split(' ')[0]}</span>
-                      {task.due_date && <span style={{ color: isOverdue ? '#ef4444' : '#94a3b8' }}>{isOverdue ? '⚠ ' : ''}{task.due_date}</span>}
+                      {task.due_date && <span style={{ color: isOverdue ? '#ef4444' : '#94a3b8' }}>{task.due_date}</span>}
                       {isActive && task.started_at && (
                         <span style={{ fontWeight: 700, color: '#f59e0b', background: '#fef3c7', padding: '1px 8px', borderRadius: 99, fontVariantNumeric: 'tabular-nums' }}>
-                          ⏱ {formatDuration(task.started_at)}
+                          {formatDuration(task.started_at)}
                         </span>
                       )}
                       {isDone && task.started_at && task.done_at && (
-                        <span style={{ color: '#16a34a', fontWeight: 600 }}>⏱ {formatDuration(task.started_at, task.done_at)}</span>
+                        <span style={{ color: '#16a34a', fontWeight: 600 }}>{formatDuration(task.started_at, task.done_at)}</span>
                       )}
                     </div>
 
@@ -354,7 +352,7 @@ export default function SupervisorPage() {
                   cursor: 'pointer', fontSize: 13, fontWeight: 600,
                   color: completionFiles.length > 0 ? '#16a34a' : '#94a3b8',
                 }}>
-                  {completionFiles.length > 0 ? `📸 ${completionFiles.length} photo${completionFiles.length > 1 ? 's' : ''} selected` : '📷 Tap to add photos'}
+                  {completionFiles.length > 0 ? `${completionFiles.length} photo${completionFiles.length > 1 ? 's' : ''} selected` : 'Tap to add photos'}
                 </button>
                 {completionFiles.length > 0 && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>

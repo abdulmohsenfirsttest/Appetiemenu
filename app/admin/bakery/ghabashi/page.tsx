@@ -19,12 +19,12 @@ export default function GhabashiAdminPage() {
 
   return (
     <div>
-      <RestaurantDashboard restaurantKey="Ghabashi" label="Ghabashi" color="#7c3aed" emoji="🏪" />
+      <RestaurantDashboard restaurantKey="Ghabashi" label="Ghabashi" color="#7c3aed" emoji="" />
 
       {/* Checklists section */}
       <div style={{ marginTop: 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>🗒️ Shift Checklists</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>Shift Checklists</div>
           <input
             type="date" value={date} onChange={e => setDate(e.target.value)}
             style={{ padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13 }}
@@ -52,7 +52,6 @@ export default function GhabashiAdminPage() {
                     onClick={() => setExpandedId(expanded ? null : shift.id)}
                     style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left' }}
                   >
-                    <span style={{ fontSize: 22 }}>{shift.shift_type === 'morning' ? '🌅' : '🌙'}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
                         {shift.staff_name}

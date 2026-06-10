@@ -7,7 +7,7 @@ import { createBrowserClient } from '@supabase/ssr'
 
 const NAV = [
   { href: '/manager', label: 'Operations', exact: true },
-  { href: '/admin/hr', label: 'HR & Payroll', exact: false },
+  { href: '/manager/hr', label: 'HR & Payroll', exact: false },
 ]
 
 export default function ManagerLayout({ children }: { children: React.ReactNode }) {
@@ -49,9 +49,6 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
 
       {/* Top bar */}
       <header style={{ background: '#0f172a', borderBottom: '1px solid #1e293b', minHeight: 52, display: 'flex', alignItems: 'center', padding: '8px 14px', gap: 10, position: 'sticky', top: 0, zIndex: 50, flexWrap: 'wrap' }}>
-        <div style={{ width: 28, height: 28, borderRadius: 8, background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-        </div>
         <span style={{ fontSize: 13, fontWeight: 700, color: 'white', flexShrink: 0 }}>Operations</span>
 
         {/* Nav tabs - scrollable on mobile */}
@@ -73,9 +70,8 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
           })}
         </nav>
 
-        <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: '1px solid #334155', background: 'transparent', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Out
+        <button onClick={handleSignOut} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #334155', background: 'transparent', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+          Sign Out
         </button>
       </header>
 

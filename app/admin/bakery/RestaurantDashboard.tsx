@@ -39,7 +39,7 @@ function EmpRow({ emp }: { emp: Emp }) {
 }
 
 export default function RestaurantDashboard({ restaurantKey, label, color, emoji }: {
-  restaurantKey: string; label: string; color: string; emoji: string
+  restaurantKey: string; label: string; color: string; emoji?: string
 }) {
   const emps = SEED_EMPLOYEES.filter(e => e.restaurant === restaurantKey)
   const supervisors = emps.filter(e => ['Supervisor','Manager','Operation Manager','Head Chef'].includes(e.position))
@@ -56,7 +56,6 @@ export default function RestaurantDashboard({ restaurantKey, label, color, emoji
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
         <Link href="/admin/bakery" style={{ fontSize: 12, color: '#64748b', textDecoration: 'none', border: '1px solid var(--admin-border)', borderRadius: 6, padding: '4px 10px' }}>← Back</Link>
-        <span style={{ fontSize: 22 }}>{emoji}</span>
         <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--admin-text)', margin: 0 }}>{label}</h2>
       </div>
 

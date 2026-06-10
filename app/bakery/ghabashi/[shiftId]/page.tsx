@@ -56,7 +56,6 @@ export default function GhabashiTaskList() {
 
   const shiftColor = shift.shift_type === 'morning' ? '#92400e' : '#1e40af'
   const shiftBg = shift.shift_type === 'morning' ? '#fffbeb' : '#eff6ff'
-  const shiftEmoji = shift.shift_type === 'morning' ? '🌅' : '🌙'
 
   return (
     <div style={{ maxWidth: 540, margin: '0 auto' }}>
@@ -65,7 +64,7 @@ export default function GhabashiTaskList() {
         <button onClick={() => router.push('/bakery/ghabashi')} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, color: '#475569' }}>← Back</button>
         <div>
           <div style={{ fontWeight: 800, fontSize: 18, color: '#2d1f14' }}>
-            {shiftEmoji} {shift.shift_type === 'morning' ? 'Morning' : 'Closing'} Shift
+            {shift.shift_type === 'morning' ? 'Morning' : 'Closing'} Shift
           </div>
           <div style={{ fontSize: 12, color: '#7a6355' }}>{shift.staff_name} · {shift.date}</div>
         </div>
@@ -134,7 +133,7 @@ export default function GhabashiTaskList() {
                         fontWeight: 700, fontSize: 12,
                       }}
                     >
-                      {busy ? '⏳ Uploading...' : done ? '📷 Retake Photo' : '📷 Take Photo'}
+                      {busy ? 'Uploading...' : done ? 'Retake Photo' : 'Take Photo'}
                     </button>
                   </>
                 )}

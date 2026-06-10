@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { SEED_EMPLOYEES } from '@/lib/seed-data'
 import { useLanguage } from '@/lib/language-context'
+import { fetchTasks, upsertTask, updateTask, deleteTask as dbDeleteTask } from '@/lib/tasks-db'
 
 interface Employee {
   id: number; name: string; iqama: string; iban: string
@@ -55,12 +56,6 @@ function calcOT(basic: number, otHrs: number) {
   const rate = basic / 30 / 8 * 1.25
   return { ot_rate: rate, ot_pay: rate * otHrs, net_pay: basic + rate * otHrs }
 }
-function loadAllTasks(): Task[] {
-  try { return JSON.parse(localStorage.getItem('all_tasks') || '[]') } catch { return [] }
-}
-function saveAllTasks(tasks: Task[]) {
-  localStorage.setItem('all_tasks', JSON.stringify(tasks))
-}
 
 const EMPTY_DRAFT = () => ({ title: '', description: '', assigned_id: 0, priority: 'medium' as Priority, due_date: '' })
 
@@ -73,9 +68,12 @@ export default function ManagerDashboard() {
   const [taskModal, setTaskModal] = useState(false)
   const [draft, setDraft] = useState(EMPTY_DRAFT())
 
-  useEffect(() => { loadData(); refreshTasks() }, [])
+  useEffect(() => { loadData(); loadTasks() }, [])
 
-  function refreshTasks() { setTasks(loadAllTasks()) }
+  async function loadTasks() {
+    const data = await fetchTasks()
+    setTasks(data as Task[])
+  }
 
   async function loadData() {
     setLoading(true)
@@ -92,11 +90,11 @@ export default function ManagerDashboard() {
     setDraft(d => ({ ...d, assigned_id: empId }))
   }
 
-  function submitTask() {
+  async function submitTask() {
     if (!draft.title.trim() || !draft.assigned_id) return
     const assigned = employees.find(e => e.id === draft.assigned_id)
     if (!assigned) return
-    const newTask: Task = {
+    const newTask = {
       id: `task_${Date.now()}`,
       title: draft.title, description: draft.description,
       assigned_to: assigned.name, assigned_id: draft.assigned_id,
@@ -107,36 +105,30 @@ export default function ManagerDashboard() {
       created_by_role: 'asjad', approved: true,
       approved_at: new Date().toISOString(),
     }
-    const updated = [newTask, ...loadAllTasks()]
-    saveAllTasks(updated)
-    setTasks(updated)
+    await upsertTask(newTask)
     setDraft(EMPTY_DRAFT())
     setTaskModal(false)
+    await loadTasks()
   }
 
-  function approveTask(id: string) {
-    const updated = loadAllTasks().map(t => t.id === id
-      ? { ...t, approved: true, approved_at: new Date().toISOString(), status: 'pending' as TaskStatus } : t)
-    saveAllTasks(updated)
-    setTasks(updated)
+  async function approveTask(id: string) {
+    await updateTask(id, { approved: true, approved_at: new Date().toISOString(), status: 'pending' })
+    await loadTasks()
   }
 
-  function rejectTask(id: string) {
-    const updated = loadAllTasks().filter(t => t.id !== id)
-    saveAllTasks(updated)
-    setTasks(updated)
+  async function rejectTask(id: string) {
+    await dbDeleteTask(id)
+    await loadTasks()
   }
 
-  function updateStatus(id: string, status: TaskStatus) {
-    const updated = loadAllTasks().map(t => t.id === id ? { ...t, status } : t)
-    saveAllTasks(updated)
-    setTasks(updated)
+  async function updateStatus(id: string, status: TaskStatus) {
+    await updateTask(id, { status })
+    await loadTasks()
   }
 
-  function deleteTask(id: string) {
-    const updated = loadAllTasks().filter(t => t.id !== id)
-    saveAllTasks(updated)
-    setTasks(updated)
+  async function deleteTask(id: string) {
+    await dbDeleteTask(id)
+    await loadTasks()
   }
 
   const asjad = employees.find(e => e.id === 1)
@@ -157,11 +149,11 @@ export default function ManagerDashboard() {
   const allApprovedTasks = tasks.filter(t => t.approved)
   const today = new Date().toISOString().slice(0, 10)
 
-  const alerts: { color: string; bg: string; icon: string; text: string }[] = []
-  if (pendingApprovals.length > 0) alerts.push({ color: '#d97706', bg: '#fef3c7', icon: '📋', text: `${pendingApprovals.length} ${t('task(s) awaiting your approval', 'مهمة بانتظار موافقتك')}` })
-  if (unpaid > 0) alerts.push({ color: '#ef4444', bg: '#fef2f2', icon: '⚠', text: `${unpaid} ${t('employees salary not yet paid', 'موظف لم يُدفع راتبه بعد')}` })
-  if (onVacation > 0) alerts.push({ color: '#64748b', bg: '#f8fafc', icon: '✈', text: `${onVacation} ${t('employees on vacation', 'موظف في إجازة')}` })
-  if (highOT.length > 0) alerts.push({ color: '#7c3aed', bg: '#ede9fe', icon: '⏱', text: `${highOT.map(e => e.name.split(' ')[0]).join(', ')} — ${t('40h+ overtime', 'أكثر من 40 ساعة إضافية')}` })
+  const alerts: { color: string; bg: string; text: string }[] = []
+  if (pendingApprovals.length > 0) alerts.push({ color: '#d97706', bg: '#fef3c7', text: `${pendingApprovals.length} ${t('task(s) awaiting your approval', 'مهمة بانتظار موافقتك')}` })
+  if (unpaid > 0) alerts.push({ color: '#ef4444', bg: '#fef2f2', text: `${unpaid} ${t('employees salary not yet paid', 'موظف لم يُدفع راتبه بعد')}` })
+  if (onVacation > 0) alerts.push({ color: '#64748b', bg: '#f8fafc', text: `${onVacation} ${t('employees on vacation', 'موظف في إجازة')}` })
+  if (highOT.length > 0) alerts.push({ color: '#7c3aed', bg: '#ede9fe', text: `${highOT.map(e => e.name.split(' ')[0]).join(', ')} — ${t('40h+ overtime', 'أكثر من 40 ساعة إضافية')}` })
 
   if (loading) return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -208,7 +200,7 @@ export default function ManagerDashboard() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {alerts.map((a, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', borderRadius: 12, background: a.bg, border: `1px solid ${a.color}33`, fontSize: 13, color: a.color, fontWeight: 600 }}>
-              <span>{a.icon}</span>{a.text}
+              {a.text}
             </div>
           ))}
         </div>
@@ -282,8 +274,8 @@ export default function ManagerDashboard() {
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', fontSize: 12 }}>
                           <span style={{ color: '#475569', fontWeight: 600 }}>→ {task.assigned_to.split(' ')[0]}</span>
                           {bc && <span style={{ padding: '1px 8px', borderRadius: 20, color: bc.text, background: bc.bg, fontSize: 11, fontWeight: 600 }}>{task.branch}</span>}
-                          <span style={{ color: '#6366f1', fontWeight: 600 }}>📋 {t('From', 'من')}: {task.created_by.split(' ')[0]}</span>
-                          {task.due_date && <span style={{ color: isOverdue ? '#ef4444' : '#94a3b8', fontWeight: 600 }}>{isOverdue ? '⚠ ' : ''}{task.due_date}</span>}
+                          <span style={{ color: '#6366f1', fontWeight: 600 }}>{t('From', 'من')}: {task.created_by.split(' ')[0]}</span>
+                          {task.due_date && <span style={{ color: isOverdue ? '#ef4444' : '#94a3b8', fontWeight: 600 }}>{task.due_date}</span>}
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -291,7 +283,7 @@ export default function ManagerDashboard() {
                           {t('Reject', 'رفض')}
                         </button>
                         <button onClick={() => approveTask(task.id)} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: '#16a34a', fontSize: 12, fontWeight: 700, color: 'white', cursor: 'pointer', boxShadow: '0 2px 6px rgba(22,163,74,0.3)' }}>
-                          ✓ {t('Approve', 'موافقة')}
+                          {t('Approve', 'موافقة')}
                         </button>
                       </div>
                     </div>
@@ -306,7 +298,6 @@ export default function ManagerDashboard() {
         {activeTab !== 'approvals' && (
           tabTasks.length === 0 ? (
             <div style={{ background: 'var(--admin-card)', borderRadius: 14, border: '1px solid var(--admin-border2)', padding: '36px 24px', textAlign: 'center' }}>
-              <div style={{ fontSize: 28, marginBottom: 10 }}>📋</div>
               <div style={{ fontSize: 13, color: '#94a3b8' }}>{t('No tasks here yet', 'لا توجد مهام هنا بعد')}</div>
             </div>
           ) : (
@@ -329,7 +320,7 @@ export default function ManagerDashboard() {
                         <span style={{ color: '#475569', fontWeight: 600 }}>→ {task.assigned_to.split(' ')[0]}</span>
                         {bc && <span style={{ padding: '1px 8px', borderRadius: 20, color: bc.text, background: bc.bg, fontSize: 11, fontWeight: 600 }}>{task.branch}</span>}
                         {activeTab === 'all_tasks' && <span style={{ color: '#6366f1', fontSize: 11, fontWeight: 600 }}>by {task.created_by.split(' ')[0]}</span>}
-                        {task.due_date && <span style={{ color: isOverdue ? '#ef4444' : '#94a3b8', fontWeight: 600 }}>{isOverdue ? '⚠ ' : ''}{task.due_date}</span>}
+                        {task.due_date && <span style={{ color: isOverdue ? '#ef4444' : '#94a3b8', fontWeight: 600 }}>{task.due_date}</span>}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -370,7 +361,7 @@ export default function ManagerDashboard() {
                 <div style={{ padding: '12px 16px', background: bc.bg, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 14, fontWeight: 800, color: bc.text }}>{branch}</span>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    {branchTasks.length > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, background: 'rgba(255,255,255,0.7)', color: bc.text }}>📋 {branchTasks.length}</span>}
+                    {branchTasks.length > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, background: 'rgba(255,255,255,0.7)', color: bc.text }}>{branchTasks.length} tasks</span>}
                     <span style={{ fontSize: 12, fontWeight: 700, color: bc.text, opacity: 0.8 }}>{branchEmps.length} {t('staff', 'موظف')}</span>
                   </div>
                 </div>
@@ -435,7 +426,7 @@ export default function ManagerDashboard() {
         <span><span style={{ color: '#ef4444', fontWeight: 700 }}>●</span> {t('Salary not paid', 'راتب غير مدفوع')}</span>
         <span>✈ {t('On vacation', 'في إجازة')}</span>
         <span><span style={{ color: '#25D366', fontWeight: 600 }}>Xh</span> {t('= OT hours', '= ساعات إضافية')}</span>
-        <span>📋 {t('= active tasks in branch', '= مهام نشطة في الفرع')}</span>
+        <span>{t('= active tasks in branch', '= مهام نشطة في الفرع')}</span>
       </div>
 
       {/* Assign Task Modal */}

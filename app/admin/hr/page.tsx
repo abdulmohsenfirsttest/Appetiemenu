@@ -11,6 +11,7 @@ import {
 import * as XLSX from 'xlsx'
 import { useLanguage } from '@/lib/language-context'
 import { getHrSetting, setHrSetting, deleteHrSetting } from '@/lib/tasks-db'
+import { deductionsByEmployee, currentPeriod } from '@/lib/violations-db'
 
 type VacationStatus = 'none' | 'on_vacation' | 'taken'
 
@@ -32,6 +33,7 @@ interface Employee {
   ot_hours: number; ot_rate: number; ot_pay: number; net_pay: number
   salary_paid: boolean; vacation_status: VacationStatus; restaurant?: string
   vacation_start?: string; vacation_end?: string
+  deduction?: number   // total SAR deducted this month from logged violations
 }
 
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -388,16 +390,21 @@ export default function HRPage() {
 
   async function loadData() {
     setLoading(true)
-    const { data } = await supabase.from('employees').select('*').order('id')
-    if (data && data.length > 0) {
-      setEmployees(data.map(e => recompute(e, multiplier)))
-    } else {
-      setEmployees(SEED_EMPLOYEES.map(e => {
-        const { ot_rate, ot_pay, net_pay } = calcOT(e.basic_salary, e.ot_hours, multiplier)
-        return { ...e, ot_rate, ot_pay, net_pay } as Employee
-      }))
-    }
+    const [{ data }, dedMap] = await Promise.all([
+      supabase.from('employees').select('*').order('id'),
+      deductionsByEmployee(currentPeriod()).catch(() => ({} as Record<number, number>)),
+    ])
+    const list: any[] = data && data.length > 0 ? data : SEED_EMPLOYEES
+    setEmployees(list.map(e => {
+      const { ot_rate, ot_pay, net_pay } = calcOT(e.basic_salary, e.ot_hours, multiplier)
+      return { ...e, ot_rate, ot_pay, net_pay, deduction: dedMap[e.id] || 0 } as Employee
+    }))
     setLoading(false)
+  }
+
+  // net_pay is stored/computed as GROSS (basic + OT). Deductions are applied for display/totals only.
+  function finalNet(e: Employee): number {
+    return e.net_pay - (e.deduction || 0)
   }
 
   function recompute(e: any, mult: number): Employee {
@@ -509,7 +516,8 @@ export default function HRPage() {
       Position: e.position, Branch: e.branch, Shift: e.shift,
       'Basic SAR': e.basic_salary, 'OT Hours': e.ot_hours,
       'OT Rate': e.ot_rate.toFixed(4), 'OT Pay': e.ot_pay.toFixed(2),
-      'Net Pay': e.net_pay.toFixed(2), 'Salary Paid': e.salary_paid ? 'Yes' : 'No',
+      'Deduction': (e.deduction || 0).toFixed(2),
+      'Net Pay': finalNet(e).toFixed(2), 'Salary Paid': e.salary_paid ? 'Yes' : 'No',
       Vacation: e.vacation_status,
     }))
     const ws = XLSX.utils.json_to_sheet(rows)
@@ -546,7 +554,8 @@ export default function HRPage() {
   const totalBasic = analyticsEmps.reduce((s, e) => s + e.basic_salary, 0)
   const totalOTHrs = analyticsEmps.reduce((s, e) => s + e.ot_hours, 0)
   const totalOTPay = analyticsEmps.reduce((s, e) => s + e.ot_pay, 0)
-  const totalNet = analyticsEmps.reduce((s, e) => s + e.net_pay, 0)
+  const totalDeduct = analyticsEmps.reduce((s, e) => s + (e.deduction || 0), 0)
+  const totalNet = analyticsEmps.reduce((s, e) => s + finalNet(e), 0)
   const paidCount = analyticsEmps.filter(e => e.salary_paid).length
   const vacationCount = analyticsEmps.filter(e => e.vacation_status === 'on_vacation').length
 
@@ -590,11 +599,11 @@ export default function HRPage() {
   const topOT = [...analyticsEmps].filter(e => e.ot_hours > 0).sort((a, b) => b.ot_hours - a.ot_hours).slice(0, 8).map(e => ({ name: e.name.split(' ')[0], hrs: e.ot_hours }))
   const branchSalary = ['Ar Rayyan', 'Hittin', 'Malqa'].map((b, i) => ({
     name: b, color: CHART_COLORS[i],
-    value: Math.round(analyticsEmps.filter(e => e.branch === b).reduce((s, e) => s + e.net_pay, 0)),
+    value: Math.round(analyticsEmps.filter(e => e.branch === b).reduce((s, e) => s + finalNet(e), 0)),
   })).filter(b => b.value > 0)
   const shiftSalary = SHIFTS.filter(s => s).map((s, i) => ({
     name: s, color: SHIFT_COLORS[s]?.text ?? CHART_COLORS[i],
-    value: Math.round(analyticsEmps.filter(e => e.shift === s).reduce((sum, e) => sum + e.net_pay, 0)),
+    value: Math.round(analyticsEmps.filter(e => e.shift === s).reduce((sum, e) => sum + finalNet(e), 0)),
   })).filter(s => s.value > 0)
 
   const summaryCards = [
@@ -602,6 +611,7 @@ export default function HRPage() {
     { label: t('Basic Salary', 'الراتب الأساسي'), value: `${totalBasic.toLocaleString()} SAR`, color: '#6366f1' },
     { label: t('OT Hours', 'ساعات إضافية'), value: totalOTHrs.toFixed(1), color: '#f59e0b' },
     { label: t('OT Cost', 'تكلفة الإضافي'), value: `${totalOTPay.toFixed(0)} SAR`, color: '#ef4444' },
+    { label: t('Deductions', 'الخصومات'), value: `${totalDeduct.toFixed(0)} SAR`, color: '#dc2626' },
     { label: t('Net Pay', 'صافي الراتب'), value: `${totalNet.toFixed(0)} SAR`, color: '#10b981' },
     { label: t('Salary Paid', 'الراتب المدفوع'), value: `${paidCount} / ${analyticsEmps.length}`, color: '#0891b2' },
     { label: t('On Vacation', 'في إجازة'), value: vacationCount, color: '#d97706' },
@@ -882,6 +892,7 @@ export default function HRPage() {
                 </th>
                 <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('OT Rate', 'معدل الإضافي')}</th>
                 <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('OT Pay', 'أجر الإضافي')}</th>
+                <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Deduct', 'خصم')}</th>
                 <th style={{ padding: '11px 12px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }} onClick={() => sortBy('net_pay')}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{t('Net Pay', 'صافي الراتب')} <SortArrow active={sort.key === 'net_pay'} dir={sort.dir} /></span>
                 </th>
@@ -939,7 +950,8 @@ export default function HRPage() {
                     </td>
                     <td style={{ padding: '11px 12px', textAlign: 'right', color: '#64748b', fontSize: 12 }}>{emp.ot_rate.toFixed(2)}</td>
                     <td style={{ padding: '11px 12px', textAlign: 'right', color: '#475569' }}>{emp.ot_pay.toFixed(2)}</td>
-                    <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 800, color: '#25D366' }}>{emp.net_pay.toFixed(2)}</td>
+                    <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 600, color: (emp.deduction || 0) > 0 ? '#dc2626' : '#cbd5e1' }}>{(emp.deduction || 0) > 0 ? `−${(emp.deduction || 0).toFixed(2)}` : '—'}</td>
+                    <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: 800, color: '#25D366' }}>{finalNet(emp).toFixed(2)}</td>
                     <td style={{ padding: '11px 12px', textAlign: 'center' }}>
                       <button onClick={() => toggleSalaryPaid(emp)} title={emp.salary_paid ? t('Mark unpaid', 'تعيين غير مدفوع') : t('Mark paid', 'تعيين مدفوع')}
                         style={{ width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -973,7 +985,7 @@ export default function HRPage() {
                 )
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={13} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>{t('No employees found', 'لا يوجد موظفون')}</td></tr>
+                <tr><td colSpan={14} style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>{t('No employees found', 'لا يوجد موظفون')}</td></tr>
               )}
             </tbody>
           </table>

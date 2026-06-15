@@ -35,6 +35,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/admin/hr',            labelEn: 'HR & Payroll',      labelAr: 'الرواتب والموارد البشرية' },
       { href: '/admin/hr/manager',    labelEn: 'Operation Manager', labelAr: 'مدير العمليات'            },
       { href: '/admin/hr/supervisor', labelEn: 'Supervisor Panel',  labelAr: 'لوحة المشرف'             },
+      { href: '/admin/hr/violations', labelEn: 'Violations & Penalties', labelAr: 'المخالفات والخصومات' },
       { href: '/admin/bakery',        labelEn: 'Manager Supervised',labelAr: 'إشراف المدير'            },
     ],
   },

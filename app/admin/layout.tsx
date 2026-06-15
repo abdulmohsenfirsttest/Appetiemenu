@@ -53,6 +53,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelAr: 'الإعدادات',
     items: [
       { href: '/admin/credentials', labelEn: 'Supervisor Credentials', labelAr: 'بيانات المشرفين' },
+      { href: '/admin/accounts',    labelEn: 'Login Accounts',         labelAr: 'حسابات الدخول' },
     ],
   },
 ]

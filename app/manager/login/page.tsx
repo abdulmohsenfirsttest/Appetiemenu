@@ -29,9 +29,11 @@ export default function ManagerLogin() {
       return
     }
 
-    if (data.user.email !== 'asjad@appetie.com') {
+    const role = (data.user.app_metadata as { role?: string } | undefined)?.role
+    const allowed = role === 'manager' || role === 'admin' || data.user.email === 'asjad@appetie.com'
+    if (!allowed) {
       await supabase.auth.signOut()
-      setError('Access denied. This portal is for Operation Manager only.')
+      setError('Access denied. This portal is for managers only.')
       setLoading(false)
       return
     }

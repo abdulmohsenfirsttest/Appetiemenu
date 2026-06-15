@@ -31,28 +31,34 @@ export async function middleware(request: NextRequest) {
   const isManagerLogin = pathname === '/manager/login'
   const isManagerRoute = pathname.startsWith('/manager')
 
-  // Admin routes — operation manager (asjad@appetie.com) may NOT enter
+  // Role lives in the account's auth metadata: 'manager', 'admin', or none.
+  const role = (user?.app_metadata as { role?: string } | undefined)?.role
+  // asjad@appetie.com is always treated as a manager (safety fallback).
+  const isManagerOnly = !!user && role !== 'admin' && (role === 'manager' || user.email === 'asjad@appetie.com')
+  const canAccessManager = !!user && (role === 'manager' || role === 'admin' || user.email === 'asjad@appetie.com')
+
+  // Admin routes — manager-only users may NOT enter
   if (isAdminRoute && !isAdminLogin && !user) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
-  if (isAdminRoute && !isAdminLogin && user && user.email === 'asjad@appetie.com') {
+  if (isAdminRoute && !isAdminLogin && isManagerOnly) {
     return NextResponse.redirect(new URL('/manager', request.url))
   }
-  if (isAdminLogin && user && user.email !== 'asjad@appetie.com') {
+  if (isAdminLogin && user && isManagerOnly) {
+    return NextResponse.redirect(new URL('/manager', request.url))
+  }
+  if (isAdminLogin && user && !isManagerOnly) {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
-  if (isAdminLogin && user && user.email === 'asjad@appetie.com') {
-    return NextResponse.redirect(new URL('/manager', request.url))
-  }
 
-  // Manager routes — only asjad@appetie.com may enter
+  // Manager routes — managers and admins may enter
   if (isManagerRoute && !isManagerLogin && !user) {
     return NextResponse.redirect(new URL('/manager/login', request.url))
   }
-  if (isManagerRoute && !isManagerLogin && user && user.email !== 'asjad@appetie.com') {
+  if (isManagerRoute && !isManagerLogin && !canAccessManager) {
     return NextResponse.redirect(new URL('/manager/login', request.url))
   }
-  if (isManagerLogin && user && user.email === 'asjad@appetie.com') {
+  if (isManagerLogin && canAccessManager) {
     return NextResponse.redirect(new URL('/manager', request.url))
   }
 

@@ -24,7 +24,9 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (pathname === '/manager/login') { setChecked(true); return }
-      if (!data.user || data.user.email !== 'asjad@appetie.com') {
+      const role = (data.user?.app_metadata as { role?: string } | undefined)?.role
+      const allowed = !!data.user && (role === 'manager' || role === 'admin' || data.user.email === 'asjad@appetie.com')
+      if (!allowed) {
         router.replace('/manager/login')
       } else {
         setChecked(true)

@@ -8,6 +8,7 @@ import { createBrowserClient } from '@supabase/ssr'
 const NAV = [
   { href: '/manager', label: 'Operations', exact: true },
   { href: '/manager/hr', label: 'HR & Payroll', exact: false },
+  { href: '/manager/checklist', label: 'Daily Check', exact: false },
   { href: '/manager/evaluations', label: 'Evaluations', exact: false },
 ]
 

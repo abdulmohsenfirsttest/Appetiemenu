@@ -44,6 +44,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelAr: 'العمليات',
     items: [
       { href: '/admin/operations',    labelEn: 'Operations Monitor', labelAr: 'مراقبة العمليات' },
+      { href: '/admin/checklists',    labelEn: 'Branch Checklists',  labelAr: 'قوائم فحص الفروع' },
       { href: '/admin/cost-centre',   labelEn: 'Cost Centre',        labelAr: 'مركز التكلفة'    },
       { href: '/admin/reports',       labelEn: 'Sales Reports',      labelAr: 'تقارير المبيعات'  },
     ],

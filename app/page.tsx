@@ -506,7 +506,7 @@ function ItemModal({ item, lang, showCalories, t, onClose }: {
               <h3 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, marginBottom: 12 }}>
                 {t.nutritionTitle}{' '}
                 <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-                  {details.size ? t.perServing(details.size) : ''}
+                  {details?.size ? t.perServing(details.size) : ''}
                 </span>
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, textAlign: 'center', marginBottom: 12 }}>

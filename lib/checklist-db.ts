@@ -59,12 +59,15 @@ export interface ChecklistSubmission {
   check_date: string
   shift: string | null
   results: Record<string, boolean>
+  photos?: Record<string, string[]> | null   // itemKey -> array of public image URLs
   checked_count: number
   total_count: number
   notes: string | null
   completed_by: string | null
   created_at: string
 }
+
+const PHOTO_BUCKET = 'checklist-photos'
 
 export function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -73,6 +76,21 @@ export function today(): string {
 export async function checklistTableReady(): Promise<boolean> {
   const { error } = await supabase.from('branch_checklists').select('id').limit(1)
   return !error
+}
+
+/** True once the `photos` column exists (scripts/checklist-photos-column.sql run). */
+export async function checklistPhotosReady(): Promise<boolean> {
+  const { error } = await supabase.from('branch_checklists').select('photos').limit(1)
+  return !error
+}
+
+/** Upload an issue photo and return its public URL. */
+export async function uploadChecklistPhoto(file: File, branch: string, date: string, key: string): Promise<string | null> {
+  const ext = file.name.split('.').pop() || 'jpg'
+  const path = `${branch}/${date}/${key}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).upload(path, file, { upsert: true })
+  if (error) return null
+  return supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path).data.publicUrl
 }
 
 export async function fetchChecklists(opts?: { branch?: string; date?: string }): Promise<ChecklistSubmission[]> {
@@ -84,7 +102,10 @@ export async function fetchChecklists(opts?: { branch?: string; date?: string })
   return (data as ChecklistSubmission[]) || []
 }
 
-export async function submitChecklist(s: Omit<ChecklistSubmission, 'id' | 'created_at'>): Promise<{ error: string | null }> {
-  const { error } = await supabase.from('branch_checklists').insert(s)
+export async function submitChecklist(s: Omit<ChecklistSubmission, 'id' | 'created_at'>, withPhotos: boolean): Promise<{ error: string | null }> {
+  // Omit `photos` if the column doesn't exist yet, so submissions still work.
+  const payload: any = { ...s }
+  if (!withPhotos) delete payload.photos
+  const { error } = await supabase.from('branch_checklists').insert(payload)
   return { error: error?.message ?? null }
 }

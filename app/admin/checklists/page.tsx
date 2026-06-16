@@ -106,10 +106,24 @@ export default function AdminChecklists() {
                   <h3 style={{ fontSize: 12, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{section.title}</h3>
                   {section.items.map(item => {
                     const ok = !!open.results?.[item.key]
+                    const pics = open.photos?.[item.key] || []
                     return (
-                      <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
-                        <span style={{ flexShrink: 0, color: ok ? '#16a34a' : '#cbd5e1', fontSize: 16 }}>{ok ? '✓' : '○'}</span>
-                        <span style={{ fontSize: 13, color: ok ? 'var(--admin-text)' : '#94a3b8' }}>{item.label}</span>
+                      <div key={item.key} style={{ padding: '6px 0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ flexShrink: 0, color: ok ? '#16a34a' : '#cbd5e1', fontSize: 16 }}>{ok ? '✓' : '○'}</span>
+                          <span style={{ fontSize: 13, color: ok ? 'var(--admin-text)' : '#94a3b8' }}>{item.label}</span>
+                          {pics.length > 0 && <span style={{ fontSize: 11, color: '#b45309' }}>📷 {pics.length}</span>}
+                        </div>
+                        {pics.length > 0 && (
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '8px 0 8px 26px' }}>
+                            {pics.map((src, pi) => (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <a key={pi} href={src} target="_blank" rel="noreferrer">
+                                <img src={src} alt="issue" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--admin-border)' }} />
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )
                   })}

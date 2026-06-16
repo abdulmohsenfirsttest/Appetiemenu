@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import {
   CHECKLIST, ALL_ITEMS, TOTAL_ITEMS, today,
-  checklistTableReady, submitChecklist, fetchChecklists, ChecklistSubmission,
+  checklistTableReady, checklistPhotosReady, uploadChecklistPhoto,
+  submitChecklist, fetchChecklists, ChecklistSubmission,
 } from '@/lib/checklist-db'
 
 const BRANCHES = ['Ar Rayyan', 'Hittin', 'Malqa']
@@ -21,16 +22,36 @@ export default function ManagerChecklist() {
   const [date, setDate] = useState(today())
   const [shift, setShift] = useState('Morning')
   const [results, setResults] = useState<Record<string, boolean>>({})
+  const [photos, setPhotos] = useState<Record<string, string[]>>({})
+  const [photosReady, setPhotosReady] = useState(true)
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
   const [todaysSubs, setTodaysSubs] = useState<ChecklistSubmission[]>([])
+  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({})
 
   useEffect(() => {
     const sb = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
     sb.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ''))
     checklistTableReady().then(setReady)
+    checklistPhotosReady().then(setPhotosReady)
   }, [])
+
+  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>, key: string) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !branch) return
+    setUploadingKey(key)
+    const urlStr = await uploadChecklistPhoto(file, branch, date, key)
+    if (urlStr) setPhotos(prev => ({ ...prev, [key]: [...(prev[key] || []), urlStr] }))
+    else flash('Photo upload failed')
+    setUploadingKey(null)
+  }
+
+  function removePhoto(key: string, idx: number) {
+    setPhotos(prev => ({ ...prev, [key]: (prev[key] || []).filter((_, i) => i !== idx) }))
+  }
 
   useEffect(() => {
     if (ready && branch) fetchChecklists({ branch, date }).then(setTodaysSubs)
@@ -38,7 +59,7 @@ export default function ManagerChecklist() {
 
   function flash(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
   function toggle(key: string) { setResults(prev => ({ ...prev, [key]: !prev[key] })) }
-  function reset() { setResults({}); setNotes('') }
+  function reset() { setResults({}); setPhotos({}); setNotes('') }
 
   const checkedCount = ALL_ITEMS.filter(i => results[i.key]).length
   const pct = Math.round((checkedCount / TOTAL_ITEMS) * 100)
@@ -48,9 +69,9 @@ export default function ManagerChecklist() {
     setSaving(true)
     const { error } = await submitChecklist({
       branch, check_date: date, shift,
-      results, checked_count: checkedCount, total_count: TOTAL_ITEMS,
+      results, photos, checked_count: checkedCount, total_count: TOTAL_ITEMS,
       notes: notes.trim() || null, completed_by: email,
-    })
+    }, photosReady)
     if (!error) { flash(`Checklist submitted for ${branch} (${checkedCount}/${TOTAL_ITEMS}) ✓`); reset() }
     else flash('Error: ' + error)
     setSaving(false)
@@ -69,6 +90,11 @@ export default function ManagerChecklist() {
       {ready === false && (
         <div style={{ padding: '12px 16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, fontSize: 13, color: '#92400e', lineHeight: 1.6 }}>
           ⚠️ <strong>Setup needed.</strong> Run <code style={{ background: '#fef3c7', padding: '1px 6px', borderRadius: 6 }}>scripts/checklist-schema.sql</code> once in the Supabase SQL Editor, then refresh.
+        </div>
+      )}
+      {ready && !photosReady && (
+        <div style={{ padding: '10px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, fontSize: 12, color: '#92400e' }}>
+          Photo attachments need one more step — run <code style={{ background: '#fef3c7', padding: '1px 6px', borderRadius: 6 }}>scripts/checklist-photos-column.sql</code> in the SQL Editor. Checklists still submit without photos until then.
         </div>
       )}
 
@@ -133,14 +159,35 @@ export default function ManagerChecklist() {
                 <div>
                   {section.items.map((item, i) => {
                     const checked = !!results[item.key]
+                    const itemPhotos = photos[item.key] || []
                     return (
-                      <button key={item.key} onClick={() => toggle(item.key)}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', border: 'none', borderTop: i === 0 ? 'none' : '1px solid #f8fafc', background: checked ? '#f0fdf4' : 'white', cursor: 'pointer', textAlign: 'left' }}>
-                        <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: 7, border: '2px solid', borderColor: checked ? '#16a34a' : '#cbd5e1', background: checked ? '#16a34a' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                          {checked && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
-                        </span>
-                        <span style={{ fontSize: 14, color: checked ? '#166534' : '#334155', fontWeight: checked ? 600 : 400, textDecoration: checked ? 'none' : 'none' }}>{item.label}</span>
-                      </button>
+                      <div key={item.key} style={{ borderTop: i === 0 ? 'none' : '1px solid #f8fafc', background: checked ? '#f0fdf4' : 'white' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
+                          <button onClick={() => toggle(item.key)} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', padding: 0 }}>
+                            <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: 7, border: '2px solid', borderColor: checked ? '#16a34a' : '#cbd5e1', background: checked ? '#16a34a' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                              {checked && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
+                            </span>
+                            <span style={{ fontSize: 14, color: checked ? '#166534' : '#334155', fontWeight: checked ? 600 : 400 }}>{item.label}</span>
+                          </button>
+                          <input ref={el => { fileInputs.current[item.key] = el }} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => handlePhoto(e, item.key)} />
+                          <button onClick={() => fileInputs.current[item.key]?.click()} disabled={uploadingKey === item.key} title="Attach photo of an issue"
+                            style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 8, border: '1.5px solid', borderColor: itemPhotos.length ? '#f59e0b' : '#e2e8f0', background: itemPhotos.length ? '#fffbeb' : 'white', color: itemPhotos.length ? '#b45309' : '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                            {uploadingKey === item.key ? '…' : itemPhotos.length || ''}
+                          </button>
+                        </div>
+                        {itemPhotos.length > 0 && (
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '0 16px 12px 50px' }}>
+                            {itemPhotos.map((src, pi) => (
+                              <div key={pi} style={{ position: 'relative' }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={src} alt="issue" style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover', border: '1px solid #e2e8f0' }} />
+                                <button onClick={() => removePhoto(item.key, pi)} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', border: 'none', background: '#ef4444', color: 'white', fontSize: 12, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     )
                   })}
                 </div>
